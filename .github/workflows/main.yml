@@ -140,32 +140,32 @@ jobs:
 #           ./command_line/run.sh
 
 
-#   sprint_3:
-#     if: github.repository_owner != 'cpppracticum'
-#     runs-on: ubuntu-22.04
-#     steps:
-#       - name: Checkout code & tests
-#         uses: actions/checkout@v3
-#         with:
-#           submodules: true
+   sprint_3:
+     if: github.repository_owner != 'cpppracticum'
+     runs-on: ubuntu-22.04
+     steps:
+       - name: Checkout code & tests
+         uses: actions/checkout@v3
+         with:
+           submodules: true
 
-#       - name: Install dependencies
-#         run: |
-#           pip uninstall conan -y
-#           pip install -U conan==1.59.0
-#           pip install -r requirements.txt
-#           pip show pytest
+       - name: Install dependencies
+         run: |
+           pip uninstall conan -y
+           pip install -U conan==1.59.0
+           pip install -r requirements.txt
+           pip show pytest
 
 #       - name: run tests sprint3 instrumentation
 #         run: |
 #           cd cpp-backend-tests-practicum/scripts/sprint3
-#           ./instrumentation/run.sh
-
-#      - name: Load FlameGraph
-#        uses: actions/checkout@v3
-#        with:
-#          repository: 'brendangregg/FlameGraph'
-#          path: ${{ github.workspace }}/sprint3/problems/flamegraph/solution/FlameGraph
+#          ./instrumentation/run.sh
+#
+      - name: Load FlameGraph
+        uses: actions/checkout@v3
+        with:
+          repository: 'brendangregg/FlameGraph'
+          path: ${{ github.workspace }}/sprint3/problems/flamegraph/solution/FlameGraph
 
 #       - name: run tests sprint3 flamegraph
 #         run: |
@@ -173,10 +173,10 @@ jobs:
 #           cd cpp-backend-tests-practicum/scripts/sprint3
 #           ./flamegraph/run.sh
 
-#       - name: run tests sprint3 gen_objects
-#         run: |
-#           cd cpp-backend-tests-practicum/scripts/sprint3
-#           ./gen_objects/run.sh
+       - name: run tests sprint3 gen_objects
+         run: |
+           cd cpp-backend-tests-practicum/scripts/sprint3
+           ./gen_objects/run.sh
 
 #       - name: run tests sprint3 static_lib
 #         run: |
