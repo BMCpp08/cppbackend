@@ -1,0 +1,113 @@
+#include "json_loader.h"
+#include <boost/json.hpp>
+#include <iostream>
+
+namespace json_loader {
+	namespace json = boost::json;
+	using namespace std::literals;
+	using namespace model;
+	using namespace model::model_details;
+
+	static Point CreatePoint(const auto& object, const std::string& x, const std::string& y) {
+		return Point{ Coord(object.at(x).as_int64()), Coord(object.at(y).as_int64()) };
+	}
+
+	static Building CreateBuilding(const auto& object) {
+		Size size{ object.at(key_w).as_int64(),object.at(key_h).as_int64() };
+		Point point = std::move(CreatePoint(object, key_x, key_y));
+		return Building{ { point ,size } };
+	}
+
+	static Office CreateOffice(const auto& object) {
+		Office::Id id{ object.at(key_id).as_string().c_str() };
+		Point point = std::move(CreatePoint(object, key_x, key_y));
+		Offset offset{ object.at(key_offset_x).as_int64(), object.at(key_offset_y).as_int64() };
+		return Office{ id, point, offset };
+	}
+
+	static Road CreateRoad(const auto& object) {
+		if (object.if_contains(key_x1)) {
+			return Road{ Road::HORIZONTAL,
+				CreatePoint(object,key_x0,key_y0),
+				Coord(object.at(key_x1).as_int64())
+			};
+
+		}
+		else if (object.if_contains(key_y1)) {
+			return Road{ Road::VERTICAL,
+				Point(object.at(key_x0).as_int64(), object.at(key_y0).as_int64()),
+				Coord(object.at(key_y1).as_int64()) };
+		}
+	}
+
+	model::Game LoadGame(const std::filesystem::path& json_path) {
+		model::Game game;
+		std::ifstream fjson(json_path);
+
+		assert(fjson.is_open());
+
+		std::stringstream buffer;
+		buffer << fjson.rdbuf();
+
+		const auto value = json::parse(buffer.str());
+		
+
+		//Скорость персонажей
+		double default_dog_speed = 1.;
+		double dog_speed = default_dog_speed;
+		if (value.as_object().contains(key_default_dog_speed)) {
+			default_dog_speed = value.as_object().at(key_default_dog_speed).as_double();
+		}
+
+		if (auto f_maps = value.as_object().find(key_maps); f_maps != value.as_object().end()) {
+			const auto& maps = value.as_object().at(key_maps);
+
+			const auto& arr = maps.as_array();
+			for (const auto& json_map : arr) {
+
+				//if (auto pos = json_map.as_object().at(key_id).as_string().find("map"); pos != std::string::npos) {
+					
+					Map::Id id{ json_map.as_object().at(key_id).as_string().c_str() };
+
+					if (json_map.as_object().contains(key_dog_speed)) {
+						dog_speed = json_map.as_object().at(key_dog_speed).as_double();
+					}
+					else {
+						dog_speed = default_dog_speed;
+					}
+
+					Map map(id, json_map.as_object().at(key_name).as_string().c_str(), dog_speed);
+
+
+					if (json_map.as_object().if_contains(key_roads)) {
+						auto roads = json_map.as_object().at(key_roads).as_array();
+
+						for (auto& road : roads) {
+							map.AddRoad(std::move(CreateRoad(road.as_object())));
+						}
+					}
+
+					if (json_map.as_object().if_contains(key_buildings)) {
+						auto buildings = json_map.as_object().at(key_buildings).as_array();
+
+						for (auto& building : buildings) {
+							map.AddBuilding(std::move(CreateBuilding(building.as_object())));
+						}
+					}
+
+					if (json_map.as_object().if_contains(key_offices)) {
+						auto offices = json_map.as_object().at(key_offices).as_array();
+
+						for (auto& office : offices) {
+							map.AddOffice(std::move(CreateOffice(office.as_object())));
+						}
+					}
+
+					game.AddMap(map);
+				//}
+			}
+		}
+		return game;
+	}
+
+}  // namespace json_loader

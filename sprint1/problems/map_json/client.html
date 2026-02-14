@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<title>Клиент API карт</title>
+</head>
+<body>
+<h1>Список карт</h1>
+<button id="loadMaps">Загрузить карты</button>
+<ul id="mapsList"></ul>
+
+<script>
+document.getElementById('loadMaps').addEventListener('click', () => {
+    fetch('/api/v1/maps') // Адрес API сервера
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Ошибка сети');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const list = document.getElementById('mapsList');
+            list.innerHTML = '';
+            data.forEach(map => {
+                const li = document.createElement('li');
+                li.textContent = `ID: ${map.id}, Название: ${map.name}`;
+                list.appendChild(li);
+            });
+        })
+        .catch(error => {
+            alert('Ошибка загрузки данных: ' + error.message);
+        });
+});
+</script>
+</body>
+</html>
