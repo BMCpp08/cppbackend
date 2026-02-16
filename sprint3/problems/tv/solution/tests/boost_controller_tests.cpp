@@ -1,4 +1,4 @@
-#include <boost/test/unit_test.hpp>
+﻿#include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <sstream>
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(on_TurnOff_command_with_some_arguments_prints_error_message
     ExpectExtraArgumentsErrorInOutput("TurnOff"sv);
 }
 // Включите этот тест, после того, как реализуете метод TV::SelectChannel
-#if 0
+#if 1
 BOOST_AUTO_TEST_CASE(on_Info_prints_current_channel) {
     tv.SelectChannel(42);
     RunMenuCommand("Info"s);
@@ -102,6 +102,14 @@ BOOST_AUTO_TEST_CASE(on_Info_prints_current_channel) {
 /*
  * Протестируйте остальные аспекты поведения класса Controller, когда TV включен
  */
+
+BOOST_AUTO_TEST_CASE(Select_invalid_channel) {
+    tv.SelectChannel(100);
+    RunMenuCommand("Info"s);
+    ExpectOutput("Invalid channel"sv);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

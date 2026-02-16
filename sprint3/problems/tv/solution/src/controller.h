@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <cassert>
 
 #include "menu.h"
@@ -48,14 +48,20 @@ private:
 
         if (EnsureNoArgsInInput(INFO_COMMAND, input, output)) {
             if (tv_.IsTurnedOn()) {
-                // Эта часть метода не реализована. Реализуйте её самостоятельно
-                assert(!"Controller::ShowInfo is not implemented when TV is turned on");
                 /*
                 Выведите две строки, завершая каждую std::endl:
 
                 TV is turned on
                 Channel number is <номер канала>
                 */
+
+                output << "TV is turned on"sv << std::endl;
+                if (tv_.GetChannel().has_value()) {
+                    output << "Channel number is "s + std::to_string(tv_.GetChannel().value()) << std::endl;
+                } else {
+                    output << "Invalid channel"s << std::endl;
+                }
+               
             } else {
                 output << "TV is turned off"sv << std::endl;
             }
@@ -103,9 +109,28 @@ private:
      * - "TV is turned off", если TV::SelectChannel выбросил std::logic_error
      */
     [[nodiscard]] bool SelectChannel(std::istream& input, std::ostream& output) const {
-        /* Реализуйте самостоятельно этот метод.*/
-        assert(!"TODO: Implement Controller::SelectChannel");
-        return true;
+   
+       try {
+          
+           int сhannel;
+           input >> сhannel;
+           if (input.fail()) {
+               input.clear();
+               input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+               output << "Invalid channel"sv << std::endl;
+               return false;
+           }
+           else {
+               tv_.SelectChannel(сhannel);
+           }
+       }
+       catch (const std::out_of_range& exc) {
+           output << exc.what() << std::endl;
+       }
+       catch (const std::logic_error& exc) {
+           output << exc.what() << std::endl;
+       }
+       return true;
     }
 
     /*
@@ -114,8 +139,14 @@ private:
      * "TV is turned off"
      */
     [[nodiscard]] bool SelectPreviousChannel(std::istream& input, std::ostream& output) const {
-        /* Реализуйте самостоятельно этот метод */
-        assert(!"TODO: Implement Controller::SelectPreviousChannel");
+        try {
+            if (EnsureNoArgsInInput(SELECT_PREVIOUS_CHANNEL_COMMAND, input, output)) {
+                tv_.SelectLastViewedChannel();
+            }
+        }
+        catch (const std::logic_error& exc) {
+            output << exc.what() << std::endl;
+        }
         return true;
     }
 

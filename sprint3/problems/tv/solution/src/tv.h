@@ -1,9 +1,12 @@
-#pragma once
+﻿#pragma once
 #include <cassert>
 #include <optional>
+#include <algorithm>
+using namespace std::literals;
 
 class TV {
 public:
+    
     constexpr static int MIN_CHANNEL = 1;
     constexpr static int MAX_CHANNEL = 99;
 
@@ -45,8 +48,17 @@ public:
      * Если номер канала за пределами диапазона MIN_CHANNEL, MAX_CHANNEL, выбрасывает out_of_range.
      */
     void SelectChannel(int channel) {
-        /* Реализуйте самостоятельно этот метод и напишите тесты для него */
-        assert(!"TODO: Implement TV::SelectChannel");
+        if (channel != channel_) {
+            if (!is_turned_on_) {
+                throw std::logic_error("TV is turned off"s);
+            }
+
+            if (channel < MIN_CHANNEL || channel >= MAX_CHANNEL) {
+                throw std::out_of_range("Channel is out of range"s);
+            }
+            last_viewed_channel_ = channel_;
+            channel_ = channel;
+        }
     }
 
     /*
@@ -55,11 +67,14 @@ public:
      * Если телевизор выключен, выбрасывает исключение std::logic_error.
      */
     void SelectLastViewedChannel() {
-        /* Реализуйте самостоятельно этот метод и напишите тесты для него */
-        assert(!"TODO: Implement TV::SelectLastViewedChannel");
+        if (!is_turned_on_) {
+            throw std::logic_error("TV is turned off"s);
+        }
+       std::swap(channel_, last_viewed_channel_);
     }
 
 private:
     bool is_turned_on_ = false;
     int channel_ = 1;
+    int last_viewed_channel_ = 1;
 };
