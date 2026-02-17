@@ -1,4 +1,4 @@
-#include <gmock/gmock-matchers.h>
+﻿#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
 #include "../src/tv.h"
@@ -42,6 +42,39 @@ TEST_F(TurnedOnTV, AfterTurningOffTurnsOffAndDoesntShowAnyChannel) {
     EXPECT_EQ(tv_.GetChannel(), std::nullopt);
 }
 TEST_F(TurnedOnTV, CanSelectChannelFrom1To99) {
-    /* Реализуйте самостоятельно этот тест */
+    EXPECT_NO_THROW(tv_.SelectChannel(5));
+    auto current_channel = tv_.GetChannel();
+    ASSERT_TRUE(current_channel.has_value());
+    EXPECT_EQ(current_channel.value(), 5);
 }
-/* Реализуйте самостоятельно остальные тесты класса TV */
+
+TEST_F(TurnedOnTV, CantSelectChannelGreater99) {
+    EXPECT_THROW(tv_.SelectChannel(100), std::out_of_range);
+    auto channel = tv_.GetChannel();
+    ASSERT_TRUE(channel.has_value());
+    EXPECT_EQ(channel.value(), 1);
+}
+
+TEST_F(TurnedOnTV, CantSelectChannelLess1) {
+    EXPECT_THROW(tv_.SelectChannel(0), std::out_of_range);
+    auto channel = tv_.GetChannel();
+    ASSERT_TRUE(channel.has_value());
+    EXPECT_EQ(channel.value(), 1);
+}
+
+TEST_F(TurnedOnTV, TestSelectPreviousChannelReturnsToInitial) {
+    auto initial_channel_opt = tv_.GetChannel();
+    ASSERT_TRUE(initial_channel_opt.has_value());
+    int initial_channel = initial_channel_opt.value();
+
+    int different_channel = initial_channel + 1;
+    if (different_channel > 99) {
+        different_channel = 99;
+    }
+    tv_.SelectChannel(different_channel);
+    tv_.SelectLastViewedChannel();
+
+    auto current_channel_opt = tv_.GetChannel();
+    ASSERT_TRUE(current_channel_opt.has_value());
+    EXPECT_EQ(current_channel_opt.value(), initial_channel);
+}

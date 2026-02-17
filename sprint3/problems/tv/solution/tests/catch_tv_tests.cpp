@@ -1,4 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 #include <iostream>
 
 #include "../src/tv.h"
@@ -41,7 +41,7 @@ SCENARIO("TV", "[TV]") {
             REQUIRE(!tv.IsTurnedOn());
 
 // Включите эту секцию и доработайте класс TV, чтобы он проходил проверки в ней
-#if 0
+#if 1
             // он не может переключать каналы
             THEN("it can't select any channel") {
                 CHECK_THROWS_AS(tv.SelectChannel(10), std::logic_error);
@@ -72,10 +72,27 @@ SCENARIO("TV", "[TV]") {
                 }
             }
             // И затем может выбирать канал с 1 по 99
-            AND_THEN("it can select channel from 1 to 99") {
-                /* Реализуйте самостоятельно эту секцию */
+            AND_THEN("it can select channel 5") {
+                REQUIRE_NOTHROW(tv.SelectChannel(5));
+                auto current_channel = tv.GetChannel();
+                AND_THEN("the current channel should be 5") {
+                    REQUIRE(current_channel.has_value());
+                    CHECK(current_channel.value() == 5);
+                }
             }
             /* Реализуйте самостоятельно остальные тесты */
+
+            AND_WHEN("Cant select channel greater 99") {
+                THEN("it throws std::out_of_range") {
+                    REQUIRE_THROWS_AS(tv.SelectChannel(100), std::out_of_range);
+                }
+            }
+
+            AND_WHEN("attempting to select a channel less than 1") {
+                THEN("it should throw std::out_of_range") {
+                    REQUIRE_THROWS_AS(tv.SelectChannel(0), std::out_of_range);
+                }
+            }
         }
     }
 }

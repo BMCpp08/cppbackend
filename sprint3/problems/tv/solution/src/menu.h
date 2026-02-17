@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <functional>
 #include <iomanip>
 #include <map>
@@ -15,6 +15,7 @@ public:
 
     void AddAction(std::string action_name, std::string args, std::string description,
                    Handler handler) {
+       
         if (!actions_
                  .try_emplace(std::move(action_name), std::move(handler), std::move(args),
                               std::move(description))

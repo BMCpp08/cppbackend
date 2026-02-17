@@ -59,6 +59,7 @@ BOOST_AUTO_TEST_CASE(on_Info_command_ignores_trailing_spaces) {
     RunMenuCommand("Info  "s);
     ExpectOutput("TV is turned off\n"sv);
 }
+
 BOOST_AUTO_TEST_CASE(on_TurnOn_command_turns_TV_on) {
     RunMenuCommand("TurnOn"s);
     BOOST_TEST(tv.IsTurnedOn());
@@ -69,9 +70,15 @@ BOOST_AUTO_TEST_CASE(on_TurnOn_command_with_some_arguments_prints_error_message)
     BOOST_TEST(!tv.IsTurnedOn());
     ExpectExtraArgumentsErrorInOutput("TurnOn"sv);
 }
-/*
- * Протестируйте остальные аспекты поведения класса Controller, когда TV выключен
- */
+BOOST_AUTO_TEST_CASE(select_prev_channel_when_tv_is_turned_off_error_message) {
+    RunMenuCommand("SelectPreviousChannel"s);
+    ExpectOutput("TV is turned off\n"sv);
+}
+
+BOOST_AUTO_TEST_CASE(cant_select_channel_when_tv_is_turned_off) {
+    BOOST_CHECK_THROW(tv.SelectChannel(5), std::logic_error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 struct WhenTVIsOnFixture : ControllerFixture {
@@ -99,16 +106,29 @@ BOOST_AUTO_TEST_CASE(on_Info_prints_current_channel) {
     ExpectOutput("TV is turned on\nChannel number is 42\n"sv);
 }
 #endif
-/*
- * Протестируйте остальные аспекты поведения класса Controller, когда TV включен
- */
 
-BOOST_AUTO_TEST_CASE(Select_invalid_channel) {
-    tv.SelectChannel(100);
-    RunMenuCommand("Info"s);
-    ExpectOutput("Invalid channel"sv);
+BOOST_AUTO_TEST_CASE(cant_select_channel_greater_99) {
+    BOOST_CHECK_THROW(tv.SelectChannel(100), std::out_of_range);
 }
 
+BOOST_AUTO_TEST_CASE(cant_select_channel_less_1) {
+    BOOST_CHECK_THROW(tv.SelectChannel(0), std::out_of_range);
+}
+
+BOOST_AUTO_TEST_CASE(Test_select_previous_channel_returns_to_iInitial) {
+    auto initial_channel_opt = tv.GetChannel();
+    BOOST_REQUIRE(initial_channel_opt.has_value());
+    int initial_channel = initial_channel_opt.value();
+
+    int different_channel = initial_channel + 1;
+    tv.SelectChannel(different_channel);
+
+    RunMenuCommand("SelectPreviousChannel"s);
+
+    auto current_channel_opt = tv.GetChannel();
+    BOOST_REQUIRE(current_channel_opt.has_value());
+    BOOST_CHECK_EQUAL(current_channel_opt.value(), initial_channel);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

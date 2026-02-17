@@ -67,6 +67,7 @@ public:
      * Если телевизор выключен, выбрасывает исключение std::logic_error.
      */
     void SelectLastViewedChannel() {
+
         if (!is_turned_on_) {
             throw std::logic_error("TV is turned off"s);
         }

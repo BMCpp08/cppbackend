@@ -1,4 +1,4 @@
-#include <gmock/gmock-matchers.h>
+﻿#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
 #include "../src/controller.h"
@@ -89,13 +89,39 @@ TEST_F(ControllerWithTurnedOnTV, OnTurnOffCommandPrintsErrorMessageIfCommandHasA
     ExpectExtraArgumentsErrorInOutput("TurnOff"sv);
 }
 // Включите этот тест, после того, как реализуете метод TV::SelectChannel
-#if 0
+#if 1
 TEST_F(ControllerWithTurnedOnTV, OnInfoPrintsCurrentChannel) {
     tv_.SelectChannel(42);
     RunMenuCommand("Info"s);
     ExpectOutput("TV is turned on\nChannel number is 42\n"sv);
 }
 #endif
-/*
- * Протестируйте остальные аспекты поведения класса Controller, когда TV включен
- */
+
+TEST_F(ControllerWithTurnedOnTV, CantSelectChannelGreater99) {
+    // Попытка выбрать канал, больше 99, должна выбрасывать исключение std::out_of_range
+    EXPECT_THROW(tv_.SelectChannel(100), std::out_of_range);
+}
+
+TEST_F(ControllerWithTurnedOnTV, CantSelectChannelLess1) {
+    // Попытка выбрать канал, меньше 1, должна выбрасывать исключение std::out_of_range
+    EXPECT_THROW(tv_.SelectChannel(0), std::out_of_range);
+}
+
+TEST_F(ControllerWithTurnedOnTV, TestSelectPreviousChannelReturnsToInitial) {
+    auto initial_channel_opt = tv_.GetChannel();
+    ASSERT_TRUE(initial_channel_opt.has_value());
+    int initial_channel = initial_channel_opt.value();
+
+    int different_channel = initial_channel + 1;
+    
+    if (different_channel > 99) {
+        different_channel = 99;
+    }
+    tv_.SelectChannel(different_channel);
+
+    RunMenuCommand("SelectPreviousChannel"s);
+
+    auto current_channel_opt = tv_.GetChannel();
+    ASSERT_TRUE(current_channel_opt.has_value());
+    EXPECT_EQ(current_channel_opt.value(), initial_channel);
+}
