@@ -1,14 +1,15 @@
-#include "logger.h"
+﻿#include "logger.h"
 #include "sdk.h"
 #include <iostream>
 #include <thread>
-#include "json_loader.h"
-#include "request_handler.h"
+#include <optional>
 #include <string_view>
+#include "json_loader.h"
+#include "request_handler.h
 #include "app.h"
 #include "boost_includes.h"
 #include "ticker.h"
-#include <optional>
+
 
 using namespace std::literals;
 using namespace logger;
@@ -111,6 +112,8 @@ int main(int argc, const char* argv[]) {
 			std::shared_ptr<app::Players> players = std::make_shared<app::Players>();
 			std::shared_ptr<app::PlayerTokens> player_tokens = std::make_shared<app::PlayerTokens>();
 			app::JoinGameUseCase join_game_use_case(game, player_tokens, players, (args->is_random_positions.has_value())? *(args->is_random_positions) : false);
+			
+		
 			app::Application application(game, join_game_use_case, player_tokens);
 			http_handler::ApiHandler api_handler(application);
 

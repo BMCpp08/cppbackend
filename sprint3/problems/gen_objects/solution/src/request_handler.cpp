@@ -63,6 +63,25 @@ namespace http_handler {
 		return offices;
 	}
 
+	json::array ApiHandler::LoadLootTypes(const model::Game::MapPtr map) const {
+		json::array loot_types;
+
+		for (auto& loots : map->GetLoots()) {
+			loot_types.emplace_back(
+		
+
+				json::object{{key_name, loots.second->GetName()},
+							{extra_data::key_file, loots.second->GetFilePath()},
+							{extra_data::key_type, loots.second->GetType()},
+							{extra_data::key_rotation, loots.second->GetRotation()},
+							{extra_data::key_color, loots.second->GetColor()},
+							{extra_data::key_scale, loots.second->GetScale()},
+				});
+		}
+
+		return loot_types;
+	}
+
 	bool ApiHandler::IsApiRequest(StringRequest req) {
 		std::string_view uri(req.target().data(), req.target().size());
 		return uri.find(api, 0) == 0;
@@ -139,6 +158,7 @@ namespace http_handler {
 				obj[key_roads] = LoadRoadsToJson(map);
 				obj[key_buildings] = LoadBuildingsToJson(map);
 				obj[key_offices] = LoadOfficesToJson(map);
+				obj[extra_data::key_loot_types] = LoadLootTypes(map);
 
 				resp = MakeStringResponse(http::status::ok, json::serialize(obj), req.version(), req.keep_alive(), ContentType::APP_JSON);
 			}

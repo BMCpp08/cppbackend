@@ -6,6 +6,8 @@
 #include <iostream>
 #include "tagged.h"
 #include <stdexcept>
+#include "loot_generator.h"
+#include "extra_data.h"
 
 namespace model {
 	using namespace std::literals;
@@ -35,6 +37,9 @@ namespace model {
 		const std::string key_speed = "speed"s; 
 		const std::string key_pos = "pos"s;
 		const std::string key_dir = "dir"s;
+		const std::string key_loot_gen_config = "lootGeneratorConfig"s;
+		const std::string key_period = "period"s;
+		const std::string key_probability = "probability"s;
 	}
 
 	class Road;
@@ -184,6 +189,7 @@ namespace model {
 		Offset offset_;
 	};
 
+
 	class Map {
 	public:
 		using Id = util::Tagged<std::string, Map>;
@@ -191,11 +197,13 @@ namespace model {
 		using Offices = std::vector<Office>;
 		using Roads = std::vector<ConstPtrRoad>;
 		using Roadmap = std::unordered_map<std::pair<Point, Direction>, ConstPtrRoad, HashPointDir>;
+		using Loots = std::vector<std::pair<Point, std::shared_ptr<extra_data::Loot>>>;
 
 		Map(Id id, std::string name, Speed speed) noexcept
 			: id_(std::move(id))
 			, name_(std::move(name))
-			, speed_(std::move(speed)){
+			, speed_(std::move(speed))
+			, loot_count_(0){
 		}
 
 		const Id& GetId() const noexcept {
@@ -241,6 +249,30 @@ namespace model {
 			return roadmap_;
 		}
 
+		void AddLoot(extra_data::Loot loot) {
+			loot_types_.emplace_back((std::pair{ Point{0,0} ,std::make_shared<extra_data::Loot>(std::move(loot)) }));
+		}
+
+		Loots GetLoots()  const noexcept {
+			return loot_types_;
+		}
+
+		void SetNewCoordLoot(int num, Point point) {
+			if (num >= loot_types_.size()) { 
+				return;
+			}
+			loot_types_[num].first = point;
+
+		}
+
+		int GetLootCount() const noexcept {
+			return loot_count_;
+		}
+
+		void SetLootCount(int loot_count) {
+			loot_count_ = loot_count;
+		}
+
 	private:
 		void CreateRoadmap(ConstPtrRoad road) {
 
@@ -281,8 +313,9 @@ namespace model {
 		Offices offices_;
 		Speed speed_;
 		Roadmap roadmap_;
-
-		/*std::unordered_map<std::pair<std::string, int>, int> loot_types_;*/
+	
+		Loots loot_types_;
+		int loot_count_;
 	};
 
 	class Dog {
@@ -421,6 +454,11 @@ namespace model {
 			return nullptr;
 		}
 
+		void AddLootGenerator(loot_gen::LootGenerator::TimeInterval, double probability);
+
+		const std::shared_ptr<loot_gen::LootGenerator> GetLootGenerator() const {
+			return loot_generator_;
+		}
 	private:
 		using MapIdHasher = util::TaggedHasher<Map::Id>;
 		using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
@@ -428,6 +466,7 @@ namespace model {
 		Maps maps_;
 		MapIdToIndex map_id_to_index_;
 		std::vector<GameSession> sessions_;
+		std::shared_ptr<loot_gen::LootGenerator> loot_generator_;
 	};
 
 }  // namespace model

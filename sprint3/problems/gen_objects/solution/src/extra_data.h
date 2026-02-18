@@ -4,29 +4,10 @@
 #include <filesystem>
 #include "boost_includes.h"
 #include "tagged.h"
-#include "model.h"
 
-//"lootTypes": [
-//{
-//    "name": "key",
-//        "file" : "assets/key.obj",
-//        "type" : "obj",
-//        "rotation" : 90,
-//        "color" : "#338844",
-//        "scale" : 0.03
-//},
-//        {
-//          "name": "wallet",
-//          "file" : "assets/wallet.obj",
-//          "type" : "obj",
-//          "rotation" : 0,
-//          "color" : "#883344",
-//          "scale" : 0.01
-//        }
-//],
 namespace extra_data {
     using namespace std::literals;
-
+    const std::string key_loot_types = "lootTypes"s;
     const std::string key_file = "file"s;
     const std::string key_type = "type"s;
     const std::string key_rotation = "rotation"s;
@@ -35,15 +16,15 @@ namespace extra_data {
 
     class Loot {
     public:
-        using Id = util::Tagged<int, Loot>;
+        
 
         Loot(std::string name, 
-            std::filesystem::path file_path, 
+            std::string file_path,
             std::string type, 
             double rotation, 
             std::string color, 
             double scale)
-            :name_(name)
+            : name_(name)
             , file_path_(file_path)
             , type_(type)
             , rotation_(rotation)
@@ -52,12 +33,11 @@ namespace extra_data {
         
         }
 
-
         std::string GetName() const {
             return name_;
         }
 
-        std::filesystem::path GetFilePath() const noexcept {
+        std::string GetFilePath() const noexcept {
             return file_path_;
         }
 
@@ -81,7 +61,7 @@ namespace extra_data {
             name_ = name;
         }
 
-        void SetFilePath(const std::filesystem::path& file_path) {
+        void SetFilePath(const std::string& file_path) {
             file_path_ = file_path;
         }
 
@@ -102,27 +82,10 @@ namespace extra_data {
         }
     private:
         std::string name_;
-        std::filesystem::path file_path_;
+        std::string file_path_;
         std::string type_;
         double rotation_;
         std::string color_;
         double scale_;
-    };
-
-    class LootTypes {
-    public:
-        using Loots = std::vector<std::shared_ptr<Loot>>;
-
-        void AddLoot(std::string id, Loot loot) {
-            loot_types_[id].emplace_back(std::make_shared<Loot>(std::move(loot)));
-        }
-
-        Loots GetLootsByMapId(model::Map::Id id) {
-        
-        }
-    private:
-
-        //можно сохранять по map id
-        std::unordered_map<std::string, Loots> loot_types_;
-    };
+    };   
 }

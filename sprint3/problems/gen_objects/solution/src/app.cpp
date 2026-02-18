@@ -3,6 +3,7 @@
 // boost.beast будет использовать std::string_view вместо boost::string_view
 #define BOOST_BEAST_USE_STD_STRING_VIEW
 #include "app.h"
+#include <random>
 
 namespace app {
 	using namespace std::literals;
@@ -224,7 +225,7 @@ namespace app {
 			auto dogs = game_session->GetDogs();
 			json::object obj;
 			obj["players"s] = json::object();
-			obj["lostObjects"s] = json::object();
+			
 
 			for (const auto& dog : dogs) {
 				json::object player;
@@ -259,6 +260,20 @@ namespace app {
 									{"dir"s, dir} };
 				
 			}
+
+			obj["lostObjects"s] = json::object();
+
+			const auto map = game_session->GetMap();
+			auto count = map->GetLootCount();
+			auto loots = map->GetLoots();
+
+			json::object pos;
+			for (int i = 0; i < count; ++i) {
+				obj["lostObjects"s].as_object()[std::to_string(i)] =
+					json::object({ {"type", i},
+						{"pos", json::array{ loots[i].first.x, loots[i].first.y } } });
+			}
+
 
 
 			return json::serialize(obj);
@@ -341,7 +356,10 @@ namespace app {
 				throw GameError(ErrorReason::FAILED_PARSE_JSON);;
 			}
 
+			static auto start_time = std::chrono::steady_clock::now();
+
 			auto maps = game_->GetMaps();
+			auto loot_generator = game_->GetLootGenerator();
 
 			for (auto map : maps) {
 
@@ -380,8 +398,44 @@ namespace app {
 							break;
 						}
 					}
+
+					if (!loot_generator) {
+						throw std::invalid_argument("Invalid ptr loot_generator = nullptr");;
+					}
+
+					
+					auto duration = (std::chrono::steady_clock::now() - start_time).count();
+					auto time_dellta = static_cast<loot_gen::LootGenerator::TimeInterval>(duration);
+					auto count = loot_generator->Generate(time_dellta, map->GetLoots().size(), map->GetLootCount());
+					map->SetLootCount(count);
+
+					auto roads = session->GetMap()->GetRoads();
+					std::random_device rd;  
+					std::mt19937 gen(rd());
+
+					for (auto i = 0; i < count; ++i) {
+						auto index = std::rand() % roads.size();
+						if (roads[index]->IsHorizontal()) {
+					
+							std::uniform_int_distribution<> dis(roads[index]->GetStart().x, roads[index]->GetEnd().x);
+							auto new_point = dis(gen);
+							map->SetNewCoordLoot(i, model::Point{ new_point, roads[index]->GetStart().y });
+						}
+						else {
+							std::uniform_int_distribution<> dis(roads[index]->GetStart().y, roads[index]->GetEnd().y);
+							auto new_point = dis(gen);
+							map->SetNewCoordLoot(i, model::Point{ roads[index]->GetStart().x, new_point });
+						}
+					}					
 				}
+
+				//
+				
+
 			}
+
+			
+
 		}
 		catch (...) {
 			throw GameError(ErrorReason::FAILED_PARSE_JSON);

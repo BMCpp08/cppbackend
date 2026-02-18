@@ -1,4 +1,4 @@
-#include "model.h"
+﻿#include "model.h"
 #include <iostream>
 
 namespace model {
@@ -34,5 +34,9 @@ void Game::AddMap(Map map) {
         }
     }
 }
-
+void Game::AddLootGenerator(loot_gen::LootGenerator::TimeInterval base_interval, double probability) {
+    if (!loot_generator_) {
+        loot_generator_ = std::make_shared<loot_gen::LootGenerator>(base_interval, probability);
+    }
+}
 }  // namespace model

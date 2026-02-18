@@ -124,6 +124,8 @@ namespace http_handler {
 		json::array LoadBuildingsToJson(const model::Game::MapPtr map) const;
 
 		json::array LoadOfficesToJson(const model::Game::MapPtr map) const;
+
+		json::array LoadLootTypes(const model::Game::MapPtr map) const;
 	public:
 		ApiHandler(app::Application& app)
 			:app_(app) {
@@ -229,7 +231,6 @@ namespace http_handler {
 					auto ext = GetExtType(uri);
 					std::string_view mime_type;
 
-
 					if (!uri.empty() && uri.back() != '/') {
 						mime_type = GetMimeType(file_ext, ext);
 					}
@@ -308,7 +309,6 @@ namespace http_handler {
 			}
 		private:
 			SomeRequestHandler& decorated_;
-			long long response_time_;
 		};
 	}
 }  // namespace http_handler
