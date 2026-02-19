@@ -261,18 +261,23 @@ namespace app {
 				
 			}
 
-			obj["lostObjects"s] = json::object();
-
 			const auto map = game_session->GetMap();
 			auto count = map->GetLootCount();
-			auto loots = map->GetLoots();
-			std::cout << count << "  hrlppppp" << std::endl;
-			json::object pos;
-			for (int i = 0; i < count; ++i) {
-				obj["lostObjects"s].as_object()[std::to_string(i)] =
-					json::object({ {"type", i},
-						{"pos", json::array{ loots[i].first.x, loots[i].first.y } } });
+			if (count > 0) {
+				obj["lostObjects"s] = json::object();
+
+
+
+				auto loots = map->GetLoots();
+
+				json::object pos;
+				for (int i = 0; i < count; ++i) {
+					obj["lostObjects"s].as_object()[std::to_string(i)] =
+						json::object({ {"type", i},
+							{"pos", json::array{ loots[i].first.x, loots[i].first.y } } });
+				}
 			}
+			
 
 
 
@@ -425,12 +430,12 @@ namespace app {
 						auto index = std::rand() % roads.size();
 						if (roads[index]->IsHorizontal()) {
 					
-							std::uniform_int_distribution<> dis(roads[index]->GetStart().x, roads[index]->GetEnd().x);
+							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().x, roads[index]->GetEnd().x), std::max(roads[index]->GetStart().x, roads[index]->GetEnd().x));
 							auto new_point = dis(gen);
 							map->SetNewCoordLoot(i, model::Point{ new_point, roads[index]->GetStart().y });
 						}
 						else {
-							std::uniform_int_distribution<> dis(roads[index]->GetStart().y, roads[index]->GetEnd().y);
+							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().y, roads[index]->GetEnd().y), std::max(roads[index]->GetStart().y, roads[index]->GetEnd().y));
 							auto new_point = dis(gen);
 							map->SetNewCoordLoot(i, model::Point{ roads[index]->GetStart().x, new_point });
 						}
