@@ -412,11 +412,9 @@ namespace app {
 				
 
 
-					auto count = loot_generator->Generate(delta, map->GetLootCount(), dogs.size());
+					auto count = loot_generator->Generate(delta, 2, dogs.size());
 
 					
-
-				//	map->SetLootCount(count);
 					start_time = std::chrono::steady_clock::now();
 
 
