@@ -5,7 +5,7 @@
 #include <optional>
 #include <string_view>
 #include "json_loader.h"
-#include "request_handler.h
+#include "request_handler.h"
 #include "app.h"
 #include "boost_includes.h"
 #include "ticker.h"
