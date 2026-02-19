@@ -266,8 +266,6 @@ namespace app {
 			if (count > 0) {
 				obj["lostObjects"s] = json::object();
 
-
-
 				auto loots = map->GetLoots();
 
 				json::object pos;
@@ -414,7 +412,7 @@ namespace app {
 				
 
 
-					auto count = loot_generator->Generate(time_dellta, map->GetLootCount(), dogs.size());
+					auto count = loot_generator->Generate(delta, map->GetLootCount(), dogs.size());
 
 					
 
