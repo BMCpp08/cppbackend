@@ -266,7 +266,7 @@ namespace app {
 			const auto map = game_session->GetMap();
 			auto count = map->GetLootCount();
 			auto loots = map->GetLoots();
-
+			std::cout << count << "  hrlppppp" << std::endl;
 			json::object pos;
 			for (int i = 0; i < count; ++i) {
 				obj["lostObjects"s].as_object()[std::to_string(i)] =
@@ -404,10 +404,18 @@ namespace app {
 					}
 
 					
-					auto duration = (std::chrono::steady_clock::now() - start_time).count();
-					auto time_dellta = static_cast<loot_gen::LootGenerator::TimeInterval>(duration);
-					auto count = loot_generator->Generate(time_dellta, map->GetLoots().size(), map->GetLootCount());
+					auto duration = std::chrono::steady_clock::now() - start_time; 
+					auto time_dellta = std::chrono::duration_cast<loot_gen::LootGenerator::TimeInterval>(duration);
+				
+
+
+					auto count = loot_generator->Generate(time_dellta, map->GetLootCount(), dogs.size());
+
+					std::cout << "time_dellta " << time_dellta << std::endl;
+
 					map->SetLootCount(count);
+					start_time = std::chrono::steady_clock::now();
+
 
 					auto roads = session->GetMap()->GetRoads();
 					std::random_device rd;  
