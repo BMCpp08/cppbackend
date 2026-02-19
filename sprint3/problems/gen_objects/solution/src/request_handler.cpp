@@ -145,6 +145,11 @@ namespace http_handler {
 			std::string_view  map_name = uri.substr(api_get_map.size());
 			auto maps = app_.GetMaps();
 
+			if (req.method() != http::verb::get) {
+				resp = MakeStringResponse(http::status::method_not_allowed, invalid_method_error, req.version(), req.keep_alive(), ContentType::APP_JSON);
+				return resp;
+			}
+
 			if (auto content_type = req[boost::beast::http::field::content_type]; !content_type.empty()) {
 				resp = MakeStringResponse(http::status::bad_request, bad_request, req.version(), req.keep_alive(), ContentType::APP_JSON);
 				return resp;
