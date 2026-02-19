@@ -145,8 +145,9 @@ namespace http_handler {
 			std::string_view  map_name = uri.substr(api_get_map.size());
 			auto maps = app_.GetMaps();
 
-			if (req.method() != http::verb::get) {
+			if (req.method() != http::verb::get && req.method() != http::verb::head) {
 				resp = MakeStringResponse(http::status::method_not_allowed, invalid_method_error, req.version(), req.keep_alive(), ContentType::APP_JSON);
+				resp.set(http::field::allow, "GET, HEAD"sv);
 				return resp;
 			}
 
