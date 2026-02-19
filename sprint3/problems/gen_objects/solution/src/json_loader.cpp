@@ -101,29 +101,45 @@ namespace json_loader {
 							map.AddOffice(std::move(CreateOffice(office.as_object())));
 						}
 					}
-
+				
 					if (json_map.as_object().contains(extra_data::key_loot_types)) {
 						const auto& loot_types = json_map.as_object().at(extra_data::key_loot_types).as_array();
 						
 						for (auto loot : loot_types) {
-							auto name = loot.as_object().at(key_name).as_string().c_str();
-							auto file = loot.as_object().at(extra_data::key_file).as_string().c_str();
-							auto type = loot.as_object().at(extra_data::key_type).as_string().c_str();
-							double rotation = static_cast<double>(loot.as_object().at(extra_data::key_rotation).as_int64());
-							auto color = loot.as_object().at(extra_data::key_color).as_string().c_str();
-							auto scale = loot.as_object().at(extra_data::key_scale).as_double();
-							map.AddLoot(extra_data::Loot{ name, file ,type , rotation , color , scale });
+
+							extra_data::Loot new_loot;
+
+							if (loot.as_object().contains(key_name)) {
+								new_loot.SetName(loot.as_object().at(key_name).as_string().c_str());
+							}
+							if (loot.as_object().contains(extra_data::key_file)) {
+								new_loot.SetFilePath(loot.as_object().at(extra_data::key_file).as_string().c_str());
+							}
+							if (loot.as_object().contains(extra_data::key_type)) {
+								new_loot.SetType(loot.as_object().at(extra_data::key_type).as_string().c_str());
+							}
+							if (loot.as_object().contains(extra_data::key_rotation)) {
+								new_loot.SetRotation(static_cast<double>(loot.as_object().at(extra_data::key_rotation).as_int64()));
+							}
+							if (loot.as_object().contains(extra_data::key_color)) {
+								new_loot.SetColor(loot.as_object().at(extra_data::key_color).as_string().c_str());
+							}
+							if (loot.as_object().contains(extra_data::key_scale)) {
+								new_loot.SetScale(loot.as_object().at(extra_data::key_scale).as_double());
+							}
+							
+							map.AddLoot(std::move(new_loot));
+							
 						}
 						
 					}
-
+					
+					std::this_thread::sleep_for(std::chrono::seconds(5));
 					game.AddMap(map);
-
 			}
-
+			
 			if (value.as_object().contains(key_loot_gen_config)) {
 				const auto& generator = value.as_object().at(key_loot_gen_config);
-
 				const auto& period_sec = generator.as_object().at(key_period).as_double();
 				const auto& probability = generator.as_object().at(key_probability).as_double();
 

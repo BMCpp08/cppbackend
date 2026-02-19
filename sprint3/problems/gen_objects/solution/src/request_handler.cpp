@@ -67,16 +67,24 @@ namespace http_handler {
 		json::array loot_types;
 
 		for (auto& loots : map->GetLoots()) {
-			loot_types.emplace_back(
-		
 
-				json::object{{key_name, loots.second->GetName()},
-							{extra_data::key_file, loots.second->GetFilePath()},
-							{extra_data::key_type, loots.second->GetType()},
-							{extra_data::key_rotation, loots.second->GetRotation()},
-							{extra_data::key_color, loots.second->GetColor()},
-							{extra_data::key_scale, loots.second->GetScale()},
-				});
+			json::object obj;
+
+			obj[key_name] = loots.second->GetName();
+			obj[extra_data::key_file] = loots.second->GetFilePath();
+			obj[extra_data::key_type] = loots.second->GetType();
+
+			if (loots.second->GetRotation().has_value()) {
+				obj[extra_data::key_rotation] = loots.second->GetRotation().value();
+			}
+
+			if (loots.second->GetColor().has_value()) {
+				obj[extra_data::key_color] = loots.second->GetColor().value();
+			}
+
+			obj[extra_data::key_scale] = loots.second->GetScale();
+
+			loot_types.emplace_back(obj);
 		}
 
 		return loot_types;

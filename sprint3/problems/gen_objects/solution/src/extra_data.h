@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <iostream>
 #include <string>
+#include <optional>
 #include <filesystem>
 #include "boost_includes.h"
 #include "tagged.h"
@@ -16,13 +17,13 @@ namespace extra_data {
 
     class Loot {
     public:
-        
+        Loot() = default;
 
-        Loot(std::string name, 
+    /*    Loot(std::string name, 
             std::string file_path,
             std::string type, 
-            double rotation, 
-            std::string color, 
+            std::optional<double> rotation = std::nullopt,
+            std::optional<std::string> color = std::nullopt,
             double scale)
             : name_(name)
             , file_path_(file_path)
@@ -31,7 +32,7 @@ namespace extra_data {
             , color_(color)
             , scale_(scale) {
         
-        }
+        }*/
 
         std::string GetName() const {
             return name_;
@@ -45,11 +46,11 @@ namespace extra_data {
             return type_;
         }
 
-        double GetRotation() const noexcept {
+        std::optional<double> GetRotation() const noexcept {
             return rotation_;
         }
 
-        std::string GetColor() const noexcept {
+        std::optional<std::string> GetColor() const noexcept {
             return color_;
         }
 
@@ -84,8 +85,8 @@ namespace extra_data {
         std::string name_;
         std::string file_path_;
         std::string type_;
-        double rotation_;
-        std::string color_;
+        std::optional<double> rotation_;
+        std::optional<std::string> color_;
         double scale_;
     };   
 }

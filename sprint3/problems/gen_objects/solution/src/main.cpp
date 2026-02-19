@@ -84,7 +84,7 @@ int main(int argc, const char* argv[]) {
 		if (auto args = ParseCommandLine(argc, argv)) {
 			// 1. Загружаем карту из файла и построить модель игры
 			std::shared_ptr<model::Game> game = std::make_shared<model::Game>(json_loader::LoadGame(args->cfg_file));
-
+			
 			// 2. Инициализируем io_context
 			const unsigned num_threads = std::thread::hardware_concurrency();
 			net::io_context ioc(num_threads);
