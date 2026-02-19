@@ -416,7 +416,7 @@ namespace app {
 
 					
 
-					map->SetLootCount(count);
+				//	map->SetLootCount(count);
 					start_time = std::chrono::steady_clock::now();
 
 
