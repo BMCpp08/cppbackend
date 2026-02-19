@@ -102,32 +102,19 @@ namespace json_loader {
 						}
 					}
 
-	/*				Loot(std::string name,
-						std::string file_path,
-						std::string type,
-						double rotation,
-						std::string color,
-						double scale)
-						:name_(name)
-						, file_path_(file_path)
-						, type_(type)
-						, rotation_(rotation)
-						, color_(color)
-						, scale_(scale) {
-
-					}*/
 					if (json_map.as_object().contains(extra_data::key_loot_types)) {
-						const auto& loot_types = value.as_array();
-
+						const auto& loot_types = json_map.as_object().at(extra_data::key_loot_types).as_array();
+						
 						for (auto loot : loot_types) {
-							const auto name = loot.as_object().at(key_name).as_string().c_str();
-							const auto file = loot.as_object().at(extra_data::key_file).as_string().c_str();
-							const auto type = loot.as_object().at(extra_data::key_type).as_string().c_str();
-							const auto rotation = loot.as_object().at(extra_data::key_rotation).as_double();
-							const auto color = loot.as_object().at(extra_data::key_color).as_string().c_str();
-							const auto scale = loot.as_object().at(extra_data::key_scale).as_double();
+							auto name = loot.as_object().at(key_name).as_string().c_str();
+							auto file = loot.as_object().at(extra_data::key_file).as_string().c_str();
+							auto type = loot.as_object().at(extra_data::key_type).as_string().c_str();
+							double rotation = static_cast<double>(loot.as_object().at(extra_data::key_rotation).as_int64());
+							auto color = loot.as_object().at(extra_data::key_color).as_string().c_str();
+							auto scale = loot.as_object().at(extra_data::key_scale).as_double();
 							map.AddLoot(extra_data::Loot{ name, file ,type , rotation , color , scale });
 						}
+						
 					}
 
 					game.AddMap(map);
