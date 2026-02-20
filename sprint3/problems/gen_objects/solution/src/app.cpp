@@ -263,7 +263,7 @@ namespace app {
 
 			const auto map = game_session->GetMap();
 			auto count = map->GetLootCount();
-			if (count > 0) {
+			/*if (count > 0) {*/
 				obj["lostObjects"s] = json::object();
 
 				auto loots = map->GetLoots();
@@ -274,7 +274,7 @@ namespace app {
 						json::object({ {"type", i},
 							{"pos", json::array{ loots[i].first.x, loots[i].first.y } } });
 				}
-			}
+			/*}*/
 			
 
 
@@ -412,7 +412,7 @@ namespace app {
 				
 
 
-					auto count = loot_generator->Generate(delta, 2, dogs.size());
+					auto count = loot_generator->Generate(delta, map->GetLootCount(), dogs.size());
 
 					
 					start_time = std::chrono::steady_clock::now();
