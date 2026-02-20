@@ -263,8 +263,9 @@ namespace app {
 
 			const auto map = game_session->GetMap();
 			auto count = map->GetLootCount();
-			/*if (count > 0) {*/
-				obj["lostObjects"s] = json::object();
+			obj["lostObjects"s] = json::object({});
+			if (count > 0) {
+				
 
 				auto loots = map->GetLoots();
 
@@ -274,10 +275,7 @@ namespace app {
 						json::object({ {"type", i},
 							{"pos", json::array{ loots[i].first.x, loots[i].first.y } } });
 				}
-			/*}*/
-			
-
-
+			}
 
 			return json::serialize(obj);
 		}
@@ -366,8 +364,38 @@ namespace app {
 
 			for (auto map : maps) {
 
+
 				if (auto* session = game_->FindGameSessions(map->GetId()); session) {
 					auto dogs = session->GetDogs();
+
+					if (!loot_generator) {
+						throw std::invalid_argument("Invalid ptr loot_generator = nullptr");;
+					}
+
+					auto count = loot_generator->Generate(delta, map->GetLootCount(), dogs.size());
+					map->SetLootCount(count);
+
+					start_time = std::chrono::steady_clock::now();
+
+
+					auto roads = session->GetMap()->GetRoads();
+					std::random_device rd;
+					std::mt19937 gen(rd());
+
+					for (auto i = 0; i < count; ++i) {
+						auto index = std::rand() % roads.size();
+						if (roads[index]->IsHorizontal()) {
+
+							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().x, roads[index]->GetEnd().x), std::max(roads[index]->GetStart().x, roads[index]->GetEnd().x));
+							auto new_point = dis(gen);
+							map->SetNewCoordLoot(i, model::Point{ new_point, roads[index]->GetStart().y });
+						}
+						else {
+							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().y, roads[index]->GetEnd().y), std::max(roads[index]->GetStart().y, roads[index]->GetEnd().y));
+							auto new_point = dis(gen);
+							map->SetNewCoordLoot(i, model::Point{ roads[index]->GetStart().x, new_point });
+						}
+					}
 
 					for (auto dog : dogs) {
 						auto dog_ = dog.second;
@@ -402,9 +430,7 @@ namespace app {
 						}
 					}
 
-					if (!loot_generator) {
-						throw std::invalid_argument("Invalid ptr loot_generator = nullptr");;
-					}
+					
 
 					
 					auto duration = std::chrono::steady_clock::now() - start_time; 
@@ -412,30 +438,7 @@ namespace app {
 				
 
 
-					auto count = loot_generator->Generate(delta, map->GetLootCount(), dogs.size());
-
 					
-					start_time = std::chrono::steady_clock::now();
-
-
-					auto roads = session->GetMap()->GetRoads();
-					std::random_device rd;  
-					std::mt19937 gen(rd());
-
-					for (auto i = 0; i < count; ++i) {
-						auto index = std::rand() % roads.size();
-						if (roads[index]->IsHorizontal()) {
-					
-							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().x, roads[index]->GetEnd().x), std::max(roads[index]->GetStart().x, roads[index]->GetEnd().x));
-							auto new_point = dis(gen);
-							map->SetNewCoordLoot(i, model::Point{ new_point, roads[index]->GetStart().y });
-						}
-						else {
-							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().y, roads[index]->GetEnd().y), std::max(roads[index]->GetStart().y, roads[index]->GetEnd().y));
-							auto new_point = dis(gen);
-							map->SetNewCoordLoot(i, model::Point{ roads[index]->GetStart().x, new_point });
-						}
-					}					
 				}
 
 				//
