@@ -263,7 +263,7 @@ namespace app {
 
 			const auto map = game_session->GetMap();
 			auto count = map->GetLootCount();
-			obj["lostObjects"s] = json::value({});
+			obj["lostObjects"s] = json::object{};
 			if (count > 0) {
 				
 
