@@ -225,7 +225,7 @@ namespace app {
 			auto dogs = game_session->GetDogs();
 			json::object obj;
 			obj["players"s] = json::object();
-			
+			obj["lostObjects"s] = json::object();
 
 			for (const auto& dog : dogs) {
 				json::object player;
@@ -263,7 +263,7 @@ namespace app {
 
 			const auto map = game_session->GetMap();
 			auto count = map->GetLootCount();
-			obj["lostObjects"s];
+			
 			if (count > 0) {
 				
 
@@ -275,6 +275,9 @@ namespace app {
 						json::object({ {"type", i},
 							{"pos", json::array{ loots[i].first.x, loots[i].first.y } } });
 				}
+			}
+			else {
+			
 			}
 
 			return json::serialize(obj);
@@ -373,7 +376,7 @@ namespace app {
 					}
 
 					auto count = loot_generator->Generate(delta, map->GetLootCount(), dogs.size());
-					map->SetLootCount(count);
+					map->SetLootCount(count + map->GetLootCount());
 
 					start_time = std::chrono::steady_clock::now();
 
