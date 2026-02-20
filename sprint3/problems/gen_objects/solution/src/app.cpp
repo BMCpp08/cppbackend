@@ -360,14 +360,10 @@ namespace app {
 				throw GameError(ErrorReason::FAILED_PARSE_JSON);;
 			}
 
-			static auto start_time = std::chrono::steady_clock::now();
-
 			auto maps = game_->GetMaps();
 			auto loot_generator = game_->GetLootGenerator();
 
 			for (auto map : maps) {
-
-
 				if (auto* session = game_->FindGameSessions(map->GetId()); session) {
 					auto dogs = session->GetDogs();
 
@@ -377,9 +373,6 @@ namespace app {
 
 					auto count = loot_generator->Generate(delta, map->GetLootCount(), dogs.size());
 					map->SetLootCount(count + map->GetLootCount());
-
-					start_time = std::chrono::steady_clock::now();
-
 
 					auto roads = session->GetMap()->GetRoads();
 					std::random_device rd;
@@ -432,25 +425,9 @@ namespace app {
 							break;
 						}
 					}
-
-					
-
-					
-					auto duration = std::chrono::steady_clock::now() - start_time; 
-					auto time_dellta = std::chrono::duration_cast<loot_gen::LootGenerator::TimeInterval>(duration);
-				
-
-
 					
 				}
-
-				//
-				
-
 			}
-
-			
-
 		}
 		catch (...) {
 			throw GameError(ErrorReason::FAILED_PARSE_JSON);
