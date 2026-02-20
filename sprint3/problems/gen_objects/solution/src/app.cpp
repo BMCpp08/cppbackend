@@ -273,7 +273,7 @@ namespace app {
 				for (int i = 0; i < count; ++i) {
 					obj["lostObjects"s].as_object()[std::to_string(i)] =
 						json::object({ {"type", i},
-							{"pos", json::array{ loots[i].first.x, loots[i].first.y } } });
+							{"pos", json::array{ static_cast<double>(loots[i].first.x), static_cast<double>(loots[i].first.y)}}});
 				}
 			}
 			else {
