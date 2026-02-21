@@ -34,9 +34,16 @@ void Game::AddMap(Map map) {
         }
     }
 }
-void Game::AddLootGenerator(loot_gen::LootGenerator::TimeInterval base_interval, double probability) {
+void Game::AddLootGenerator(loot_gen::LootGenerator loot_generator) {
     if (!loot_generator_) {
-        loot_generator_ = std::make_shared<loot_gen::LootGenerator>(base_interval, probability);
+        loot_generator_ = std::make_shared<loot_gen::LootGenerator>(std::move(loot_generator));
     }
+}
+
+const std::shared_ptr<loot_gen::LootGenerator> Game::GetLootGenerator() const {
+    if (!loot_generator_) {
+        throw std::logic_error("LootGenerator does not exist!"s);
+    }
+    return loot_generator_;
 }
 }  // namespace model

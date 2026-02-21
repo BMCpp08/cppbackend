@@ -144,7 +144,7 @@ namespace json_loader {
 
 				auto period_ms = static_cast<loot_gen::LootGenerator::TimeInterval::rep>(std::round(period_sec * 1000));
 				loot_gen::LootGenerator::TimeInterval period(period_ms);
-				game.AddLootGenerator(period, probability);
+				game.AddLootGenerator(loot_gen::LootGenerator{ period, probability });
 			}
 			
 		}

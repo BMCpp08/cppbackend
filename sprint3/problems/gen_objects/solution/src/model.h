@@ -454,11 +454,9 @@ namespace model {
 			return nullptr;
 		}
 
-		void AddLootGenerator(loot_gen::LootGenerator::TimeInterval base_interval, double probability);
+		void AddLootGenerator(loot_gen::LootGenerator loot_generator);
 
-		const std::shared_ptr<loot_gen::LootGenerator> GetLootGenerator() const {
-			return loot_generator_;
-		}
+		const std::shared_ptr<loot_gen::LootGenerator> GetLootGenerator() const;
 	private:
 		using MapIdHasher = util::TaggedHasher<Map::Id>;
 		using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
