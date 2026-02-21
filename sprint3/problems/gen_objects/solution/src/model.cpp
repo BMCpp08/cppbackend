@@ -38,5 +38,6 @@ void Game::AddLootGenerator(loot_gen::LootGenerator::TimeInterval base_interval,
     if (!loot_generator_) {
         loot_generator_ = std::make_shared<loot_gen::LootGenerator>(base_interval, probability);
     }
+    throw std::invalid_argument("The LootGenerator does not exist"s);;
 }
 }  // namespace model

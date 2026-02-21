@@ -454,7 +454,7 @@ namespace model {
 			return nullptr;
 		}
 
-		void AddLootGenerator(loot_gen::LootGenerator::TimeInterval, double probability);
+		void AddLootGenerator(loot_gen::LootGenerator::TimeInterval base_interval, double probability);
 
 		const std::shared_ptr<loot_gen::LootGenerator> GetLootGenerator() const {
 			return loot_generator_;
