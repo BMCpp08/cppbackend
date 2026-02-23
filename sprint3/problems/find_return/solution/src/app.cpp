@@ -1,0 +1,593 @@
+﻿#pragma once
+
+// boost.beast будет использовать std::string_view вместо boost::string_view
+#define BOOST_BEAST_USE_STD_STRING_VIEW
+#include "app.h"
+#include <random>
+
+namespace app {
+	using namespace std::literals;
+	using namespace boost_aliases;
+
+	const Player::Id& Player::GetId() const noexcept {
+		return id_;
+	}
+
+	model::GameSession* Player::GetGameSession()  noexcept {
+		return game_session_;
+	}
+
+	std::shared_ptr<model::Dog> Player::GetDogName() {
+		if (!dog_) {
+			throw std::invalid_argument("Invalid ptr dog_ = nullptr");
+		}
+		return dog_;
+	}
+
+	const model::PlayerSpeed& Player::GetSpeed() const noexcept {
+		return dog_->GetSpeed();
+	}
+
+	void Player::SetSpeed(model::PlayerSpeed speed) {
+		dog_->SetSpeed(std::move(speed));
+	}
+
+	void Player::SetDir(model::Direction dir) {
+		dog_->SetDir(std::move(dir));
+	}
+
+	model::Direction Player::GetDir() const {
+		return dog_->GetDir();
+	}
+
+	Player& Players::Add(std::shared_ptr<model::Dog> dog, model::GameSession* game_session) {
+
+		if (!game_session) {
+			throw std::invalid_argument("Invalid ptr game_session = nullptr");
+		}
+
+		auto key = std::pair{ dog->GetName(), *(game_session->GetMap()->GetId()) };
+		players_.emplace(key, std::move(Player(Player::Id(dog->GetId()), game_session, dog)));
+		return players_[key];
+	};
+
+	const Player* Players::FindByDogIdAndMapId(std::string name, model::Map::Id map_id) {
+		if (auto it_player = players_.find(std::pair{ name, *map_id }); it_player != players_.end()) {
+			return &it_player->second;
+		}
+		return nullptr;
+	}
+
+	std::shared_ptr<Player> PlayerTokens::FindPlayerByToken(Token token) {
+		if (token_to_player_.count(token)) {
+			return token_to_player_[token];
+		}
+		return nullptr;
+	}
+
+	Token  PlayerTokens::FindTokenByPlayer(const Player* player) const {
+		auto it = std::find_if(token_to_player_.begin(), token_to_player_.end(), [&](const auto& pair) {
+			return pair.second.get() == player;
+			}
+		);
+		if (it != token_to_player_.end()) {
+			return it->first;
+		}
+		throw GameError(AuthorizationGameErrorReason::AUTHORIZATION_TOKEN_NOT_FOUND);
+	}
+
+	Token GameResult::GetPlayerTokens() const noexcept {
+		return token_;
+	}
+
+	Player::Id GameResult::GetPlayerId() const noexcept {
+		return id_;
+	}
+
+	GameResult JoinGameUseCase::JoinGame(std::string map_id, std::string name) {
+
+		if (name.empty()) {
+			throw GameError(JoinGameErrorReason::INVALIDE_NAME);
+		}
+		if (auto* session = game_->FindGameSessions(model::Map::Id(map_id)); session) {
+
+			auto spawn_point = model::PointD{ 0.,0. };
+			model::ConstPtrRoad road = nullptr;
+
+			if (!session->GetMap()->GetRoads().empty()) {
+				int index = (is_random_positions_) ? std::rand() % session->GetMap()->GetRoads().size() : 0;
+				road = session->GetMap()->GetRoads()[index];
+				spawn_point = model::PointD{ static_cast<double>(road->GetStart().x), static_cast<double>(road->GetStart().y) };
+			}
+
+			if (!players_) {
+				throw std::invalid_argument("Invalid ptr players_ = nullptr");
+			}
+			
+			auto& player = players_->Add(session->AddDog(spawn_point, std::move(name), road, session->GetMap()->GetBagCapacity()), session);
+
+			if (!player_tokens_) {
+				throw std::invalid_argument("Invalid ptr player_tokens_ = nullptr");
+			}
+			auto token = player_tokens_->AddPlayer(player);
+			return { token, player.GetId() };
+		}
+		throw GameError(JoinGameErrorReason::INVALIDE_MAP);
+	}
+
+	std::shared_ptr<Players> JoinGameUseCase::GetListPlayersUseCase() const noexcept {
+		return players_;
+	}
+
+	Token Authorization::TryExtractToken(std::string_view authorization_body) {
+		std::string bearer;
+		std::string token;
+
+
+		if (authorization_body.empty()) {
+			throw GameError(AuthorizationGameErrorReason::AUTHORIZATION_INVALIDE_TOKEN);
+		}
+
+		auto pos = authorization_body.find(' ');
+		if (pos == std::string::npos) {
+			throw GameError(AuthorizationGameErrorReason::AUTHORIZATION_INVALIDE_TOKEN);
+		}
+
+		bearer = authorization_body.substr(0, pos);
+		token = authorization_body.substr(pos + 1);
+
+		if (bearer.empty() || token.empty() || bearer != "Bearer" || token.length() != 32) {
+
+			throw GameError(AuthorizationGameErrorReason::AUTHORIZATION_INVALIDE_TOKEN);
+		}
+		return Token(token);
+	}
+
+	Token Authorization::FindTokenByPlayer(const Player* player) const {
+		return player_tokens_->FindTokenByPlayer(player);
+	}
+
+	const std::shared_ptr<Player> Authorization::FindPlayerByToken(const Token& token) const {
+		if (auto player = player_tokens_->FindPlayerByToken(token); player) {
+			return player;
+		}
+		throw GameError(AuthorizationGameErrorReason::AUTHORIZATION_TOKEN_NOT_FOUND);
+	}
+
+	const model::Game::Maps Application::GetMaps() const noexcept {
+		return game_->GetMaps();
+	}
+
+	const model::Game::MapPtr Application::FindMap(const model::Map::Id& id) const noexcept {
+		return game_->FindMap(id);
+	}
+
+	GameResult Application::JoinGame(std::string map_id, std::string name) {
+		try {
+			return join_game_use_case_.JoinGame(std::move(map_id), std::move(name));
+		}
+		catch (app::GameError<app::JoinGameErrorReason> err) {
+
+			if (err.GetErrorReason() == app::INVALIDE_NAME) {//несуществующий id карты
+				throw GameError(JoinGameErrorReason::INVALIDE_NAME);
+			}
+			else if (err.GetErrorReason() == app::INVALIDE_MAP) {//пустое имя игрока,
+				throw GameError(JoinGameErrorReason::INVALIDE_MAP);
+			}
+		}
+		catch (const std::exception& exc) {
+			throw std::runtime_error(std::string("Error Application: ") + exc.what());
+		}
+
+	}
+
+	void Application::Tick(std::chrono::milliseconds delta) {
+		UpdateGameState(delta);
+	}
+
+	std::shared_ptr<Players> Application::GetListPlayersUseCase() const noexcept {
+		return join_game_use_case_.GetListPlayersUseCase();
+	}
+
+	std::string Application::GetPlayers(std::string_view authorization_body) {
+		try {
+			auto token = TryExtractToken(authorization_body);
+			auto player = FindPlayerByToken(token);
+			auto game_session = player->GetGameSession();
+			auto dogs = game_session->GetDogs();
+
+			json::object obj;
+			for (const auto& dog : dogs) {
+				obj[std::to_string(dog.second->GetId())] = json::value{ {"name"s,dog.second->GetName()} };
+			}
+
+			return json::serialize(obj);
+		}
+		catch (app::GameError<app::AuthorizationGameErrorReason> err) {
+			if (err.GetErrorReason() == AUTHORIZATION_INVALIDE_TOKEN) {
+				throw GameError(AuthorizationGameErrorReason::AUTHORIZATION_HEADER_MISSING);
+			}
+			else {
+				throw err;
+			}
+		}
+		catch (const std::exception& exc) {
+			throw std::runtime_error(std::string("Error Application: ") + exc.what());
+		}
+	}
+
+	std::string Application::GetGameState(std::string_view authorization_body) {
+		try {
+
+			auto token = TryExtractToken(authorization_body);
+			auto player = FindPlayerByToken(token);
+			auto game_session = player->GetGameSession();
+			auto dogs = game_session->GetDogs();
+			json::object obj;
+			obj["players"s] = json::object();
+			obj["lostObjects"s] = json::object();
+
+			for (const auto& dog : dogs) {
+				json::object player;
+				std::string dir;
+				switch (dog.second->GetDir()) {
+				case model::Direction::DIR_NORTH:
+					dir = "U"s;
+					break;
+				case model::Direction::DIR_SOUTH:
+					dir = "D"s;
+					break;
+				case model::Direction::DIR_EAST:
+					dir = "R"s;
+					break;
+				case model::Direction::DIR_WEST:
+					dir = "L"s;
+					break;
+				}
+
+				json::array arr_pos;
+				arr_pos.push_back(dog.second->GetPos().x);
+				arr_pos.push_back(dog.second->GetPos().y);
+
+				json::array arr_speed;
+				arr_speed.push_back(dog.second->GetSpeed().x);
+				arr_speed.push_back(dog.second->GetSpeed().y);
+				auto dog_id = std::to_string(dog.second->GetId());
+
+				obj["players"s].as_object()[dog_id] =
+					json::object{ {"pos"s, arr_pos},
+									{"speed"s, arr_speed},
+									{"dir"s, dir} };
+				
+			}
+
+			const auto map = game_session->GetMap();
+			auto loots = map->GetLoots();
+			
+			if (loots.size() > 0) {
+				
+				json::object pos;
+				for (int i = 0; i < loots.size(); ++i) {
+					obj["lostObjects"s].as_object()[std::to_string(loots[i].id)] =
+						json::object({ {"type", loots[i].type},
+							{"pos", json::array{ static_cast<double>(loots[i].position.x), static_cast<double>(loots[i].position.y)}}});
+				}
+			}
+			return json::serialize(obj);
+		}
+		catch (app::GameError<app::AuthorizationGameErrorReason> err) {
+			if (err.GetErrorReason() == AUTHORIZATION_INVALIDE_TOKEN) {
+				throw GameError(AuthorizationGameErrorReason::AUTHORIZATION_HEADER_REQ);
+			}
+			throw err;
+		}
+		catch (...) {
+			throw GameError(ErrorReason::FAILED_PARSE_JSON);
+		}
+	}
+
+	std::string Application::SetPlayerAction(std::string_view authorization_body, std::string base_body) {
+		try {
+
+			auto token = TryExtractToken(authorization_body);
+			auto player = FindPlayerByToken(token);
+			auto json_obj = json::parse(base_body).as_object();
+			auto dir = json_obj.at("move").as_string().c_str();
+			auto speed = player->GetGameSession()->GetMap()->GetSpeed();
+
+			if (std::strcmp(dir, "") == 0) {
+				player->SetSpeed({ 0,0 });
+			}
+			else if (std::strcmp(dir, "L") == 0) {
+				player->SetSpeed({ -speed,0 });
+				player->SetDir(model::Direction::DIR_WEST);
+			}
+			else if (std::strcmp(dir, "R") == 0) {
+				player->SetSpeed({ speed,0 });
+				player->SetDir(model::Direction::DIR_EAST);
+			}
+			else if (std::strcmp(dir, "U") == 0) {
+				player->SetSpeed({ 0,-speed });
+				player->SetDir(model::Direction::DIR_NORTH);
+			}
+			else if (std::strcmp(dir, "D") == 0) {
+				player->SetSpeed({ 0,speed });
+				player->SetDir(model::Direction::DIR_SOUTH);
+			}
+			else {
+				throw GameError(ActionGameErrorReason::FAILED_PARSE_ACTION);
+			}
+
+			return json::serialize(json::object());
+		}
+		catch (app::GameError<app::AuthorizationGameErrorReason> err) {
+
+			if (err.GetErrorReason() == AUTHORIZATION_INVALIDE_TOKEN) {
+				throw GameError(AuthorizationGameErrorReason::AUTHORIZATION_HEADER_REQ);
+			}
+			else {
+				throw err;
+			}
+		}
+		catch (...) {
+			throw GameError(ActionGameErrorReason::FAILED_PARSE_ACTION);
+		}
+	}
+
+	std::string Application::SetTimeDelta(std::string base_body) {
+		try {
+			auto json_obj = json::parse(base_body).as_object();
+			std::chrono::milliseconds time(json_obj.at("timeDelta").as_int64());
+			UpdateGameState(time);
+			return json::serialize(json::object());
+		}
+		catch (...) {
+			throw GameError(ErrorReason::FAILED_PARSE_JSON);
+		}
+	}
+
+	void Application::UpdateGameState(std::chrono::milliseconds delta) {
+		try {
+			auto time = delta.count();
+			if (time <= 0) {
+				throw GameError(ErrorReason::FAILED_PARSE_JSON);;
+			}
+
+			auto maps = game_->GetMaps();
+			auto loot_generator = game_->GetLootGenerator();
+
+			for (auto map : maps) {
+				if (auto* session = game_->FindGameSessions(map->GetId()); session) {
+					auto dogs = session->GetDogs();
+
+					if (!loot_generator) {
+						throw std::invalid_argument("Invalid ptr loot_generator = nullptr");;
+					}
+
+					auto count = loot_generator->Generate(delta, map->GetLootCount(), dogs.size());
+			
+					auto roads = session->GetMap()->GetRoads();
+					std::random_device rd;
+					std::mt19937 gen(rd());
+					auto desc = map->GetDescription();
+					for (auto i = 0; i < count; ++i) {
+						auto index = std::rand() % roads.size();
+						model::Loot new_loot;
+						new_loot.type = i % desc.size();
+
+						if (roads[index]->IsHorizontal()) {
+						
+							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().x, roads[index]->GetEnd().x), std::max(roads[index]->GetStart().x, roads[index]->GetEnd().x));
+							auto new_point = dis(gen);
+							new_loot.position = model::Point{ new_point, roads[index]->GetStart().y };
+							map->AddLoot(new_loot);
+						}
+						else {
+							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().y, roads[index]->GetEnd().y), std::max(roads[index]->GetStart().y, roads[index]->GetEnd().y));
+							auto new_point = dis(gen);
+							new_loot.position = model::Point{ roads[index]->GetStart().x, new_point };
+							map->AddLoot(new_loot);
+						}
+					}
+
+					for (auto dog : dogs) {
+						auto dog_ = dog.second;
+
+						auto roads = map->GetRoadmap();
+						auto new_x = dog_->GetPos().x + (dog_->GetSpeed().x * time / 1000);
+						auto new_y = dog_->GetPos().y + (dog_->GetSpeed().y * time / 1000);
+						auto cur_dir = dog_->GetDir();
+						double w_road = 0.4;
+
+						switch (cur_dir) {
+						case model::Direction::DIR_NORTH:
+							if (dog_->GetSpeed().y != 0) {
+								GoToNorth(roads, dog_, new_y, w_road);
+							}
+							break;
+						case model::Direction::DIR_SOUTH:
+							if (dog_->GetSpeed().y != 0) {
+								GoToSouth(roads, dog_, new_y, w_road);
+							}
+							break;
+						case model::Direction::DIR_WEST:
+							if (dog_->GetSpeed().x != 0) {
+								GoToWest(roads, dog_, new_x, w_road);
+							}
+							break;
+						case model::Direction::DIR_EAST:
+							if (dog_->GetSpeed().x != 0) {
+								GoToEast(roads, dog_, new_x, w_road);
+							}
+							break;
+						}
+					}
+					
+				}
+			}
+		}
+		catch (...) {
+			throw GameError(ErrorReason::FAILED_PARSE_JSON);
+		}
+	}
+
+	void Application::GoToSouth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
+		auto curr_road = dog->GetCurrentRoad();
+		auto cur_dog_pos = dog->GetPos();
+		int max_pos = std::max(curr_road->GetStart().y, curr_road->GetEnd().y);
+
+		if (new_pos <= max_pos + w_road) {
+			dog->SetPos(model::PointD(dog->GetPos().x, new_pos));
+			return;
+		}
+
+		model::Map::Roadmap::iterator road;
+
+		if (curr_road->IsHorizontal()) {
+			if (cur_dog_pos.x >= curr_road->GetStart().x - w_road && cur_dog_pos.x <= curr_road->GetStart().x + w_road) {
+				road = roadmap.find(std::pair{ curr_road->GetStart(), model::Direction::DIR_SOUTH });
+
+			}
+			else if (cur_dog_pos.x >= curr_road->GetEnd().x - w_road && cur_dog_pos.x <= curr_road->GetEnd().x + w_road) {
+				road = roadmap.find(std::pair{ curr_road->GetEnd(), model::Direction::DIR_SOUTH });
+			}
+		}
+		else {
+			road = roadmap.find(std::pair{ model::Point{curr_road->GetEnd().x, max_pos}, model::Direction::DIR_SOUTH });
+		}
+
+		while (road != roadmap.end() && new_pos > (max_pos = std::max(road->second->GetStart().y, road->second->GetEnd().y))) {
+			road = roadmap.find(std::pair{ model::Point{curr_road->GetEnd().x, max_pos}, model::Direction::DIR_SOUTH });
+		}
+
+		if (road != roadmap.end()) {
+			dog->SetNewRoad(road->second);
+			dog->SetPos(model::PointD(dog->GetPos().x, new_pos));
+		}
+		else {
+			dog->SetSpeed(model::PlayerSpeed{ 0, 0 });
+			dog->SetPos(model::PointD(dog->GetPos().x, max_pos + w_road));
+		}
+	}
+
+	void Application::GoToNorth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
+		auto curr_road = dog->GetCurrentRoad();
+		auto cur_dog_pos = dog->GetPos();
+		int min_pos = std::min(curr_road->GetStart().y, curr_road->GetEnd().y);
+
+		if (new_pos >= min_pos - w_road) {
+			dog->SetPos(model::PointD(dog->GetPos().x, new_pos));
+			return;
+		}
+
+		model::Map::Roadmap::iterator road;
+
+		if (curr_road->IsHorizontal()) {
+			if (cur_dog_pos.x >= curr_road->GetStart().x - w_road && cur_dog_pos.x <= curr_road->GetStart().x + w_road) {
+				road = roadmap.find(std::pair{ curr_road->GetStart(), model::Direction::DIR_NORTH });
+
+			}
+			else if (cur_dog_pos.x >= curr_road->GetEnd().x - w_road && cur_dog_pos.x <= curr_road->GetEnd().x + w_road) {
+				road = roadmap.find(std::pair{ curr_road->GetEnd(), model::Direction::DIR_NORTH });
+			}
+		}
+		else {
+			road = roadmap.find(std::pair{ model::Point{curr_road->GetEnd().x, min_pos}, model::Direction::DIR_NORTH });
+		}
+
+		while (road != roadmap.end() && new_pos > (min_pos = std::min(road->second->GetStart().y, road->second->GetEnd().y))) {
+			road = roadmap.find(std::pair{ model::Point{curr_road->GetEnd().x, min_pos}, model::Direction::DIR_NORTH });
+		}
+
+		if (road != roadmap.end()) {
+			dog->SetNewRoad(road->second);
+			dog->SetPos(model::PointD(dog->GetPos().x, new_pos));
+		}
+		else {
+			dog->SetSpeed(model::PlayerSpeed{ 0, 0 });
+			dog->SetPos(model::PointD(dog->GetPos().x, min_pos - w_road));
+		}
+	}
+
+	void Application::GoToWest(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
+		auto curr_road = dog->GetCurrentRoad();
+		auto cur_dog_pos = dog->GetPos();
+		int min_pos = std::min(curr_road->GetStart().x, curr_road->GetEnd().x);
+
+		if (new_pos >= min_pos - w_road) {
+			dog->SetPos(model::PointD(new_pos, dog->GetPos().y));
+			return;
+		}
+
+		model::Map::Roadmap::iterator road;
+
+		if (curr_road->IsVertical()) {
+
+			if (cur_dog_pos.y >= curr_road->GetStart().y - w_road && cur_dog_pos.y <= curr_road->GetStart().y + w_road) {
+				road = roadmap.find(std::pair{ curr_road->GetStart(), model::Direction::DIR_WEST });
+
+			}
+			else if (cur_dog_pos.y >= curr_road->GetEnd().y - w_road && cur_dog_pos.y <= curr_road->GetEnd().y + w_road) {
+				road = roadmap.find(std::pair{ curr_road->GetEnd(), model::Direction::DIR_WEST });
+			}
+		}
+		else {
+			road = roadmap.find(std::pair{ model::Point{min_pos, curr_road->GetEnd().y}, model::Direction::DIR_WEST });
+		}
+
+		while (road != roadmap.end() && new_pos > (min_pos = std::min(road->second->GetStart().x, road->second->GetEnd().x))) {
+			road = roadmap.find(std::pair{ model::Point{min_pos, curr_road->GetEnd().y}, model::Direction::DIR_WEST });
+		}
+
+		if (road != roadmap.end()) {
+			dog->SetNewRoad(road->second);
+			dog->SetPos(model::PointD(new_pos, dog->GetPos().y));
+		}
+		else {
+			dog->SetSpeed(model::PlayerSpeed{ 0, 0 });
+			dog->SetPos(model::PointD(min_pos - w_road, dog->GetPos().y));
+		}
+	}
+
+	void Application::GoToEast(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
+		auto curr_road = dog->GetCurrentRoad();
+		auto cur_dog_pos = dog->GetPos();
+		int max_pos = std::max(curr_road->GetStart().x, curr_road->GetEnd().x);
+
+		if (new_pos <= max_pos + w_road) {
+			dog->SetPos(model::PointD(new_pos, dog->GetPos().y));
+			return;
+		}
+
+		model::Map::Roadmap::iterator road;
+
+		if (curr_road->IsVertical()) {
+			if (cur_dog_pos.y >= curr_road->GetStart().y - w_road && cur_dog_pos.y <= curr_road->GetStart().y + w_road) {
+				road = roadmap.find(std::pair{ curr_road->GetStart(), model::Direction::DIR_EAST });
+
+			}
+			else if (cur_dog_pos.y >= curr_road->GetEnd().y - w_road && cur_dog_pos.y <= curr_road->GetEnd().y + w_road) {
+				road = roadmap.find(std::pair{ curr_road->GetEnd(), model::Direction::DIR_EAST });
+			}
+		}
+		else {
+			road = roadmap.find(std::pair{ model::Point{max_pos, curr_road->GetEnd().y}, model::Direction::DIR_EAST });
+		}
+
+		while (road != roadmap.end() && new_pos > (max_pos = std::max(road->second->GetStart().x, road->second->GetEnd().x))) {
+
+			road = roadmap.find(std::pair{ model::Point{max_pos, road->second->GetEnd().y}, model::Direction::DIR_EAST });
+		}
+
+		if (road != roadmap.end()) {
+			dog->SetNewRoad(road->second);
+			dog->SetPos(model::PointD(new_pos, dog->GetPos().y));
+		}
+		else {
+			dog->SetSpeed(model::PlayerSpeed{ 0, 0 });
+			dog->SetPos(model::PointD(max_pos + w_road, dog->GetPos().y));
+		}
+	}
+
+}
+
