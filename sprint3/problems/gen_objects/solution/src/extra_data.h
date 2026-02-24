@@ -16,7 +16,7 @@ namespace extra_data {
         std::string name_;
         std::string file_path_;
         std::string type_;
-        std::optional<double> rotation_;
+        std::optional<int> rotation_;
         std::optional<std::string> color_;
         double scale_;
     };   

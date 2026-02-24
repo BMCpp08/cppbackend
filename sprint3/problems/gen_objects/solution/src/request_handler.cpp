@@ -182,7 +182,7 @@ namespace http_handler {
 				obj[key_buildings] = LoadBuildingsToJson(map);
 				obj[key_offices] = LoadOfficesToJson(map);
 				obj[extra_data::key_loot_types] = LoadLootTypes(map);
-
+				std::cout << json::serialize(obj) << std::endl;
 				resp = MakeStringResponse(http::status::ok, json::serialize(obj), req.version(), req.keep_alive(), ContentType::APP_JSON);
 			}
 			else {
