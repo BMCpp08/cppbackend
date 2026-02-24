@@ -141,7 +141,9 @@ namespace json_loader {
 							if (loot.as_object().contains(extra_data::key_scale)) {
 								new_loot.scale_ = loot.as_object().at(extra_data::key_scale).as_double();
 							}
-							
+							if (loot.as_object().contains(extra_data::key_value)) {
+								new_loot.value_ = loot.as_object().at(extra_data::key_value).as_int64();
+							}
 							map.AddLootDescription(std::move(new_loot));
 						}
 					}
