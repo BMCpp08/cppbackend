@@ -70,4 +70,4 @@ add_executable(game_server_tests
 )
 
 target_link_libraries(game_server PRIVATE game_lib collision_detection_lib Threads::Threads)
-target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2 game_lib)
+target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2 game_lib collision_detection_lib)
