@@ -1,4 +1,4 @@
-# Не просто создаём образ, но даём ему имя build
+cd# Не просто создаём образ, но даём ему имя build
 FROM gcc:11.3 AS build
 
 RUN apt update && \
@@ -31,7 +31,7 @@ USER www
 
 # Скопируем приложение со сборочного контейнера в директорию /app.
 # Не забываем также папку data, она пригодится.
-COPY --from=build /app/build/Release/game_server /app/
+COPY --from=build /app/build/game_server /app/
 COPY ./data /app/data
 COPY ./static /app/static
 
