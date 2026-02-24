@@ -31,9 +31,8 @@ USER www
 
 # Скопируем приложение со сборочного контейнера в директорию /app.
 # Не забываем также папку data, она пригодится.
-COPY --from=build /app/build/bin/game_server /app/
+COPY --from=build /app/build/Release/game_server /app/
 COPY ./data /app/data
-COPY ./tests /app/tests
 COPY ./static /app/static
 
 # Запускаем игровой сервер
