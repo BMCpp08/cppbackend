@@ -40,6 +40,8 @@ namespace model {
 		const std::string key_loot_gen_config = "lootGeneratorConfig"s;
 		const std::string key_period = "period"s;
 		const std::string key_probability = "probability"s;
+		const std::string key_def_bag_capacity = "defaultBagCapacity"s;
+		const std::string key_bag_capacity = "bagCapacity"s;
 	}
 
 	class Road;
@@ -100,6 +102,12 @@ namespace model {
 
 	struct PlayerSpeed {
 		Speed x, y;
+	};
+
+	struct Loot {
+		int id;
+		int type;
+		Point position;
 	};
 
 	class Road {
@@ -197,13 +205,15 @@ namespace model {
 		using Offices = std::vector<Office>;
 		using Roads = std::vector<ConstPtrRoad>;
 		using Roadmap = std::unordered_map<std::pair<Point, Direction>, ConstPtrRoad, HashPointDir>;
-		using Loots = std::vector<std::pair<Point, std::shared_ptr<extra_data::Loot>>>;
+		using Loots = std::vector<Loot>;
+		using LootsDescription = std::vector<std::shared_ptr<extra_data::LootDescription>>;
 
-		Map(Id id, std::string name, Speed speed) noexcept
+
+		Map(Id id, std::string name, Speed speed, int bag_capacity) noexcept
 			: id_(std::move(id))
 			, name_(std::move(name))
 			, speed_(std::move(speed))
-			, loot_count_(0){
+			, bag_capacity_(bag_capacity){
 		}
 
 		const Id& GetId() const noexcept {
@@ -249,28 +259,38 @@ namespace model {
 			return roadmap_;
 		}
 
-		void AddLoot(extra_data::Loot loot) {
-			loot_types_.emplace_back((std::pair{ Point{0,0} ,std::make_shared<extra_data::Loot>(std::move(loot)) }));
+		void AddLootDescription(extra_data::LootDescription loot_description) {
+			loot_description_.emplace_back(std::make_shared<extra_data::LootDescription>(std::move(loot_description)));
 		}
 
-		Loots GetLoots()  const noexcept {
-			return loot_types_;
+		void AddLoot(Loot loot) {
+			const size_t index = loots_.size();
+			loot.id = index;
+			loots_.emplace_back(std::move(loot));
 		}
 
-		void SetNewCoordLoot(int num, Point point) {
-			if (num >= loot_types_.size()) { 
+		Loots GetLoots() const noexcept {
+			return loots_;
+		}
+
+		LootsDescription GetDescription() const noexcept {
+			return loot_description_;
+		}
+
+		
+		void ExtractLoot(size_t idx) {
+			if (idx >= loots_.size()) {
 				return;
 			}
-			loot_types_[num].first = point;
-
+			loots_.erase(loots_.begin() + idx);
 		}
 
 		int GetLootCount() const noexcept {
-			return loot_count_;
+			return loots_.size();
 		}
 
-		void SetLootCount(int loot_count) {
-			loot_count_ = loot_count;
+		size_t GetBagCapacity() const noexcept {
+			return bag_capacity_;
 		}
 
 	private:
@@ -314,8 +334,11 @@ namespace model {
 		Speed speed_;
 		Roadmap roadmap_;
 	
-		Loots loot_types_;
-		int loot_count_;
+		Loots loots_;
+		LootsDescription loot_description_;
+
+
+		size_t bag_capacity_;
 	};
 
 	class Dog {
@@ -324,7 +347,8 @@ namespace model {
 		Dog(PointD pos,
 			std::string name,
 			std::uint64_t id,
-			ConstPtrRoad road,
+			ConstPtrRoad road, 
+			size_t bag_capacity = 0,
 			Direction dir = Direction::DIR_NORTH,
 			PlayerSpeed speed = {0, 0}) noexcept
 			: pos_(std::move(pos))
@@ -332,7 +356,8 @@ namespace model {
 			, id_(std::move(id))
 			, road_(road)
 			, dir_(std::move(dir))
-			, speed_(speed){
+			, speed_(speed)
+			, bag_capacity_(bag_capacity){
 		}
 
 		const std::string& GetName() const noexcept {
@@ -374,6 +399,14 @@ namespace model {
 			return road_;
 		}
 
+		bool PutItemIntoBag(extra_data::LootDescription item) {
+			if (bag_.size() >= bag_capacity_) {
+				return false;
+			}
+			bag_.emplace_back(std::move(item));
+			return true;
+		}
+
 	private:
 		PointD pos_;
 		std::string name_;
@@ -382,6 +415,9 @@ namespace model {
 		Direction dir_;
 		PlayerSpeed speed_;
 		ConstPtrRoad road_;
+		size_t bag_capacity_;
+		std::vector<extra_data::LootDescription> bag_;
+		
 	};
 
 	class GameSession {
@@ -392,7 +428,7 @@ namespace model {
 			: map_{ map } {
 		}
 
-		const std::shared_ptr<Dog> AddDog(PointD point, std::string name, ConstPtrRoad road) {
+		const std::shared_ptr<Dog> AddDog(PointD point, std::string name, ConstPtrRoad road, size_t capacity) {
 			using namespace std::literals;
 			if (!road) {
 				throw std::invalid_argument("Invalid ptr road = nullptr");
@@ -405,7 +441,7 @@ namespace model {
 			}
 			else {
 				try {
-					dogs_.emplace(index, std::make_shared<Dog>(std::move(point), std::move(name), index, road));
+					dogs_.emplace(index, std::make_shared<Dog>(std::move(point), std::move(name), index, road, capacity));
 					return dogs_[index];
 				}
 				catch (...) {

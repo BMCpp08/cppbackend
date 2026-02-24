@@ -66,23 +66,32 @@ namespace http_handler {
 	json::array ApiHandler::LoadLootTypes(const model::Game::MapPtr map) const {
 		json::array loot_types;
 
-		for (auto& loots : map->GetLoots()) {
+		if (!map) {
+			throw std::logic_error("map is nullptr");
+		}
+
+		auto loots = map->GetDescription();
+		for (auto& loot : loots) {
+
+			if (!loot) {
+				throw std::logic_error("Loots is nullptr");
+			}
 
 			json::object obj;
 
-			obj[key_name] = loots.second->GetName();
-			obj[extra_data::key_file] = loots.second->GetFilePath();
-			obj[extra_data::key_type] = loots.second->GetType();
+			obj[key_name] = loot->name_;
+			obj[extra_data::key_file] = loot->file_path_;
+			obj[extra_data::key_type] = loot->type_;
 
-			if (loots.second->GetRotation().has_value()) {
-				obj[extra_data::key_rotation] = loots.second->GetRotation().value();
+			if (loot->rotation_.has_value()) {
+				obj[extra_data::key_rotation] = loot->rotation_.value();
 			}
 
-			if (loots.second->GetColor().has_value()) {
-				obj[extra_data::key_color] = loots.second->GetColor().value();
+			if (loot->color_.has_value()) {
+				obj[extra_data::key_color] = loot->color_.value();
 			}
 
-			obj[extra_data::key_scale] = loots.second->GetScale();
+			obj[extra_data::key_scale] = loot->scale_;
 
 			loot_types.emplace_back(obj);
 		}

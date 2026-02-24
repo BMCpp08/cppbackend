@@ -60,6 +60,13 @@ namespace json_loader {
 			default_dog_speed = value.as_object().at(key_default_dog_speed).as_double();
 		}
 
+		//Вместимость рюкзаков на всех картах 
+		int def_bag_capacity = 3;
+		int bag_capacity = def_bag_capacity;
+		if (value.as_object().contains(key_def_bag_capacity)) {
+			def_bag_capacity = value.as_object().at(key_def_bag_capacity).as_int64();
+		}
+
 		if (auto f_maps = value.as_object().find(key_maps); f_maps != value.as_object().end()) {
 			const auto& maps = value.as_object().at(key_maps);
 
@@ -75,7 +82,14 @@ namespace json_loader {
 						dog_speed = default_dog_speed;
 					}
 
-					Map map(id, json_map.as_object().at(key_name).as_string().c_str(), dog_speed);
+					if (json_map.as_object().contains(key_bag_capacity)) {
+						bag_capacity = json_map.as_object().at(key_bag_capacity).as_int64();
+					}
+					else {
+						bag_capacity = def_bag_capacity;
+					}
+
+					Map map(id, json_map.as_object().at(key_name).as_string().c_str(), dog_speed, bag_capacity);
 
 
 					if (json_map.as_object().if_contains(key_roads)) {
@@ -107,33 +121,33 @@ namespace json_loader {
 						
 						for (auto loot : loot_types) {
 
-							extra_data::Loot new_loot;
+							extra_data::LootDescription new_loot;
 
 							if (loot.as_object().contains(key_name)) {
-								new_loot.SetName(loot.as_object().at(key_name).as_string().c_str());
+								new_loot.name_ = loot.as_object().at(key_name).as_string().c_str();
 							}
 							if (loot.as_object().contains(extra_data::key_file)) {
-								new_loot.SetFilePath(loot.as_object().at(extra_data::key_file).as_string().c_str());
+								new_loot.file_path_ = loot.as_object().at(extra_data::key_file).as_string().c_str();
 							}
 							if (loot.as_object().contains(extra_data::key_type)) {
-								new_loot.SetType(loot.as_object().at(extra_data::key_type).as_string().c_str());
+								new_loot.type_ = loot.as_object().at(extra_data::key_type).as_string().c_str();
 							}
 							if (loot.as_object().contains(extra_data::key_rotation)) {
-								new_loot.SetRotation(static_cast<double>(loot.as_object().at(extra_data::key_rotation).as_int64()));
+								new_loot.rotation_ = static_cast<double>(loot.as_object().at(extra_data::key_rotation).as_int64());
 							}
 							if (loot.as_object().contains(extra_data::key_color)) {
-								new_loot.SetColor(loot.as_object().at(extra_data::key_color).as_string().c_str());
+								new_loot.color_ = loot.as_object().at(extra_data::key_color).as_string().c_str();
 							}
 							if (loot.as_object().contains(extra_data::key_scale)) {
-								new_loot.SetScale(loot.as_object().at(extra_data::key_scale).as_double());
+								new_loot.scale_ = loot.as_object().at(extra_data::key_scale).as_double();
 							}
 							
-							map.AddLoot(std::move(new_loot));
-							
+							map.AddLootDescription(std::move(new_loot));
 						}
-						
 					}
+
 					
+
 					game.AddMap(map);
 			}
 			

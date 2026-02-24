@@ -103,8 +103,8 @@ namespace app {
 			if (!players_) {
 				throw std::invalid_argument("Invalid ptr players_ = nullptr");
 			}
-
-			auto& player = players_->Add(session->AddDog(spawn_point, std::move(name), road), session);
+			
+			auto& player = players_->Add(session->AddDog(spawn_point, std::move(name), road, session->GetMap()->GetBagCapacity()), session);
 
 			if (!player_tokens_) {
 				throw std::invalid_argument("Invalid ptr player_tokens_ = nullptr");
@@ -262,24 +262,17 @@ namespace app {
 			}
 
 			const auto map = game_session->GetMap();
-			auto count = map->GetLootCount();
+			auto loots = map->GetLoots();
 			
-			if (count > 0) {
+			if (loots.size() > 0) {
 				
-
-				auto loots = map->GetLoots();
-
 				json::object pos;
-				for (int i = 0; i < count; ++i) {
-					obj["lostObjects"s].as_object()[std::to_string(i)] =
-						json::object({ {"type", i},
-							{"pos", json::array{ static_cast<double>(loots[i].first.x), static_cast<double>(loots[i].first.y)}}});
+				for (int i = 0; i < loots.size(); ++i) {
+					obj["lostObjects"s].as_object()[std::to_string(loots[i].id)] =
+						json::object({ {"type", loots[i].type},
+							{"pos", json::array{ static_cast<double>(loots[i].position.x), static_cast<double>(loots[i].position.y)}}});
 				}
 			}
-			else {
-			
-			}
-
 			return json::serialize(obj);
 		}
 		catch (app::GameError<app::AuthorizationGameErrorReason> err) {
@@ -372,24 +365,28 @@ namespace app {
 					}
 
 					auto count = loot_generator->Generate(delta, map->GetLootCount(), dogs.size());
-					map->SetLootCount(count + map->GetLootCount());
-
+			
 					auto roads = session->GetMap()->GetRoads();
 					std::random_device rd;
 					std::mt19937 gen(rd());
-
+					auto desc = map->GetDescription();
 					for (auto i = 0; i < count; ++i) {
 						auto index = std::rand() % roads.size();
-						if (roads[index]->IsHorizontal()) {
+						model::Loot new_loot;
+						new_loot.type = i % desc.size();
 
+						if (roads[index]->IsHorizontal()) {
+						
 							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().x, roads[index]->GetEnd().x), std::max(roads[index]->GetStart().x, roads[index]->GetEnd().x));
 							auto new_point = dis(gen);
-							map->SetNewCoordLoot(i, model::Point{ new_point, roads[index]->GetStart().y });
+							new_loot.position = model::Point{ new_point, roads[index]->GetStart().y };
+							map->AddLoot(new_loot);
 						}
 						else {
 							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().y, roads[index]->GetEnd().y), std::max(roads[index]->GetStart().y, roads[index]->GetEnd().y));
 							auto new_point = dis(gen);
-							map->SetNewCoordLoot(i, model::Point{ roads[index]->GetStart().x, new_point });
+							new_loot.position = model::Point{ roads[index]->GetStart().x, new_point };
+							map->AddLoot(new_loot);
 						}
 					}
 
