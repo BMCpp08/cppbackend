@@ -133,7 +133,7 @@ namespace json_loader {
 								new_loot.type_ = loot.as_object().at(extra_data::key_type).as_string().c_str();
 							}
 							if (loot.as_object().contains(extra_data::key_rotation)) {
-								new_loot.rotation_ = static_cast<double>(loot.as_object().at(extra_data::key_rotation).as_int64());
+								new_loot.rotation_ = loot.as_object().at(extra_data::key_rotation).as_int64();
 							}
 							if (loot.as_object().contains(extra_data::key_color)) {
 								new_loot.color_ = loot.as_object().at(extra_data::key_color).as_string().c_str();
@@ -141,13 +141,12 @@ namespace json_loader {
 							if (loot.as_object().contains(extra_data::key_scale)) {
 								new_loot.scale_ = loot.as_object().at(extra_data::key_scale).as_double();
 							}
-							
+							if (loot.as_object().contains(extra_data::key_value)) {
+								new_loot.value_ = loot.as_object().at(extra_data::key_value).as_int64();
+							}
 							map.AddLootDescription(std::move(new_loot));
 						}
 					}
-
-					
-
 					game.AddMap(map);
 			}
 			

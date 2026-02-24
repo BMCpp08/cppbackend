@@ -82,6 +82,7 @@ namespace http_handler {
 			obj[key_name] = loot->name_;
 			obj[extra_data::key_file] = loot->file_path_;
 			obj[extra_data::key_type] = loot->type_;
+			obj[extra_data::key_value] = loot->value_;
 
 			if (loot->rotation_.has_value()) {
 				obj[extra_data::key_rotation] = loot->rotation_.value();
@@ -182,7 +183,7 @@ namespace http_handler {
 				obj[key_buildings] = LoadBuildingsToJson(map);
 				obj[key_offices] = LoadOfficesToJson(map);
 				obj[extra_data::key_loot_types] = LoadLootTypes(map);
-
+				
 				resp = MakeStringResponse(http::status::ok, json::serialize(obj), req.version(), req.keep_alive(), ContentType::APP_JSON);
 			}
 			else {

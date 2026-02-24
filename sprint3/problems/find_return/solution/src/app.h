@@ -11,6 +11,7 @@
 #include <memory>
 #include "boost_includes.h"
 #include "ticker.h"
+#include "collision_detector.h"
 
 namespace app {
 	using namespace std::literals;
@@ -241,16 +242,54 @@ namespace app {
 		void UpdateGameState(std::chrono::milliseconds delta);
 
 	private:
-		void GoToSouth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road);
+		double GoToSouth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road);
 
-		void GoToNorth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road);
+		double GoToNorth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road);
 
-		void GoToWest(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road);
+		double GoToWest(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road);
 
-		void GoToEast(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road);
+		double GoToEast(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road);
 	private:
 		std::shared_ptr<model::Game> game_;
 		JoinGameUseCase& join_game_use_case_;
 	};
+
+	class GathererProvider : public collision_detector::ItemGathererProvider {
+	public:
+
+		GathererProvider(std::vector<collision_detector::Item> items, std::vector<collision_detector::Gatherer> gatherers)
+			: items_(std::move(items))
+			, gatherers_(std::move(gatherers)) {
+
+		}
+
+		size_t ItemsCount() const override {
+			return items_.size();
+		}
+
+		collision_detector::Item GetItem(size_t idx) const override {
+			if (idx >= items_.size()) {
+				throw std::logic_error("Invalid item idx!");
+			}
+			return items_[idx];
+		}
+
+		size_t GatherersCount() const override {
+			return gatherers_.size();
+		}
+
+		collision_detector::Gatherer GetGatherer(size_t idx) const override {
+			if (idx >= gatherers_.size()) {
+				throw std::logic_error("Invalid gatherer idx!");
+			}
+			return gatherers_[idx];
+		}
+
+	private:
+		std::vector<collision_detector::Item> items_;
+		std::vector<collision_detector::Gatherer> gatherers_;
+	};
+
+	
 }
 

@@ -64,14 +64,10 @@ add_executable(game_server
 )
 
 add_executable(game_server_tests
-    tests/loot_generator_tests.cpp
+    	tests/loot_generator_tests.cpp
 	tests/model_testes.cpp
-)
-
-add_executable(collision_detection_tests
 	tests/collision-detector-tests.cpp
 )
 
 target_link_libraries(game_server PRIVATE game_lib collision_detection_lib Threads::Threads)
-target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2 game_lib)
-target_link_libraries(collision_detection_tests CONAN_PKG::catch2 collision_detection_lib)
+target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2 game_lib collision_detection_lib)

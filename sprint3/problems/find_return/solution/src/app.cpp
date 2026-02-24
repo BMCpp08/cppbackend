@@ -5,6 +5,7 @@
 #include "app.h"
 #include <random>
 
+
 namespace app {
 	using namespace std::literals;
 	using namespace boost_aliases;
@@ -390,39 +391,96 @@ namespace app {
 						}
 					}
 
+			
+
+					std::unordered_map<std::shared_ptr<model::Dog>, std::vector<collision_detector::GatheringEvent>> scenarios;
+
+					auto loots = map->GetLoots();
+					std::vector<collision_detector::Item> items;
+					for (auto loot : loots) {
+						collision_detector::Item item;
+						item.position = geom::Point2D{ static_cast<double>(loot.position.x),static_cast<double>(loot.position.y) };
+						item.width = 0.;
+						items.emplace_back(item);
+					}
+
+					auto offices = map->GetOffices();
+					for (auto office : offices) {
+						collision_detector::Item item;
+						item.position = geom::Point2D{ static_cast<double>(office.GetPosition().x),static_cast<double>(office.GetPosition().y) };
+						item.width = 0.5 / 2.;
+						items.emplace_back(item);
+					}
+
+					 
+
 					for (auto dog : dogs) {
 						auto dog_ = dog.second;
 
 						auto roads = map->GetRoadmap();
 						auto new_x = dog_->GetPos().x + (dog_->GetSpeed().x * time / 1000);
 						auto new_y = dog_->GetPos().y + (dog_->GetSpeed().y * time / 1000);
+						
 						auto cur_dir = dog_->GetDir();
 						double w_road = 0.4;
+						double distance = 0.;
+
+						auto start_pos = geom::Point2D{ dog_->GetPos().x, dog_->GetPos().y };
 
 						switch (cur_dir) {
 						case model::Direction::DIR_NORTH:
 							if (dog_->GetSpeed().y != 0) {
-								GoToNorth(roads, dog_, new_y, w_road);
+								distance = GoToNorth(roads, dog_, new_y, w_road);
 							}
 							break;
 						case model::Direction::DIR_SOUTH:
 							if (dog_->GetSpeed().y != 0) {
-								GoToSouth(roads, dog_, new_y, w_road);
+								distance = GoToSouth(roads, dog_, new_y, w_road);
 							}
 							break;
 						case model::Direction::DIR_WEST:
 							if (dog_->GetSpeed().x != 0) {
-								GoToWest(roads, dog_, new_x, w_road);
+								distance = GoToWest(roads, dog_, new_x, w_road);
 							}
 							break;
 						case model::Direction::DIR_EAST:
 							if (dog_->GetSpeed().x != 0) {
-								GoToEast(roads, dog_, new_x, w_road);
+
+								distance = GoToEast(roads, dog_, new_x, w_road);
 							}
 							break;
 						}
-					}
+
+						auto end_pos = geom::Point2D{ dog_->GetPos().x, dog_->GetPos().y };
+
+						
 					
+						if (distance != 0.) {
+							
+							GathererProvider provider(items, { {start_pos, end_pos, 0.6/2.} });
+							if (auto events = collision_detector::FindGatherEvents(provider); !events.empty()) {
+								scenarios[dog_]=(events);
+							}
+						}
+	
+					}
+
+					
+
+					for (auto s : scenarios) {
+						
+						for(auto i : s.second) {
+							if (i.item_id < loots.size() && !s.first->BagIsFull()) {
+
+
+								s.first->PutItemIntoBag(loots[i.item_id]);
+								map->ExtractLoot(loots[i.item_id].id);
+							}
+							else {
+								s.first->EraseBag();
+							}
+						}
+					}
 				}
 			}
 		}
@@ -431,14 +489,15 @@ namespace app {
 		}
 	}
 
-	void Application::GoToSouth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
+	double Application::GoToSouth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
+		double res = 0.;
 		auto curr_road = dog->GetCurrentRoad();
 		auto cur_dog_pos = dog->GetPos();
 		int max_pos = std::max(curr_road->GetStart().y, curr_road->GetEnd().y);
 
 		if (new_pos <= max_pos + w_road) {
 			dog->SetPos(model::PointD(dog->GetPos().x, new_pos));
-			return;
+			return res;
 		}
 
 		model::Map::Roadmap::iterator road;
@@ -463,21 +522,25 @@ namespace app {
 		if (road != roadmap.end()) {
 			dog->SetNewRoad(road->second);
 			dog->SetPos(model::PointD(dog->GetPos().x, new_pos));
+			res = new_pos;
 		}
 		else {
 			dog->SetSpeed(model::PlayerSpeed{ 0, 0 });
 			dog->SetPos(model::PointD(dog->GetPos().x, max_pos + w_road));
+			res = max_pos + w_road;
 		}
+		return res;
 	}
 
-	void Application::GoToNorth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
+	double Application::GoToNorth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
+		double res = 0.;
 		auto curr_road = dog->GetCurrentRoad();
 		auto cur_dog_pos = dog->GetPos();
 		int min_pos = std::min(curr_road->GetStart().y, curr_road->GetEnd().y);
 
 		if (new_pos >= min_pos - w_road) {
 			dog->SetPos(model::PointD(dog->GetPos().x, new_pos));
-			return;
+			return res;
 		}
 
 		model::Map::Roadmap::iterator road;
@@ -502,21 +565,25 @@ namespace app {
 		if (road != roadmap.end()) {
 			dog->SetNewRoad(road->second);
 			dog->SetPos(model::PointD(dog->GetPos().x, new_pos));
+			res = new_pos;
 		}
 		else {
 			dog->SetSpeed(model::PlayerSpeed{ 0, 0 });
 			dog->SetPos(model::PointD(dog->GetPos().x, min_pos - w_road));
+			res = min_pos - w_road;
 		}
+		return res;
 	}
 
-	void Application::GoToWest(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
+	double Application::GoToWest(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
+		double res = 0.;
 		auto curr_road = dog->GetCurrentRoad();
 		auto cur_dog_pos = dog->GetPos();
 		int min_pos = std::min(curr_road->GetStart().x, curr_road->GetEnd().x);
 
 		if (new_pos >= min_pos - w_road) {
 			dog->SetPos(model::PointD(new_pos, dog->GetPos().y));
-			return;
+			return res;
 		}
 
 		model::Map::Roadmap::iterator road;
@@ -542,21 +609,25 @@ namespace app {
 		if (road != roadmap.end()) {
 			dog->SetNewRoad(road->second);
 			dog->SetPos(model::PointD(new_pos, dog->GetPos().y));
+			res = new_pos;
 		}
 		else {
 			dog->SetSpeed(model::PlayerSpeed{ 0, 0 });
 			dog->SetPos(model::PointD(min_pos - w_road, dog->GetPos().y));
+			res = min_pos - w_road;
 		}
+		return res;
 	}
 
-	void Application::GoToEast(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
+	double Application::GoToEast(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
+		double res = 0.;
 		auto curr_road = dog->GetCurrentRoad();
 		auto cur_dog_pos = dog->GetPos();
 		int max_pos = std::max(curr_road->GetStart().x, curr_road->GetEnd().x);
 
 		if (new_pos <= max_pos + w_road) {
 			dog->SetPos(model::PointD(new_pos, dog->GetPos().y));
-			return;
+			return res;
 		}
 
 		model::Map::Roadmap::iterator road;
@@ -582,11 +653,14 @@ namespace app {
 		if (road != roadmap.end()) {
 			dog->SetNewRoad(road->second);
 			dog->SetPos(model::PointD(new_pos, dog->GetPos().y));
+			res = new_pos;
 		}
 		else {
 			dog->SetSpeed(model::PlayerSpeed{ 0, 0 });
 			dog->SetPos(model::PointD(max_pos + w_road, dog->GetPos().y));
+			res = max_pos + w_road;
 		}
+		return res;
 	}
 
 }

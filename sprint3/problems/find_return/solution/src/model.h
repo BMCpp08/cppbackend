@@ -110,6 +110,8 @@ namespace model {
 		Point position;
 	};
 
+	using Loots = std::vector<Loot>;
+
 	class Road {
 		struct HorizontalTag {
 			explicit HorizontalTag() = default;
@@ -205,7 +207,6 @@ namespace model {
 		using Offices = std::vector<Office>;
 		using Roads = std::vector<ConstPtrRoad>;
 		using Roadmap = std::unordered_map<std::pair<Point, Direction>, ConstPtrRoad, HashPointDir>;
-		using Loots = std::vector<Loot>;
 		using LootsDescription = std::vector<std::shared_ptr<extra_data::LootDescription>>;
 
 
@@ -279,10 +280,12 @@ namespace model {
 
 		
 		void ExtractLoot(size_t idx) {
-			if (idx >= loots_.size()) {
-				return;
+			auto res = std::find_if(loots_.begin(), loots_.end(), [&](const Loot& loot) {
+				return loot.id == idx;
+				});
+			if (res != loots_.end()) {
+				loots_.erase(res);
 			}
-			loots_.erase(loots_.begin() + idx);
 		}
 
 		int GetLootCount() const noexcept {
@@ -350,14 +353,15 @@ namespace model {
 			ConstPtrRoad road, 
 			size_t bag_capacity = 0,
 			Direction dir = Direction::DIR_NORTH,
-			PlayerSpeed speed = {0, 0}) noexcept
+			PlayerSpeed speed = {0, 0}, int score = 0) noexcept
 			: pos_(std::move(pos))
 			, name_(std::move(name))
 			, id_(std::move(id))
 			, road_(road)
 			, dir_(std::move(dir))
 			, speed_(speed)
-			, bag_capacity_(bag_capacity){
+			, bag_capacity_(bag_capacity)
+			, score_(score){
 		}
 
 		const std::string& GetName() const noexcept {
@@ -399,12 +403,32 @@ namespace model {
 			return road_;
 		}
 
-		bool PutItemIntoBag(extra_data::LootDescription item) {
+		bool PutItemIntoBag(Loot item) {
 			if (bag_.size() >= bag_capacity_) {
 				return false;
 			}
 			bag_.emplace_back(std::move(item));
 			return true;
+		}
+
+		Loots GetBag() const noexcept {
+			return bag_;
+		}
+
+		void EraseBag() {
+			bag_.clear();
+		}
+
+		bool BagIsFull() {
+			return bag_.size() >= bag_capacity_;
+		}
+
+		void SetScore(int score) {
+			score_ += score;
+		}
+
+		int GetScore()  const noexcept {
+			return score_;
 		}
 
 	private:
@@ -416,7 +440,8 @@ namespace model {
 		PlayerSpeed speed_;
 		ConstPtrRoad road_;
 		size_t bag_capacity_;
-		std::vector<extra_data::LootDescription> bag_;
+		Loots bag_;
+		int score_;
 		
 	};
 
