@@ -5,13 +5,6 @@
 
 namespace extra_data {
     using namespace std::literals;
-    const std::string key_loot_types = "lootTypes"s;
-    const std::string key_file = "file"s;
-    const std::string key_type = "type"s;
-    const std::string key_rotation = "rotation"s;
-    const std::string key_color = "color"s;
-    const std::string key_scale = "scale"s;
-    const std::string key_value = "value"s;
     
     struct LootDescription {
         std::string name_;

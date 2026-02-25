@@ -16,6 +16,7 @@
 namespace app {
 	using namespace std::literals;
 	using namespace boost_aliases;
+	using namespace model_details;
 
 	enum JoinGameErrorReason {
 		INVALIDE_NAME = 0u,
@@ -89,9 +90,9 @@ namespace app {
 
 		const Id& GetId() const noexcept;
 
-		model::GameSession* GetGameSession()  noexcept;
+		model::GameSession* GetGameSession() const noexcept;
 
-		std::shared_ptr<model::Dog> GetDogName();
+		std::shared_ptr<model::Dog> GetDogName() const;
 
 		const model::PlayerSpeed& GetSpeed() const noexcept;
 
@@ -214,10 +215,10 @@ namespace app {
 			, game_(game)
 			, join_game_use_case_(join_game_use_case) {
 			if (!game_) {
-				throw std::invalid_argument("Invalid ptr game_ = nullptr");
+				throw std::invalid_argument("Invalid ptr game_ = nullptr"s);
 			}
 			if (!player_tokens) {
-				throw std::invalid_argument("Invalid ptr player_tokens = nullptr");
+				throw std::invalid_argument("Invalid ptr player_tokens = nullptr"s);
 			}
 		}
 
@@ -269,7 +270,7 @@ namespace app {
 
 		collision_detector::Item GetItem(size_t idx) const override {
 			if (idx >= items_.size()) {
-				throw std::logic_error("Invalid item idx!");
+				throw std::logic_error("Invalid item idx!"s);
 			}
 			return items_[idx];
 		}
@@ -280,7 +281,7 @@ namespace app {
 
 		collision_detector::Gatherer GetGatherer(size_t idx) const override {
 			if (idx >= gatherers_.size()) {
-				throw std::logic_error("Invalid gatherer idx!");
+				throw std::logic_error("Invalid gatherer idx!"s);
 			}
 			return gatherers_[idx];
 		}

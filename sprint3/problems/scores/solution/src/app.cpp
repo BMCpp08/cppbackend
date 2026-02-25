@@ -10,15 +10,45 @@ namespace app {
 	using namespace std::literals;
 	using namespace boost_aliases;
 
+	const double item_width = 0.0;
+	const double gatherer_width = 0.6;
+	const double office_width = 0.5;
+	const double road_width = 0.4;
+
+	static model::Loot CreateLoot(std::mt19937& gen, const model::ConstPtrRoad& road, int type, model::Map::LootsDescription& loots_desc) {
+		model::Loot new_loot;
+		new_loot.type = std::move(type);
+		new_loot.score = loots_desc[type]->value_;
+
+		if (road->IsHorizontal()) {
+			std::uniform_int_distribution<> dis(std::min(road->GetStart().x, road->GetEnd().x), std::max(road->GetStart().x, road->GetEnd().x));
+			auto new_point = dis(gen);
+			new_loot.position = model::Point{ new_point, road->GetStart().y };
+		}
+		else {
+			std::uniform_int_distribution<> dis(std::min(road->GetStart().y, road->GetEnd().y), std::max(road->GetStart().y, road->GetEnd().y));
+			auto new_point = dis(gen);
+			new_loot.position = model::Point{ road->GetStart().x, new_point };
+		}
+		return new_loot;
+	}
+
+	static collision_detector::Item CreateItem(const model::Point& position, double item_width) {
+		collision_detector::Item item;
+		item.position = geom::Point2D{ static_cast<double>(position.x),static_cast<double>(position.y) };
+		item.width = item_width;
+		return item;
+	}
+	
 	const Player::Id& Player::GetId() const noexcept {
 		return id_;
 	}
 
-	model::GameSession* Player::GetGameSession()  noexcept {
+	model::GameSession* Player::GetGameSession() const noexcept {
 		return game_session_;
 	}
 
-	std::shared_ptr<model::Dog> Player::GetDogName() {
+	std::shared_ptr<model::Dog> Player::GetDogName() const {
 		if (!dog_) {
 			throw std::invalid_argument("Invalid ptr dog_ = nullptr");
 		}
@@ -199,7 +229,7 @@ namespace app {
 
 			json::object obj;
 			for (const auto& dog : dogs) {
-				obj[std::to_string(dog.second->GetId())] = json::value{ {"name"s,dog.second->GetName()} };
+				obj[std::to_string(dog.second->GetId())] = json::value{ {key_name, dog.second->GetName()} };
 			}
 
 			return json::serialize(obj);
@@ -225,8 +255,8 @@ namespace app {
 			auto game_session = player->GetGameSession();
 			auto dogs = game_session->GetDogs();
 			json::object obj;
-			obj["players"s] = json::object();
-			obj["lostObjects"s] = json::object();
+			obj[key_players] = json::object();
+			obj[key_lost_objects] = json::object();
 
 			for (const auto& dog : dogs) {
 				json::object player;
@@ -257,16 +287,15 @@ namespace app {
 
 				json::array bag;
 				for (auto item : dog.second->GetBag()) {
-					bag.push_back(json::object{ {"id", item.id}, {"type", item.type} });
+					bag.push_back(json::object{ {key_id, item.id}, {key_type, item.type} });
 				}
 
-				obj["players"s].as_object()[dog_id] =
-					json::object{ {"pos"s, arr_pos},
-									{"speed"s, arr_speed},
-									{"dir"s, dir},
-									{"bag"s, bag},
-									{"score"s, dog.second->GetScore()}};
-
+				obj[key_players].as_object()[dog_id] =
+					json::object{ {key_pos, arr_pos},
+									{key_speed, arr_speed},
+									{key_dir, dir},
+									{key_bag, bag},
+									{key_score, dog.second->GetScore()} };
 			}
 
 			const auto map = game_session->GetMap();
@@ -276,9 +305,9 @@ namespace app {
 
 				json::object pos;
 				for (int i = 0; i < loots.size(); ++i) {
-					obj["lostObjects"s].as_object()[std::to_string(loots[i].id)] =
-						json::object({ {"type", loots[i].type},
-							{"pos", json::array{ static_cast<double>(loots[i].position.x), static_cast<double>(loots[i].position.y)}} });
+					obj[key_lost_objects].as_object()[std::to_string(loots[i].id)] =
+						json::object({ {key_type, loots[i].type},
+							{key_pos, json::array{ static_cast<double>(loots[i].position.x), static_cast<double>(loots[i].position.y)}} });
 				}
 			}
 			return json::serialize(obj);
@@ -300,7 +329,7 @@ namespace app {
 			auto token = TryExtractToken(authorization_body);
 			auto player = FindPlayerByToken(token);
 			auto json_obj = json::parse(base_body).as_object();
-			auto dir = json_obj.at("move").as_string().c_str();
+			auto dir = json_obj.at(key_move).as_string().c_str();
 			auto speed = player->GetGameSession()->GetMap()->GetSpeed();
 
 			if (std::strcmp(dir, "") == 0) {
@@ -345,7 +374,7 @@ namespace app {
 	std::string Application::SetTimeDelta(std::string base_body) {
 		try {
 			auto json_obj = json::parse(base_body).as_object();
-			std::chrono::milliseconds time(json_obj.at("timeDelta").as_int64());
+			std::chrono::milliseconds time(json_obj.at(key_time_delta).as_int64());
 			UpdateGameState(time);
 			return json::serialize(json::object());
 		}
@@ -381,42 +410,20 @@ namespace app {
 
 					for (auto i = 0; i < count; ++i) {
 						auto index = std::rand() % roads.size();
-						model::Loot new_loot;
-						new_loot.type = i % loot_desc.size();
-						new_loot.score = loot_desc[new_loot.type]->value_;
-
-						if (roads[index]->IsHorizontal()) {
-
-							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().x, roads[index]->GetEnd().x), std::max(roads[index]->GetStart().x, roads[index]->GetEnd().x));
-							auto new_point = dis(gen);
-							new_loot.position = model::Point{ new_point, roads[index]->GetStart().y };
-							map->AddLoot(new_loot);
-						}
-						else {
-							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().y, roads[index]->GetEnd().y), std::max(roads[index]->GetStart().y, roads[index]->GetEnd().y));
-							auto new_point = dis(gen);
-							new_loot.position = model::Point{ roads[index]->GetStart().x, new_point };
-							map->AddLoot(new_loot);
-						}
+						map->AddLoot(CreateLoot(gen, roads[index], i % loot_desc.size(), loot_desc));
 					}
-
+					
 					auto loots = map->GetLoots();
+
 					std::vector<collision_detector::Item> items;
-					for (auto loot : loots) {
-						collision_detector::Item item;
-						item.position = geom::Point2D{ static_cast<double>(loot.position.x),static_cast<double>(loot.position.y) };
-						item.width = 0.;
-						items.emplace_back(item);
+					for (const auto& loot : loots) {
+						items.emplace_back(CreateItem(loot.position, item_width));
 					}
-
+			
 					auto offices = map->GetOffices();
-					for (auto office : offices) {
-						collision_detector::Item item;
-						item.position = geom::Point2D{ static_cast<double>(office.GetPosition().x),static_cast<double>(office.GetPosition().y) };
-						item.width = 0.5 / 2.;
-						items.emplace_back(item);
+					for (const auto& office : offices) {
+						items.emplace_back(CreateItem(office.GetPosition(), item_width));
 					}
-
 
 					std::vector<collision_detector::Gatherer> gatherers;
 					std::vector<std::shared_ptr<model::Dog>> temp_list_dogs;
@@ -429,7 +436,7 @@ namespace app {
 						auto new_y = dog_->GetPos().y + (dog_->GetSpeed().y * time / 1000);
 
 						auto cur_dir = dog_->GetDir();
-						double w_road = 0.4;
+						double w_road = road_width;
 						double distance = 0.;
 
 						auto start_pos = geom::Point2D{ dog_->GetPos().x, dog_->GetPos().y };
@@ -452,7 +459,6 @@ namespace app {
 							break;
 						case model::Direction::DIR_EAST:
 							if (dog_->GetSpeed().x != 0) {
-
 								distance = GoToEast(roads, dog_, new_x, w_road);
 							}
 							break;
@@ -461,7 +467,7 @@ namespace app {
 						auto end_pos = geom::Point2D{ dog_->GetPos().x, dog_->GetPos().y };
 
 						if (distance != 0.) {
-							gatherers.emplace_back(start_pos, end_pos, 0.6 / 2.);
+							gatherers.emplace_back(start_pos, end_pos, gatherer_width / 2.);
 							temp_list_dogs.push_back(dog_);
 						}
 
@@ -471,7 +477,7 @@ namespace app {
 					std::set<size_t> set_item_id;
 
 					if (auto events = collision_detector::FindGatherEvents(provider); !events.empty()) {
-						for (auto event : events) {
+						for (const auto& event : events) {
 
 							if (event.item_id < loots.size() && set_item_id.count(event.item_id) && !temp_list_dogs[event.gatherer_id]->BagIsFull()) {
 								temp_list_dogs[event.gatherer_id]->PutItemIntoBag(loots[event.item_id]);
@@ -665,5 +671,6 @@ namespace app {
 		return res;
 	}
 
+	
 }
 

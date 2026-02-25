@@ -80,19 +80,19 @@ namespace http_handler {
 			json::object obj;
 
 			obj[key_name] = loot->name_;
-			obj[extra_data::key_file] = loot->file_path_;
-			obj[extra_data::key_type] = loot->type_;
-			obj[extra_data::key_value] = loot->value_;
+			obj[key_file] = loot->file_path_;
+			obj[key_type] = loot->type_;
+			obj[key_value] = loot->value_;
 
 			if (loot->rotation_.has_value()) {
-				obj[extra_data::key_rotation] = loot->rotation_.value();
+				obj[key_rotation] = loot->rotation_.value();
 			}
 
 			if (loot->color_.has_value()) {
-				obj[extra_data::key_color] = loot->color_.value();
+				obj[key_color] = loot->color_.value();
 			}
 
-			obj[extra_data::key_scale] = loot->scale_;
+			obj[key_scale] = loot->scale_;
 
 			loot_types.emplace_back(obj);
 		}
@@ -182,7 +182,7 @@ namespace http_handler {
 				obj[key_roads] = LoadRoadsToJson(map);
 				obj[key_buildings] = LoadBuildingsToJson(map);
 				obj[key_offices] = LoadOfficesToJson(map);
-				obj[extra_data::key_loot_types] = LoadLootTypes(map);
+				obj[key_loot_types] = LoadLootTypes(map);
 				
 				resp = MakeStringResponse(http::status::ok, json::serialize(obj), req.version(), req.keep_alive(), ContentType::APP_JSON);
 			}

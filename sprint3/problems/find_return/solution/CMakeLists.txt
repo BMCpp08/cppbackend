@@ -22,7 +22,7 @@ add_library(game_lib STATIC
     src/loot_generator.cpp
     src/tagged.h
     src/extra_data.h
-    src/game_datails.h
+    src/model_datails.h
 )
 
 target_include_directories(game_lib PUBLIC

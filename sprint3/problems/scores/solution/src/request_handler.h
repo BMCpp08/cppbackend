@@ -18,13 +18,12 @@
 namespace http_handler {
 	using namespace std::literals;
 	using namespace boost_aliases;
-	using namespace model::model_details;
+	using namespace model_details;
 	namespace fs = std::filesystem;
 	using namespace logger;
 
 	// Запрос, тело которого представлено в виде строки
 	using StringRequest = http::request<http::string_body>;
-
 	using StringResponse = http::response<http::string_body>;
 	using FileResponse = http::response<http::file_body>;
 	using EmptyResponse = http::response<http::empty_body>;
