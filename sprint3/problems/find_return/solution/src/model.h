@@ -107,6 +107,7 @@ namespace model {
 	struct Loot {
 		int id;
 		int type;
+		int score;
 		Point position;
 	};
 
@@ -314,12 +315,10 @@ namespace model {
 
 					roadmap_[std::pair{ road->GetStart(), Direction::DIR_SOUTH }] = road;
 					roadmap_[std::pair{ road->GetEnd(), Direction::DIR_NORTH }] = road;
-
 				}
 				else {
 					roadmap_[std::pair{ road->GetEnd(), Direction::DIR_SOUTH }] = road;
 					roadmap_[std::pair{ road->GetStart(), Direction::DIR_NORTH }] = road;
-
 				}
 			}
 		}
@@ -423,8 +422,11 @@ namespace model {
 			return bag_.size() >= bag_capacity_;
 		}
 
-		void SetScore(int score) {
-			score_ += score;
+		void CalcScoreAndEraseBag() {
+			for (auto item : bag_) {
+				score_ += item.score;
+			}
+			EraseBag();
 		}
 
 		int GetScore()  const noexcept {

@@ -104,7 +104,7 @@ namespace app {
 			if (!players_) {
 				throw std::invalid_argument("Invalid ptr players_ = nullptr");
 			}
-			
+
 			auto& player = players_->Add(session->AddDog(spawn_point, std::move(name), road, session->GetMap()->GetBagCapacity()), session);
 
 			if (!player_tokens_) {
@@ -255,23 +255,30 @@ namespace app {
 				arr_speed.push_back(dog.second->GetSpeed().y);
 				auto dog_id = std::to_string(dog.second->GetId());
 
+				json::array bag;
+				for (auto item : dog.second->GetBag()) {
+					bag.push_back(json::object{ {"id", item.id}, {"type", item.type} });
+				}
+
 				obj["players"s].as_object()[dog_id] =
 					json::object{ {"pos"s, arr_pos},
 									{"speed"s, arr_speed},
-									{"dir"s, dir} };
-				
+									{"dir"s, dir},
+									{"bag"s, bag},
+									{"score"s, dog.second->GetScore()}};
+
 			}
 
 			const auto map = game_session->GetMap();
 			auto loots = map->GetLoots();
-			
+
 			if (loots.size() > 0) {
-				
+
 				json::object pos;
 				for (int i = 0; i < loots.size(); ++i) {
 					obj["lostObjects"s].as_object()[std::to_string(loots[i].id)] =
 						json::object({ {"type", loots[i].type},
-							{"pos", json::array{ static_cast<double>(loots[i].position.x), static_cast<double>(loots[i].position.y)}}});
+							{"pos", json::array{ static_cast<double>(loots[i].position.x), static_cast<double>(loots[i].position.y)}} });
 				}
 			}
 			return json::serialize(obj);
@@ -366,18 +373,20 @@ namespace app {
 					}
 
 					auto count = loot_generator->Generate(delta, map->GetLootCount(), dogs.size());
-			
+
 					auto roads = session->GetMap()->GetRoads();
 					std::random_device rd;
 					std::mt19937 gen(rd());
-					auto desc = map->GetDescription();
+					auto loot_desc = map->GetDescription();
+
 					for (auto i = 0; i < count; ++i) {
 						auto index = std::rand() % roads.size();
 						model::Loot new_loot;
-						new_loot.type = i % desc.size();
+						new_loot.type = i % loot_desc.size();
+						new_loot.score = loot_desc[new_loot.type]->value_;
 
 						if (roads[index]->IsHorizontal()) {
-						
+
 							std::uniform_int_distribution<> dis(std::min(roads[index]->GetStart().x, roads[index]->GetEnd().x), std::max(roads[index]->GetStart().x, roads[index]->GetEnd().x));
 							auto new_point = dis(gen);
 							new_loot.position = model::Point{ new_point, roads[index]->GetStart().y };
@@ -390,10 +399,6 @@ namespace app {
 							map->AddLoot(new_loot);
 						}
 					}
-
-			
-
-					std::unordered_map<std::shared_ptr<model::Dog>, std::vector<collision_detector::GatheringEvent>> scenarios;
 
 					auto loots = map->GetLoots();
 					std::vector<collision_detector::Item> items;
@@ -412,7 +417,9 @@ namespace app {
 						items.emplace_back(item);
 					}
 
-					 
+
+					std::vector<collision_detector::Gatherer> gatherers;
+					std::vector<std::shared_ptr<model::Dog>> temp_list_dogs;
 
 					for (auto dog : dogs) {
 						auto dog_ = dog.second;
@@ -420,7 +427,7 @@ namespace app {
 						auto roads = map->GetRoadmap();
 						auto new_x = dog_->GetPos().x + (dog_->GetSpeed().x * time / 1000);
 						auto new_y = dog_->GetPos().y + (dog_->GetSpeed().y * time / 1000);
-						
+
 						auto cur_dir = dog_->GetDir();
 						double w_road = 0.4;
 						double distance = 0.;
@@ -453,31 +460,26 @@ namespace app {
 
 						auto end_pos = geom::Point2D{ dog_->GetPos().x, dog_->GetPos().y };
 
-						
-					
 						if (distance != 0.) {
-							
-							GathererProvider provider(items, { {start_pos, end_pos, 0.6/2.} });
-							if (auto events = collision_detector::FindGatherEvents(provider); !events.empty()) {
-								scenarios[dog_]=(events);
-							}
+							gatherers.emplace_back(start_pos, end_pos, 0.6 / 2.);
+							temp_list_dogs.push_back(dog_);
 						}
-	
+
 					}
 
-					
+					GathererProvider provider(items, gatherers);
+					std::set<size_t> set_item_id;
 
-					for (auto s : scenarios) {
-						
-						for(auto i : s.second) {
-							if (i.item_id < loots.size() && !s.first->BagIsFull()) {
+					if (auto events = collision_detector::FindGatherEvents(provider); !events.empty()) {
+						for (auto event : events) {
 
-
-								s.first->PutItemIntoBag(loots[i.item_id]);
-								map->ExtractLoot(loots[i.item_id].id);
+							if (event.item_id < loots.size() && set_item_id.count(event.item_id) && !temp_list_dogs[event.gatherer_id]->BagIsFull()) {
+								temp_list_dogs[event.gatherer_id]->PutItemIntoBag(loots[event.item_id]);
+								set_item_id.insert(event.item_id);
+								map->ExtractLoot(loots[event.item_id].id);
 							}
 							else {
-								s.first->EraseBag();
+								temp_list_dogs[event.gatherer_id]->CalcScoreAndEraseBag();
 							}
 						}
 					}
