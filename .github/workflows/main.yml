@@ -13,22 +13,22 @@ permissions:
 
 
 jobs:
-#  sprint_3:
-#    if: github.repository_owner != 'cpppracticum'
-#    runs-on: ubuntu-22.04
-#    steps:
+  sprint_3:
+    if: github.repository_owner != 'cpppracticum'
+    runs-on: ubuntu-22.04
+    steps:
 
-#      - name: Checkout code & tests
-#        uses: actions/checkout@v3
-#        with:
-#          submodules: true
+      - name: Checkout code & tests
+        uses: actions/checkout@v3
+        with:
+          submodules: true
 
-#      - name: Install dependencies
-#        run: |
-#          pip uninstall conan -y
-#          pip install -U conan==1.59.0
-#          pip install -r requirements.txt
-#          pip show pytest
+      - name: Install dependencies
+        run: |
+          pip uninstall conan -y
+          pip install -U conan==1.59.0
+          pip install -r requirements.txt
+          pip show pytest
 
 #      - name: run tests sprint3 instrumentation
 #        run: |
@@ -100,10 +100,10 @@ jobs:
 #          cd cpp-backend-tests-practicum/scripts/sprint3
 #          ./find_return/run.sh
 
-#      - name: run tests sprint3 scores
-#        run: |
-#          cd cpp-backend-tests-practicum/scripts/sprint3
-#          ./scores/run.sh
+      - name: run tests sprint3 scores
+        run: |
+          cd cpp-backend-tests-practicum/scripts/sprint3
+          ./scores/run.sh
 
 #      - name: run tests sprint3 ammo
 #        run: |
@@ -115,11 +115,11 @@ jobs:
 #          cd cpp-backend-tests-practicum/scripts/sprint3
 #          ./load/run.sh
 
-#      - name: Publish XML reports
-#        uses: EnricoMi/publish-unit-test-result-action@v2
-#        if: always()
-#        with:
-#          junit_files: ${{ github.workspace }}/*.xml
+      - name: Publish XML reports
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          junit_files: ${{ github.workspace }}/*.xml
 
   sprint_4:
     if: github.repository_owner != 'cpppracticum'
