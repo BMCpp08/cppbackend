@@ -261,27 +261,27 @@ namespace model {
 		}
 
 	private:
-		void CreateRoadmap(ConstPtrRoad road) {
-
-			if (road->IsHorizontal()) {
-				if (road->GetStart().x < road->GetEnd().x) {
-					roadmap_[std::pair{ road->GetStart(), Direction::DIR_EAST }] = road;
-					roadmap_[std::pair{ road->GetEnd(), Direction::DIR_WEST }] = road;
-				}
-				else {
-					roadmap_[std::pair{ road->GetEnd(), Direction::DIR_EAST }] = road;
-					roadmap_[std::pair{ road->GetStart(), Direction::DIR_WEST }] = road;
-				}
+		template<typename Comparator>
+		void LoadRoadmap(const ConstPtrRoad& road, Comparator comp, std::pair<Direction, Direction> dir) {
+			if (comp(road)) {
+				roadmap_[std::pair{ road->GetStart(), dir.second }] = road;
+				roadmap_[std::pair{ road->GetEnd(), dir.first }] = road;
 			}
 			else {
-				if (road->GetStart().y < road->GetEnd().y) {
-					roadmap_[std::pair{ road->GetStart(), Direction::DIR_SOUTH }] = road;
-					roadmap_[std::pair{ road->GetEnd(), Direction::DIR_NORTH }] = road;
-				}
-				else {
-					roadmap_[std::pair{ road->GetEnd(), Direction::DIR_SOUTH }] = road;
-					roadmap_[std::pair{ road->GetStart(), Direction::DIR_NORTH }] = road;
-				}
+				roadmap_[std::pair{ road->GetEnd(), dir.second }] = road;
+				roadmap_[std::pair{ road->GetStart(), dir.first }] = road;
+			}
+		}
+
+		void CreateRoadmap(ConstPtrRoad road) {
+			auto comparator_x = [](ConstPtrRoad road) { return road->GetStart().x < road->GetEnd().x; };
+			auto comparator_y = [](ConstPtrRoad road) { return road->GetStart().y < road->GetEnd().y; };
+
+			if (road->IsHorizontal()) {
+				LoadRoadmap(road, comparator_x, std::pair<Direction, Direction>{Direction::DIR_WEST, Direction::DIR_EAST});
+			}
+			else {
+				LoadRoadmap(road, comparator_y, std::pair<Direction, Direction>{Direction::DIR_NORTH, Direction::DIR_SOUTH});
 			}
 		}
 	private:
