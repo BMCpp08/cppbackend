@@ -14,6 +14,7 @@ namespace app {
 	const double gatherer_width = 0.6;
 	const double office_width = 0.5;
 	const double road_width = 0.4;
+	const double ms_per_second = 1000.;
 
 	static model::Loot CreateLoot(std::mt19937& gen, const model::ConstPtrRoad& road, int type, model::Map::LootsDescription& loots_desc) {
 		model::Loot new_loot;
@@ -72,7 +73,6 @@ namespace app {
 	}
 
 	Player& Players::Add(std::shared_ptr<model::Dog> dog, model::GameSession* game_session) {
-
 		if (!game_session) {
 			throw std::invalid_argument("Invalid ptr game_session = nullptr");
 		}
@@ -82,7 +82,7 @@ namespace app {
 		return players_[key];
 	};
 
-	const Player* Players::FindByDogIdAndMapId(std::string name, model::Map::Id map_id) {
+	const Player* Players::FindByDogIdAndMapId(const std::string& name, model::Map::Id map_id) {
 		if (auto it_player = players_.find(std::pair{ name, *map_id }); it_player != players_.end()) {
 			return &it_player->second;
 		}
@@ -99,8 +99,7 @@ namespace app {
 	Token  PlayerTokens::FindTokenByPlayer(const Player* player) const {
 		auto it = std::find_if(token_to_player_.begin(), token_to_player_.end(), [&](const auto& pair) {
 			return pair.second.get() == player;
-			}
-		);
+			});
 		if (it != token_to_player_.end()) {
 			return it->first;
 		}
@@ -115,8 +114,7 @@ namespace app {
 		return id_;
 	}
 
-	GameResult JoinGameUseCase::JoinGame(std::string map_id, std::string name) {
-
+	GameResult JoinGameUseCase::JoinGame(const std::string& map_id, const std::string& name) {
 		if (name.empty()) {
 			throw GameError(JoinGameErrorReason::INVALIDE_NAME);
 		}
@@ -135,7 +133,7 @@ namespace app {
 				throw std::invalid_argument("Invalid ptr players_ = nullptr");
 			}
 
-			auto& player = players_->Add(session->AddDog(spawn_point, std::move(name), road, session->GetMap()->GetBagCapacity()), session);
+			auto& player = players_->Add(session->AddDog(spawn_point, name, road, session->GetMap()->GetBagCapacity()), session);
 
 			if (!player_tokens_) {
 				throw std::invalid_argument("Invalid ptr player_tokens_ = nullptr");
@@ -154,7 +152,6 @@ namespace app {
 		std::string bearer;
 		std::string token;
 
-
 		if (authorization_body.empty()) {
 			throw GameError(AuthorizationGameErrorReason::AUTHORIZATION_INVALIDE_TOKEN);
 		}
@@ -168,7 +165,6 @@ namespace app {
 		token = authorization_body.substr(pos + 1);
 
 		if (bearer.empty() || token.empty() || bearer != "Bearer" || token.length() != 32) {
-
 			throw GameError(AuthorizationGameErrorReason::AUTHORIZATION_INVALIDE_TOKEN);
 		}
 		return Token(token);
@@ -193,23 +189,22 @@ namespace app {
 		return game_->FindMap(id);
 	}
 
-	GameResult Application::JoinGame(std::string map_id, std::string name) {
+	GameResult Application::JoinGame(const std::string& map_id, const std::string& name) {
 		try {
-			return join_game_use_case_.JoinGame(std::move(map_id), std::move(name));
+			return join_game_use_case_.JoinGame(map_id, name);
 		}
 		catch (app::GameError<app::JoinGameErrorReason> err) {
 
 			if (err.GetErrorReason() == app::INVALIDE_NAME) {//несуществующий id карты
 				throw GameError(JoinGameErrorReason::INVALIDE_NAME);
 			}
-			else if (err.GetErrorReason() == app::INVALIDE_MAP) {//пустое имя игрока,
+			if (err.GetErrorReason() == app::INVALIDE_MAP) {//пустое имя игрока,
 				throw GameError(JoinGameErrorReason::INVALIDE_MAP);
 			}
 		}
 		catch (const std::exception& exc) {
 			throw std::runtime_error(std::string("Error Application: ") + exc.what());
 		}
-
 	}
 
 	void Application::Tick(std::chrono::milliseconds delta) {
@@ -231,16 +226,13 @@ namespace app {
 			for (const auto& dog : dogs) {
 				obj[std::to_string(dog.second->GetId())] = json::value{ {key_name, dog.second->GetName()} };
 			}
-
 			return json::serialize(obj);
 		}
 		catch (app::GameError<app::AuthorizationGameErrorReason> err) {
 			if (err.GetErrorReason() == AUTHORIZATION_INVALIDE_TOKEN) {
 				throw GameError(AuthorizationGameErrorReason::AUTHORIZATION_HEADER_MISSING);
 			}
-			else {
-				throw err;
-			}
+			throw err;
 		}
 		catch (const std::exception& exc) {
 			throw std::runtime_error(std::string("Error Application: ") + exc.what());
@@ -249,7 +241,6 @@ namespace app {
 
 	std::string Application::GetGameState(std::string_view authorization_body) {
 		try {
-
 			auto token = TryExtractToken(authorization_body);
 			auto player = FindPlayerByToken(token);
 			auto game_session = player->GetGameSession();
@@ -323,9 +314,8 @@ namespace app {
 		}
 	}
 
-	std::string Application::SetPlayerAction(std::string_view authorization_body, std::string base_body) {
+	std::string Application::SetPlayerAction(std::string_view authorization_body, const std::string& base_body) {
 		try {
-
 			auto token = TryExtractToken(authorization_body);
 			auto player = FindPlayerByToken(token);
 			auto json_obj = json::parse(base_body).as_object();
@@ -354,24 +344,20 @@ namespace app {
 			else {
 				throw GameError(ActionGameErrorReason::FAILED_PARSE_ACTION);
 			}
-
 			return json::serialize(json::object());
 		}
 		catch (app::GameError<app::AuthorizationGameErrorReason> err) {
-
 			if (err.GetErrorReason() == AUTHORIZATION_INVALIDE_TOKEN) {
 				throw GameError(AuthorizationGameErrorReason::AUTHORIZATION_HEADER_REQ);
 			}
-			else {
-				throw err;
-			}
+			throw err;
 		}
 		catch (...) {
 			throw GameError(ActionGameErrorReason::FAILED_PARSE_ACTION);
 		}
 	}
 
-	std::string Application::SetTimeDelta(std::string base_body) {
+	std::string Application::SetTimeDelta(const std::string& base_body) {
 		try {
 			auto json_obj = json::parse(base_body).as_object();
 			std::chrono::milliseconds time(json_obj.at(key_time_delta).as_int64());
@@ -428,12 +414,12 @@ namespace app {
 					std::vector<collision_detector::Gatherer> gatherers;
 					std::vector<std::shared_ptr<model::Dog>> temp_list_dogs;
 
-					for (auto dog : dogs) {
+					for (const auto& dog : dogs) {
 						auto dog_ = dog.second;
 
 						auto roads = map->GetRoadmap();
-						auto new_x = dog_->GetPos().x + (dog_->GetSpeed().x * time / 1000);
-						auto new_y = dog_->GetPos().y + (dog_->GetSpeed().y * time / 1000);
+						auto new_x = dog_->GetPos().x + (dog_->GetSpeed().x * time / ms_per_second);
+						auto new_y = dog_->GetPos().y + (dog_->GetSpeed().y * time / ms_per_second);
 
 						auto cur_dir = dog_->GetDir();
 						double w_road = road_width;
@@ -470,7 +456,6 @@ namespace app {
 							gatherers.emplace_back(start_pos, end_pos, gatherer_width / 2.);
 							temp_list_dogs.push_back(dog_);
 						}
-
 					}
 
 					GathererProvider provider(items, gatherers);
@@ -509,11 +494,9 @@ namespace app {
 		}
 
 		model::Map::Roadmap::iterator road;
-
 		if (curr_road->IsHorizontal()) {
 			if (cur_dog_pos.x >= curr_road->GetStart().x - w_road && cur_dog_pos.x <= curr_road->GetStart().x + w_road) {
 				road = roadmap.find(std::pair{ curr_road->GetStart(), model::Direction::DIR_SOUTH });
-
 			}
 			else if (cur_dog_pos.x >= curr_road->GetEnd().x - w_road && cur_dog_pos.x <= curr_road->GetEnd().x + w_road) {
 				road = roadmap.find(std::pair{ curr_road->GetEnd(), model::Direction::DIR_SOUTH });
@@ -552,7 +535,6 @@ namespace app {
 		}
 
 		model::Map::Roadmap::iterator road;
-
 		if (curr_road->IsHorizontal()) {
 			if (cur_dog_pos.x >= curr_road->GetStart().x - w_road && cur_dog_pos.x <= curr_road->GetStart().x + w_road) {
 				road = roadmap.find(std::pair{ curr_road->GetStart(), model::Direction::DIR_NORTH });
@@ -595,7 +577,6 @@ namespace app {
 		}
 
 		model::Map::Roadmap::iterator road;
-
 		if (curr_road->IsVertical()) {
 
 			if (cur_dog_pos.y >= curr_road->GetStart().y - w_road && cur_dog_pos.y <= curr_road->GetStart().y + w_road) {
@@ -639,7 +620,6 @@ namespace app {
 		}
 
 		model::Map::Roadmap::iterator road;
-
 		if (curr_road->IsVertical()) {
 			if (cur_dog_pos.y >= curr_road->GetStart().y - w_road && cur_dog_pos.y <= curr_road->GetStart().y + w_road) {
 				road = roadmap.find(std::pair{ curr_road->GetStart(), model::Direction::DIR_EAST });
@@ -670,7 +650,5 @@ namespace app {
 		}
 		return res;
 	}
-
-	
 }
 

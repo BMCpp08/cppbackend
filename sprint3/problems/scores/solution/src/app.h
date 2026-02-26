@@ -112,7 +112,7 @@ namespace app {
 	public:
 		Player& Add(std::shared_ptr<model::Dog> dog, model::GameSession* game_session);
 
-		const Player* FindByDogIdAndMapId(std::string name, model::Map::Id map_id);
+		const Player* FindByDogIdAndMapId(const std::string& name, model::Map::Id map_id);
 
 	private:
 		std::unordered_map<std::pair<std::string, std::string>, Player, PlayersHash> players_;
@@ -181,7 +181,7 @@ namespace app {
 			, is_random_positions_(is_random_positions) {
 		}
 
-		GameResult JoinGame(std::string map_id, std::string name);
+		GameResult JoinGame(const std::string& map_id, const std::string& name);
 
 		std::shared_ptr<Players> GetListPlayersUseCase() const noexcept;
 	private:
@@ -221,12 +221,12 @@ namespace app {
 				throw std::invalid_argument("Invalid ptr player_tokens = nullptr"s);
 			}
 		}
-
+		
 		const model::Game::Maps GetMaps() const noexcept;
 
 		const model::Game::MapPtr FindMap(const model::Map::Id& id) const noexcept;
 
-		GameResult JoinGame(std::string map_id, std::string name);
+		GameResult JoinGame(const std::string& map_id, const std::string& name);
 
 		void Tick(std::chrono::milliseconds delta);
 
@@ -236,9 +236,9 @@ namespace app {
 
 		std::string GetGameState(std::string_view authorization_body);
 
-		std::string SetPlayerAction(std::string_view authorization_body, std::string base_body);
+		std::string SetPlayerAction(std::string_view authorization_body, const std::string& base_body);
 
-		std::string SetTimeDelta(std::string base_body);
+		std::string SetTimeDelta(const std::string& base_body);
 
 		void UpdateGameState(std::chrono::milliseconds delta);
 
@@ -272,7 +272,7 @@ namespace app {
 			if (idx >= items_.size()) {
 				throw std::logic_error("Invalid item idx!"s);
 			}
-			return items_[idx];
+			return items_.at(idx);
 		}
 
 		size_t GatherersCount() const override {
@@ -283,7 +283,7 @@ namespace app {
 			if (idx >= gatherers_.size()) {
 				throw std::logic_error("Invalid gatherer idx!"s);
 			}
-			return gatherers_[idx];
+			return gatherers_.at(idx);
 		}
 
 	private:

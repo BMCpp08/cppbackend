@@ -1,4 +1,4 @@
-#include "http_server.h"
+﻿#include "http_server.h"
 
 
 #include <iostream>
@@ -20,6 +20,10 @@ namespace http_server {
 	void SessionBase::Close() {
 		beast::error_code ec;
 		stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
+		if (ec) {
+			BOOST_LOG_TRIVIAL(fatal) << logging::add_value(data, CreateJsonExc(EXIT_FAILURE, ec.message()))
+				<< logging::add_value(message, key_error);
+		}
 	}
 
 	void SessionBase::Read() {

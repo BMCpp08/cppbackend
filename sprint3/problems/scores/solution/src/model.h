@@ -91,7 +91,6 @@ namespace model {
 		struct VerticalTag {
 			explicit VerticalTag() = default;
 		};
-
 	public:
 		constexpr static HorizontalTag HORIZONTAL{};
 		constexpr static VerticalTag VERTICAL{};
@@ -121,11 +120,9 @@ namespace model {
 		Point GetEnd() const noexcept {
 			return end_;
 		}
-
 	private:
 		Point start_;
 		Point end_;
-
 	};
 
 	class Building {
@@ -137,7 +134,6 @@ namespace model {
 		const Rectangle& GetBounds() const noexcept {
 			return bounds_;
 		}
-
 	private:
 		Rectangle bounds_;
 	};
@@ -163,13 +159,11 @@ namespace model {
 		Offset GetOffset() const noexcept {
 			return offset_;
 		}
-
 	private:
 		Id id_;
 		Point position_;
 		Offset offset_;
 	};
-
 
 	class Map {
 	public:
@@ -249,7 +243,6 @@ namespace model {
 			return loot_description_;
 		}
 
-		
 		void ExtractLoot(size_t idx) {
 			auto res = std::find_if(loots_.begin(), loots_.end(), [&](const Loot& loot) {
 				return loot.id == idx;
@@ -259,7 +252,7 @@ namespace model {
 			}
 		}
 
-		int GetLootCount() const noexcept {
+		size_t GetLootCount() const noexcept {
 			return loots_.size();
 		}
 
@@ -282,7 +275,6 @@ namespace model {
 			}
 			else {
 				if (road->GetStart().y < road->GetEnd().y) {
-
 					roadmap_[std::pair{ road->GetStart(), Direction::DIR_SOUTH }] = road;
 					roadmap_[std::pair{ road->GetEnd(), Direction::DIR_NORTH }] = road;
 				}
@@ -292,24 +284,18 @@ namespace model {
 				}
 			}
 		}
-
 	private:
 		using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
-
 		Id id_;
 		std::string name_;
 		Roads roads_;
 		Buildings buildings_;
-
 		OfficeIdToIndex warehouse_id_to_index_;
 		Offices offices_;
 		Speed speed_;
 		Roadmap roadmap_;
-	
 		Loots loots_;
 		LootsDescription loot_description_;
-
-
 		size_t bag_capacity_;
 	};
 
@@ -393,7 +379,7 @@ namespace model {
 		}
 
 		void CalcScoreAndEraseBag() {
-			for (auto item : bag_) {
+			for (const auto& item : bag_) {
 				score_ += item.score;
 			}
 			EraseBag();
@@ -407,7 +393,6 @@ namespace model {
 		PointD pos_;
 		std::string name_;
 		std::uint64_t id_;
-		
 		Direction dir_;
 		PlayerSpeed speed_;
 		ConstPtrRoad road_;
@@ -425,20 +410,19 @@ namespace model {
 			: map_{ map } {
 		}
 
-		const std::shared_ptr<Dog> AddDog(PointD point, std::string name, ConstPtrRoad road, size_t capacity) {
+		const std::shared_ptr<Dog> AddDog(PointD point, const std::string& name, ConstPtrRoad road, size_t capacity) {
 			using namespace std::literals;
 			if (!road) {
 				throw std::invalid_argument("Invalid ptr road = nullptr");
 			}
 
 			const size_t index = dogs_.size();
-
 			if (dogs_.count(index)) {
 				throw std::invalid_argument("Dog with id "s + std::to_string(index));
 			}
 			else {
 				try {
-					dogs_.emplace(index, std::make_shared<Dog>(std::move(point), std::move(name), index, road, capacity));
+					dogs_.emplace(index, std::make_shared<Dog>(std::move(point), name, index, road, capacity));
 					return dogs_[index];
 				}
 				catch (...) {
@@ -455,7 +439,6 @@ namespace model {
 		const Dogs& GetDogs() const noexcept {
 			return dogs_;
 		}
-
 	private:
 		Dogs dogs_;
 		std::shared_ptr<Map> map_;
@@ -493,7 +476,6 @@ namespace model {
 	private:
 		using MapIdHasher = util::TaggedHasher<Map::Id>;
 		using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
-
 		Maps maps_;
 		MapIdToIndex map_id_to_index_;
 		std::vector<GameSession> sessions_;

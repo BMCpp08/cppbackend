@@ -56,15 +56,15 @@ namespace json_loader {
 		//Скорость персонажей
 		double default_dog_speed = 1.;
 		double dog_speed = default_dog_speed;
-		if (value.as_object().contains(key_default_dog_speed)) {
-			default_dog_speed = value.as_object().at(key_default_dog_speed).as_double();
+		if (auto it = value.as_object().if_contains(key_default_dog_speed); it) {
+			default_dog_speed = it->as_double();
 		}
 
 		//Вместимость рюкзаков на всех картах 
 		int def_bag_capacity = 3;
 		int bag_capacity = def_bag_capacity;
-		if (value.as_object().contains(key_def_bag_capacity)) {
-			def_bag_capacity = value.as_object().at(key_def_bag_capacity).as_int64();
+		if (auto it = value.as_object().if_contains(key_def_bag_capacity); it) {
+			def_bag_capacity = it->as_int64();
 		}
 
 		if (auto f_maps = value.as_object().find(key_maps); f_maps != value.as_object().end()) {
@@ -75,74 +75,72 @@ namespace json_loader {
 
 					Map::Id id{ json_map.as_object().at(key_id).as_string().c_str() };
 
-					if (json_map.as_object().contains(key_dog_speed)) {
-						dog_speed = json_map.as_object().at(key_dog_speed).as_double();
-					}
-					else {
+					if (auto it = json_map.as_object().if_contains(key_dog_speed); it) {
+						dog_speed = it->as_double();
+					} else {
 						dog_speed = default_dog_speed;
 					}
 
-					if (json_map.as_object().contains(key_bag_capacity)) {
-						bag_capacity = json_map.as_object().at(key_bag_capacity).as_int64();
-					}
-					else {
+					if (auto it = json_map.as_object().if_contains(key_bag_capacity); it) {
+						bag_capacity = it->as_int64();
+					} else {
 						bag_capacity = def_bag_capacity;
 					}
 
 					Map map(id, json_map.as_object().at(key_name).as_string().c_str(), dog_speed, bag_capacity);
 
 
-					if (json_map.as_object().if_contains(key_roads)) {
-						auto roads = json_map.as_object().at(key_roads).as_array();
+					if (auto it = json_map.as_object().if_contains(key_roads); it) {
+						auto roads = it->as_array();
 
 						for (auto& road : roads) {
 							map.AddRoad(std::move(CreateRoad(road.as_object())));
 						}
 					}
 
-					if (json_map.as_object().if_contains(key_buildings)) {
-						auto buildings = json_map.as_object().at(key_buildings).as_array();
+					if (auto it = json_map.as_object().if_contains(key_buildings); it) {
+						auto buildings = it->as_array();
 
 						for (auto& building : buildings) {
 							map.AddBuilding(std::move(CreateBuilding(building.as_object())));
 						}
 					}
 
-					if (json_map.as_object().if_contains(key_offices)) {
-						auto offices = json_map.as_object().at(key_offices).as_array();
+					if (auto it = json_map.as_object().if_contains(key_offices); it) {
+						auto offices = it->as_array();
 
 						for (auto& office : offices) {
 							map.AddOffice(std::move(CreateOffice(office.as_object())));
 						}
 					}
 				
-					if (json_map.as_object().contains(key_loot_types)) {
-						const auto& loot_types = json_map.as_object().at(key_loot_types).as_array();
+					if (auto it = json_map.as_object().if_contains(key_loot_types); it) {
+						const auto& loot_types = it->as_array();
 						
 						for (auto loot : loot_types) {
 
 							extra_data::LootDescription new_loot;
 
-							if (loot.as_object().contains(key_name)) {
-								new_loot.name_ = loot.as_object().at(key_name).as_string().c_str();
+							if (auto it = loot.as_object().if_contains(key_name); it) {
+								new_loot.name_ = it->as_string().c_str();
 							}
-							if (loot.as_object().contains(key_file)) {
-								new_loot.file_path_ = loot.as_object().at(key_file).as_string().c_str();
+							if (auto it = loot.as_object().if_contains(key_file); it) {
+								new_loot.file_path_ = it->as_string().c_str();
 							}
-							if (loot.as_object().contains(key_type)) {
-								new_loot.type_ = loot.as_object().at(key_type).as_string().c_str();
+							if (auto it = loot.as_object().if_contains(key_type); it) {
+								new_loot.type_ = it->as_string().c_str();
 							}
-							if (loot.as_object().contains(key_rotation)) {
-								new_loot.rotation_ = loot.as_object().at(key_rotation).as_int64();
+							if (auto it = loot.as_object().if_contains(key_rotation); it) {
+								new_loot.rotation_ = it->as_int64();
 							}
-							if (loot.as_object().contains(key_color)) {
-								new_loot.color_ = loot.as_object().at(key_color).as_string().c_str();
+							if (auto it = loot.as_object().if_contains(key_color); it) {
+								new_loot.color_ = it->as_string().c_str();
 							}
-							if (loot.as_object().contains(key_scale)) {
-								new_loot.scale_ = loot.as_object().at(key_scale).as_double();
+							if (auto it = loot.as_object().if_contains(key_scale); it) {
+								new_loot.scale_ = it->as_double();
 							}
-							if (loot.as_object().contains(key_value)) {
-								new_loot.value_ = loot.as_object().at(key_value).as_int64();
+							if (auto it = loot.as_object().if_contains(key_value); it) {
+								new_loot.value_ = it->as_int64();
 							}
 							map.AddLootDescription(std::move(new_loot));
 						}
@@ -150,8 +148,8 @@ namespace json_loader {
 					game.AddMap(map);
 			}
 			
-			if (value.as_object().contains(key_loot_gen_config)) {
-				const auto& generator = value.as_object().at(key_loot_gen_config);
+			if (auto it = value.as_object().if_contains(key_loot_gen_config); it) {
+				const auto& generator = *it;
 				const auto& period_sec = generator.as_object().at(key_period).as_double();
 				const auto& probability = generator.as_object().at(key_probability).as_double();
 
