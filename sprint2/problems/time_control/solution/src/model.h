@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -27,12 +27,12 @@ namespace model {
 		const std::string key_offices = "offices"s;
 		const std::string key_offset_x = "offsetX"s;
 		const std::string key_offset_y = "offsetY"s;
-		const std::string key_auth_token = "authToken"s;
+		const std::string key_auth_token = "authToken"s; 
 		const std::string key_player_id = "playerId"s;
 		const std::string key_default_dog_speed = "defaultDogSpeed"s;
 		const std::string key_dog_speed = "dogSpeed"s;
 		const std::string key_players = "players"s;
-		const std::string key_speed = "speed"s;
+		const std::string key_speed = "speed"s; 
 		const std::string key_pos = "pos"s;
 		const std::string key_dir = "dir"s;
 	}
@@ -61,7 +61,7 @@ namespace model {
 		size_t operator()(const Point& p) const noexcept {
 			size_t h1 = std::hash<Coord>()(p.x);
 			size_t h2 = std::hash<Coord>()(p.y);
-			return h1 ^ (h2 << 1);
+			return h1 ^ (h2 << 1); 
 		}
 	};
 
@@ -197,7 +197,7 @@ namespace model {
 		Map(Id id, std::string name, Speed speed) noexcept
 			: id_(std::move(id))
 			, name_(std::move(name))
-			, speed_(std::move(speed)) {
+			, speed_(std::move(speed)){
 		}
 
 		const Id& GetId() const noexcept {
@@ -244,55 +244,33 @@ namespace model {
 		}
 
 	private:
-		//void CreateRoadmap(ConstPtrRoad road) {
-
-		//	if (road->IsHorizontal()) {
-		//		if (road->GetStart().x < road->GetEnd().x) {
-		//			roadmap_[std::pair{ road->GetStart(), Direction::DIR_EAST }] = road;
-		//			roadmap_[std::pair{ road->GetEnd(), Direction::DIR_WEST }] = road;
-		//		}
-		//		else {
-		//			roadmap_[std::pair{ road->GetEnd(), Direction::DIR_EAST }] = road;
-		//			roadmap_[std::pair{ road->GetStart(), Direction::DIR_WEST }] = road;
-		//		}
-		//	}
-		//	else {
-		//		if (road->GetStart().y < road->GetEnd().y) {
-
-		//			roadmap_[std::pair{ road->GetStart(), Direction::DIR_SOUTH }] = road;
-		//			roadmap_[std::pair{ road->GetEnd(), Direction::DIR_NORTH }] = road;
-
-		//		}
-		//		else {
-		//			roadmap_[std::pair{ road->GetEnd(), Direction::DIR_SOUTH }] = road;
-		//			roadmap_[std::pair{ road->GetStart(), Direction::DIR_NORTH }] = road;
-
-		//		}
-		//	}
-		//}
-		template<typename Comparator>
-		void LoadRoadmap(const ConstPtrRoad& road, Comparator comp, std::pair<Direction, Direction> dir) {
-			if (comp(road)) {
-				roadmap_[std::pair{ road->GetStart(), dir.second }] = road;
-				roadmap_[std::pair{ road->GetEnd(), dir.first }] = road;
-			}
-			else {
-				roadmap_[std::pair{ road->GetEnd(), dir.second }] = road;
-				roadmap_[std::pair{ road->GetStart(), dir.first }] = road;
-			}
-		}
-
 		void CreateRoadmap(ConstPtrRoad road) {
-			auto comparator_x = [](ConstPtrRoad road) { return road->GetStart().x < road->GetEnd().x; };
-			auto comparator_y = [](ConstPtrRoad road) { return road->GetStart().y < road->GetEnd().y; };
 
 			if (road->IsHorizontal()) {
-				LoadRoadmap(road, comparator_x, std::pair<Direction, Direction>{Direction::DIR_WEST, Direction::DIR_EAST});
+				if (road->GetStart().x < road->GetEnd().x) {
+					roadmap_[std::pair{ road->GetStart(), Direction::DIR_EAST }] = road;
+					roadmap_[std::pair{ road->GetEnd(), Direction::DIR_WEST }] = road;
+				}
+				else {
+					roadmap_[std::pair{ road->GetEnd(), Direction::DIR_EAST }] = road;
+					roadmap_[std::pair{ road->GetStart(), Direction::DIR_WEST }] = road;
+				}
 			}
 			else {
-				LoadRoadmap(road, comparator_y, std::pair<Direction, Direction>{Direction::DIR_NORTH, Direction::DIR_SOUTH});
+				if (road->GetStart().y < road->GetEnd().y) {
+
+					roadmap_[std::pair{ road->GetStart(), Direction::DIR_SOUTH }] = road;
+					roadmap_[std::pair{ road->GetEnd(), Direction::DIR_NORTH }] = road;
+
+				}
+				else {
+					roadmap_[std::pair{ road->GetEnd(), Direction::DIR_SOUTH }] = road;
+					roadmap_[std::pair{ road->GetStart(), Direction::DIR_NORTH }] = road;
+
+				}
 			}
 		}
+
 	private:
 		using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
 
