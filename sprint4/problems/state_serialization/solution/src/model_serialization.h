@@ -122,10 +122,6 @@ private:
     model::Point position_;
 };
 
-struct DescriptionPlayer {
-    app::Player::Id id;
-    app::Token token;
-};
 
 class PlayerRepr {
 public:
@@ -133,15 +129,12 @@ public:
 
     explicit PlayerRepr(const app::Player* player, const app::Token& token)
         : id_(player->GetId())
-        , token_(token) {
+        , token_(player->GetToken()) {
     }
 
-    [[nodiscard]] DescriptionPlayer Restore() const {
-        DescriptionPlayer player{ id_, token_ };
-
-        player.id = id_;
-        player.token = token_;
-
+    [[nodiscard]] app::Player Restore() const {
+        app::Player player(id_);
+        player.SetToken(token_);
         return player;
     }
 

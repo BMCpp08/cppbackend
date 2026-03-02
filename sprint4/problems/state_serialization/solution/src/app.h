@@ -82,8 +82,8 @@ namespace app {
 		using Id = util::Tagged<std::uint32_t, Player>;
 
 		Player(Id id,
-			model::GameSession* game_session,
-			std::shared_ptr<model::Dog> dog) noexcept
+			model::GameSession* game_session = nullptr,
+			std::shared_ptr<model::Dog> dog = nullptr) noexcept
 			: id_(std::move(id))
 			, game_session_(game_session)
 			, dog_(dog) {
@@ -108,11 +108,14 @@ namespace app {
 
 		model::Direction GetDir() const noexcept;
 
+		void SetToken(Token token);
+
+		Token GetToken() const noexcept;
 	private:
 		model::GameSession* game_session_;
 		std::shared_ptr<model::Dog> dog_;
 		Id id_;
-
+		Token token_ = Token{ std::to_string(0) };
 	};
 
 	class Players {
@@ -149,6 +152,7 @@ namespace app {
 				<< std::hex << std::setfill('0') << std::setw(16) << num2;
 
 			auto token = Token(ss.str());
+			player.SetToken(token);
 			token_to_player_[token] = std::make_shared<Player>(std::forward<NewPlayer>(player));
 			return token;
 		}

@@ -61,10 +61,7 @@ namespace infrastructure {
 
 
 							const app::Player* player = players->FindByDogIdAndMapId(dog.second->GetName(), map->GetId());
-							const app::Token token = app_.FindTokenByPlayer(player);
-
-
-							players_repr.emplace_back(player, token);
+							players_repr.emplace_back(player, player->GetToken());
 						}
 						auto loots = map->GetLoots();
 						for (const auto& loot : loots) {
@@ -117,7 +114,7 @@ namespace infrastructure {
 					if (auto* session = game->FindGameSessions(map_data.id); session) {
 
 						const auto& map = session->GetMap();
-						std::vector<serialization::DescriptionPlayer> players;
+						std::vector<app::Player> players;
 						for (auto player_repr : map_data.players) {
 							players.emplace_back(player_repr.Restore());
 						}
@@ -127,12 +124,12 @@ namespace infrastructure {
 
 							auto road = map->GetRoads().at(*dog.GetRoadId());
 							dog.SetNewRoad(road);
-							auto f_player = std::find_if(players.begin(), players.end(), [&](const serialization::DescriptionPlayer& player) {
-								return *dog.GetId() == *player.id;
+							auto f_player = std::find_if(players.begin(), players.end(), [&](const app::Player& player) {
+								return *dog.GetId() == *player.GetId();
 								});
 
 							if (f_player != players.end()) {
-								app_.JoinGame(session->AddDog(dog), session, f_player->token);
+								app_.JoinGame(session->AddDog(dog), session, f_player->GetToken());
 							}
 						}
 						for (auto loot_repr : map_data.loots) {

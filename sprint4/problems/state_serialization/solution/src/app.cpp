@@ -72,6 +72,13 @@ namespace app {
 		return dog_->GetDirection();
 	}
 
+	void Player::SetToken(Token token) {
+		token_ = std::move(token);
+	}
+	Token Player::GetToken() const noexcept {
+		return token_;
+	}
+
 	Player& Players::Add(std::shared_ptr<model::Dog> dog, model::GameSession* game_session) {
 		if (!game_session) {
 			throw std::invalid_argument("Invalid ptr game_session = nullptr");
