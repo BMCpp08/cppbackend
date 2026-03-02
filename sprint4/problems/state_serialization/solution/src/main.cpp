@@ -9,7 +9,7 @@
 #include "app.h"
 #include "boost_includes.h"
 #include "ticker.h"
-
+#include "infastructure.h"
 
 using namespace std::literals;
 using namespace logger;
@@ -90,7 +90,7 @@ int main(int argc, const char* argv[]) {
 		if (auto args = ParseCommandLine(argc, argv)) {
 			// 1. Загружаем карту из файла и построить модель игры
 			std::shared_ptr<model::Game> game = std::make_shared<model::Game>(json_loader::LoadGame(args->cfg_file));
-			
+			std::shared_ptr<infrastructure::SerializingListener> serializing_listener;
 			// 2. Инициализируем io_context
 			const unsigned num_threads = std::thread::hardware_concurrency();
 			net::io_context ioc(num_threads);
@@ -101,10 +101,6 @@ int main(int argc, const char* argv[]) {
 			net::signal_set signals(ioc, SIGINT, SIGTERM);
 			signals.async_wait([&ioc, &args](const sys::error_code& ec, [[maybe_unused]] int signal_number) {
 				if (!ec) {
-					//Сохраняем текущее состояние сервера
-					if (args->state_file.has_value()) {
-					//???
-					}
 					ioc.stop();
 
 					BOOST_LOG_TRIVIAL(info) << logging::add_value(data, CreateJsonExc(0))
@@ -123,9 +119,23 @@ int main(int argc, const char* argv[]) {
 			std::shared_ptr<app::PlayerTokens> player_tokens = std::make_shared<app::PlayerTokens>();
 			app::JoinGameUseCase join_game_use_case(game, player_tokens, players, (args->is_random_positions.has_value())? *(args->is_random_positions) : false);
 			
-		
+	
+			
 			app::Application application(game, join_game_use_case, player_tokens);
 			http_handler::ApiHandler api_handler(application);
+
+			if (args->state_file.has_value()) {
+				auto period = args->save_state_period_ms.value_or(std::chrono::milliseconds::zero());
+				serializing_listener = std::make_shared<infrastructure::SerializingListener>(
+					args->state_file.value(), application, period);
+
+				serializing_listener->RestoreGameState(args->state_file.value());
+			}
+
+			if (args->save_state_period_ms.has_value() && serializing_listener) {
+				application.SetApplicationListener(serializing_listener);
+			}
+
 
 			// Настраиваем вызов метода Application::Tick
 			std::shared_ptr<Ticker> ticker;
@@ -169,12 +179,15 @@ int main(int argc, const char* argv[]) {
 			BOOST_LOG_TRIVIAL(info) << logging::add_value(data, custom_data)
 				<< logging::add_value(message, msg);
 
-
+			
 			// 6. Запускаем обработку асинхронных операций
 			RunWorkers(std::max(1u, num_threads), [&ioc] {
 				ioc.run();
 				});
 
+			if (serializing_listener) {
+				serializing_listener->SaveState();
+			}
 		}
 	}
 	catch (const std::exception& ex) {

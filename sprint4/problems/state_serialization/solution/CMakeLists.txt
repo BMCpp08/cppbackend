@@ -15,10 +15,11 @@ find_package(Threads REQUIRED)
 add_library(game_lib STATIC
     src/model.h
     src/model.cpp
+    src/geom.h
     src/loot_generator.h
     src/loot_generator.cpp
     src/tagged.h
-    src/extra_data.h
+    src/game_details.h
     src/model_datails.h
 )
 
@@ -59,10 +60,12 @@ add_executable(game_server
     src/app.cpp
     src/ticker.h
     src/ticker.cpp
+    src/model_serialization.h
+    src/infastructure.h
 )
 
 add_executable(game_server_tests
-    	tests/loot_generator_tests.cpp
+    tests/loot_generator_tests.cpp
 	tests/model_testes.cpp
 	tests/collision-detector-tests.cpp
 	tests/state-serialization-tests.cpp

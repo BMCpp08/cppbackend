@@ -79,7 +79,7 @@ namespace app {
 
 	class Player {
 	public:
-		using Id = util::Tagged<std::uint64_t, Player>;
+		using Id = util::Tagged<std::uint32_t, Player>;
 
 		Player(Id id,
 			model::GameSession* game_session,
@@ -100,18 +100,19 @@ namespace app {
 
 		std::shared_ptr<model::Dog> GetDogName() const;
 
-		const model::PlayerSpeed& GetSpeed() const noexcept;
+		const geom::Vec2D& GetSpeed() const noexcept;
 
-		void SetSpeed(model::PlayerSpeed speed);
+		void SetSpeed(geom::Vec2D speed);
 
 		void SetDir(model::Direction dir);
 
-		model::Direction GetDir() const;
+		model::Direction GetDir() const noexcept;
 
 	private:
 		model::GameSession* game_session_;
 		std::shared_ptr<model::Dog> dog_;
 		Id id_;
+
 	};
 
 	class Players {
@@ -156,6 +157,11 @@ namespace app {
 
 		Token FindTokenByPlayer(const Player* player) const;
 
+		template<typename Player>
+		void AddToken(Token token, Player player) {
+			token_to_player_[token] = std::make_shared<Player>(player);
+		}
+
 	private:
 		std::unordered_map<Token, std::shared_ptr<Player>, TokenHash> token_to_player_;
 	};
@@ -188,6 +194,8 @@ namespace app {
 		}
 
 		GameResult JoinGame(const std::string& map_id, const std::string& name);
+
+		void JoinGame(std::shared_ptr<model::Dog> dog, model::GameSession* game_session, Token token);
 
 		std::shared_ptr<Players> GetListPlayersUseCase() const noexcept;
 	private:
@@ -233,7 +241,9 @@ namespace app {
 		const model::Game::MapPtr FindMap(const model::Map::Id& id) const noexcept;
 
 		GameResult JoinGame(const std::string& map_id, const std::string& name);
-
+		
+		void JoinGame(std::shared_ptr<model::Dog> dog, model::GameSession* game_session, Token token);
+		
 		void Tick(std::chrono::milliseconds delta);
 
 		std::shared_ptr<Players> GetListPlayersUseCase() const noexcept;
@@ -248,7 +258,9 @@ namespace app {
 
 		void UpdateGameState(std::chrono::milliseconds delta);
 
-		void SetApplicationListener(ApplicationListener listener);
+		void SetApplicationListener(std::shared_ptr<ApplicationListener> listener);
+
+		const std::shared_ptr<model::Game> GetGame();
 
 	private:
 		double GoToSouth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road);
@@ -299,7 +311,4 @@ namespace app {
 		std::vector<collision_detector::Item> items_;
 		std::vector<collision_detector::Gatherer> gatherers_;
 	};
-
-
 }
-

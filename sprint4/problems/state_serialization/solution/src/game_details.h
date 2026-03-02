@@ -3,9 +3,11 @@
 #include <string>
 #include <optional>
 
-namespace extra_data {
+namespace game_details {
     using namespace std::literals;
-    
+    using Score = unsigned;
+    using LootType = unsigned;
+
     struct LootDescription {
         std::string name_;
         std::string file_path_;
@@ -13,6 +15,6 @@ namespace extra_data {
         std::optional<int> rotation_;
         std::optional<std::string> color_;
         double scale_;
-        int value_;
+        Score value_;
     };   
 }

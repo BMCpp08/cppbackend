@@ -27,18 +27,19 @@ namespace json_loader {
 		return Office{ id, point, offset };
 	}
 
-	static Road CreateRoad(const auto& object) {
+	static Road CreateRoad(const auto& object, int id) {
 		if (object.if_contains(key_x1)) {
 			return Road{ Road::HORIZONTAL,
 				CreatePoint(object,key_x0,key_y0),
-				Coord(object.at(key_x1).as_int64())
+				Coord(object.at(key_x1).as_int64()), model::Road::Id(id)
 			};
 
 		}
 		else if (object.if_contains(key_y1)) {
 			return Road{ Road::VERTICAL,
 				Point(object.at(key_x0).as_int64(), object.at(key_y0).as_int64()),
-				Coord(object.at(key_y1).as_int64()) };
+				Coord(object.at(key_y1).as_int64()), model::Road::Id(id)
+			};
 		}
 	}
 
@@ -93,8 +94,8 @@ namespace json_loader {
 					if (auto it = json_map.as_object().if_contains(key_roads); it) {
 						auto roads = it->as_array();
 
-						for (auto& road : roads) {
-							map.AddRoad(std::move(CreateRoad(road.as_object())));
+						for (int i = 0; i < roads.size(); ++i) {
+							map.AddRoad(std::move(CreateRoad(roads[i].as_object(),i)));
 						}
 					}
 
@@ -119,7 +120,7 @@ namespace json_loader {
 						
 						for (auto loot : loot_types) {
 
-							extra_data::LootDescription new_loot;
+							game_details::LootDescription new_loot;
 
 							if (auto it = loot.as_object().if_contains(key_name); it) {
 								new_loot.name_ = it->as_string().c_str();

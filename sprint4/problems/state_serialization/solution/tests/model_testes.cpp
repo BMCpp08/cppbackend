@@ -3,7 +3,7 @@
 
 #include "../src/loot_generator.h"
 #include "../src/model.h"
-#include "../src/extra_data.h"
+#include "../src/game_details.h"
 
 using namespace std::literals;
 

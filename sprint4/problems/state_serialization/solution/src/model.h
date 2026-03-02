@@ -7,19 +7,21 @@
 #include "tagged.h"
 #include <stdexcept>
 #include "loot_generator.h"
-#include "extra_data.h"
+#include "game_details.h"
 #include "model_datails.h"
+#include "geom.h"
 
 namespace model {
 	using namespace std::literals;
 	using namespace model_details;
-
+	using namespace game_details;
 	class Road;
 	using ConstPtrRoad = std::shared_ptr<const Road>;
 	using Dimension = int;
 	using Coord = Dimension;
+	using Speed = double;
 
-	enum Direction {
+	enum class Direction {
 		DIR_NORTH = 0U,
 		DIR_SOUTH,
 		DIR_WEST,
@@ -28,10 +30,6 @@ namespace model {
 
 	struct Point {
 		Coord x, y;
-	};
-
-	struct PointD {
-		double x, y;
 	};
 
 	struct HashPoint {
@@ -68,17 +66,13 @@ namespace model {
 		Dimension dx, dy;
 	};
 
-	using Speed = double;
-
-	struct PlayerSpeed {
-		Speed x, y;
-	};
-
 	struct Loot {
-		int id;
-		int type;
-		int score;
+		using Id = util::Tagged<size_t, Loot>;
+		Id id{ 0u };
+		LootType type;
+		Score score;
 		Point position;
+		[[nodiscard]] auto operator<=>(const Loot&) const = default;
 	};
 
 	using Loots = std::vector<Loot>;
@@ -94,15 +88,18 @@ namespace model {
 	public:
 		constexpr static HorizontalTag HORIZONTAL{};
 		constexpr static VerticalTag VERTICAL{};
+		using Id = util::Tagged<int, Road>;
 
-		Road(HorizontalTag, Point start, Coord end_x) noexcept
+		Road(HorizontalTag, Point start, Coord end_x, Id id) noexcept
 			: start_{ start }
-			, end_{ end_x, start.y } {
+			, end_{ end_x, start.y }
+			, id_(id){
 		}
 
-		Road(VerticalTag, Point start, Coord end_y) noexcept
+		Road(VerticalTag, Point start, Coord end_y, Id id) noexcept
 			: start_{ start }
-			, end_{ start.x, end_y } {
+			, end_{ start.x, end_y }
+			, id_(id) {
 		}
 
 		bool IsHorizontal() const noexcept {
@@ -120,9 +117,15 @@ namespace model {
 		Point GetEnd() const noexcept {
 			return end_;
 		}
+
+		const Id& GetId() const noexcept {
+			return id_;
+		}
+
 	private:
 		Point start_;
 		Point end_;
+		Id id_;
 	};
 
 	class Building {
@@ -172,7 +175,7 @@ namespace model {
 		using Offices = std::vector<Office>;
 		using Roads = std::vector<ConstPtrRoad>;
 		using Roadmap = std::unordered_map<std::pair<Point, Direction>, ConstPtrRoad, HashPointDir>;
-		using LootsDescription = std::vector<std::shared_ptr<extra_data::LootDescription>>;
+		using LootsDescription = std::vector<std::shared_ptr<LootDescription>>;
 
 
 		Map(Id id, std::string name, Speed speed, int bag_capacity) noexcept
@@ -225,13 +228,12 @@ namespace model {
 			return roadmap_;
 		}
 
-		void AddLootDescription(extra_data::LootDescription loot_description) {
-			loot_description_.emplace_back(std::make_shared<extra_data::LootDescription>(std::move(loot_description)));
+		void AddLootDescription(LootDescription loot_description) {
+			loot_description_.emplace_back(std::make_shared<LootDescription>(std::move(loot_description)));
 		}
 
 		void AddLoot(Loot loot) {
-			const size_t index = loots_.size();
-			loot.id = index;
+			loot.id = Loot::Id{ loots_.size() };
 			loots_.emplace_back(std::move(loot));
 		}
 
@@ -243,9 +245,9 @@ namespace model {
 			return loot_description_;
 		}
 
-		void ExtractLoot(size_t idx) {
+		void ExtractLoot(Loot::Id idx) {
 			auto res = std::find_if(loots_.begin(), loots_.end(), [&](const Loot& loot) {
-				return loot.id == idx;
+				return loot.id == idx ;
 				});
 			if (res != loots_.end()) {
 				loots_.erase(res);
@@ -301,72 +303,87 @@ namespace model {
 
 	class Dog {
 	public:
+		using Id = util::Tagged<uint32_t, Dog>;
 
-		Dog(PointD pos,
+		Dog(geom::Point2D pos,
 			std::string name,
-			std::uint64_t id,
+			Id id,
 			ConstPtrRoad road, 
 			size_t bag_capacity = 0,
 			Direction dir = Direction::DIR_NORTH,
-			PlayerSpeed speed = {0, 0}, int score = 0) noexcept
+			int score = 0) noexcept
 			: pos_(std::move(pos))
 			, name_(std::move(name))
 			, id_(std::move(id))
 			, road_(road)
 			, dir_(std::move(dir))
-			, speed_(speed)
 			, bag_capacity_(bag_capacity)
 			, score_(score){
+			
+			if (road_) {
+				SetRoadId(road->GetId());
+			}
+			
 		}
 
-		const std::string& GetName() const noexcept {
+		const std::string GetName() const noexcept {
 			return name_;
 		}
 
-		void SetPos(PointD pos) {
+		void SetPosition(geom::Point2D pos) {
 			pos_ = std::move(pos);
 		}
-		const PointD& GetPos() const noexcept {
+
+		const geom::Point2D& GetPosition() const noexcept {
 			return pos_;
 		}
 
-		std::uint64_t GetId() const noexcept {
+		const Id& GetId() const noexcept {
 			return id_;
 		}
 
-		void SetDir(Direction new_dir) noexcept {
+		void SetDirection(Direction new_dir) noexcept {
 			dir_ = new_dir;
 		}
 
-		const Direction& GetDir() const noexcept {
+		Direction GetDirection() const noexcept {
 			return dir_;
 		}
 
-		const PlayerSpeed& GetSpeed() const noexcept {
+		const geom::Vec2D GetSpeed() const noexcept {
 			return speed_;
 		}
 
-		void SetSpeed(PlayerSpeed speed) {
+		void SetSpeed(geom::Vec2D speed) {
 			speed_ = std::move(speed);
 		}
 
 		void SetNewRoad(ConstPtrRoad& road) {
 			road_ = road;
+			SetRoadId(road->GetId());
+		}
+
+		void SetRoadId(Road::Id id) {
+			road_id_ = *id;
 		}
 
 		const ConstPtrRoad GetCurrentRoad() const noexcept {
 			return road_;
 		}
 
-		bool PutItemIntoBag(Loot item) {
-			if (bag_.size() >= bag_capacity_) {
+		[[nodiscard]] bool PutItemIntoBag(Loot item) {
+			if (IsBagFull()) {
 				return false;
 			}
 			bag_.emplace_back(std::move(item));
 			return true;
 		}
 
-		Loots GetBag() const noexcept {
+		bool IsBagFull() const noexcept {
+			return bag_.size() >= bag_capacity_;
+		}
+
+		Loots GetBagContent() const noexcept {
 			return bag_;
 		}
 
@@ -374,7 +391,7 @@ namespace model {
 			bag_.clear();
 		}
 
-		bool BagIsFull() {
+		bool IsBagFull() {
 			return bag_.size() >= bag_capacity_;
 		}
 
@@ -389,17 +406,27 @@ namespace model {
 			return score_;
 		}
 
+		void AddScore(Score score) noexcept {
+			score_ += score;
+		}
+
+		size_t GetBagCapacity() const noexcept {
+			return bag_capacity_;
+		}
+		Road::Id GetRoadId() const noexcept {
+			return Road::Id{ road_id_ };
+		}
 	private:
-		PointD pos_;
+		geom::Point2D pos_;
 		std::string name_;
-		std::uint64_t id_;
+		Id id_;
 		Direction dir_;
-		PlayerSpeed speed_;
+		geom::Vec2D speed_;
 		ConstPtrRoad road_;
 		size_t bag_capacity_;
 		Loots bag_;
-		int score_;
-		
+		Score score_;
+		int road_id_;
 	};
 
 	class GameSession {
@@ -410,10 +437,10 @@ namespace model {
 			: map_{ map } {
 		}
 
-		const std::shared_ptr<Dog> AddDog(PointD point, const std::string& name, ConstPtrRoad road, size_t capacity) {
+		const std::shared_ptr<Dog> AddDog(geom::Point2D point, const std::string& name, ConstPtrRoad road, size_t capacity) {
 			using namespace std::literals;
 			if (!road) {
-				throw std::invalid_argument("Invalid ptr road = nullptr");
+				throw std::invalid_argument("Invalid ptr road = nullptr"s);
 			}
 
 			const size_t index = dogs_.size();
@@ -422,11 +449,28 @@ namespace model {
 			}
 			else {
 				try {
-					dogs_.emplace(index, std::make_shared<Dog>(std::move(point), name, index, road, capacity));
+					dogs_.emplace(index, std::make_shared<Dog>(std::move(point), name, static_cast<model::Dog::Id>( index ), road, capacity));
 					return dogs_[index];
 				}
 				catch (...) {
 					dogs_.erase(index);
+					throw;
+				}
+			}
+		}
+
+		const std::shared_ptr<Dog> AddDog(Dog dog) {
+			auto idx = *dog.GetId();
+			if (dogs_.count(idx)) {
+				throw std::invalid_argument("Dog with id "s + std::to_string(idx));
+			}
+			else {
+				try {
+					dogs_.emplace(idx, std::make_shared<Dog>(std::move(dog)));
+					return dogs_[idx];
+				}
+				catch (...) {
+					dogs_.erase(idx);
 					throw;
 				}
 			}

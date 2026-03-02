@@ -40,7 +40,7 @@ namespace app {
 		item.width = item_width;
 		return item;
 	}
-	
+
 	const Player::Id& Player::GetId() const noexcept {
 		return id_;
 	}
@@ -56,20 +56,20 @@ namespace app {
 		return dog_;
 	}
 
-	const model::PlayerSpeed& Player::GetSpeed() const noexcept {
+	const geom::Vec2D& Player::GetSpeed() const noexcept {
 		return dog_->GetSpeed();
 	}
 
-	void Player::SetSpeed(model::PlayerSpeed speed) {
+	void Player::SetSpeed(geom::Vec2D speed) {
 		dog_->SetSpeed(std::move(speed));
 	}
 
 	void Player::SetDir(model::Direction dir) {
-		dog_->SetDir(std::move(dir));
+		dog_->SetDirection(std::move(dir));
 	}
 
-	model::Direction Player::GetDir() const {
-		return dog_->GetDir();
+	model::Direction Player::GetDir() const noexcept {
+		return dog_->GetDirection();
 	}
 
 	Player& Players::Add(std::shared_ptr<model::Dog> dog, model::GameSession* game_session) {
@@ -78,7 +78,7 @@ namespace app {
 		}
 
 		auto key = std::pair{ dog->GetName(), *(game_session->GetMap()->GetId()) };
-		players_.emplace(key, std::move(Player(Player::Id(dog->GetId()), game_session, dog)));
+		players_.emplace(key, std::move(Player(Player::Id(*dog->GetId()), game_session, dog)));
 		return players_[key];
 	};
 
@@ -120,13 +120,13 @@ namespace app {
 		}
 		if (auto* session = game_->FindGameSessions(model::Map::Id(map_id)); session) {
 
-			auto spawn_point = model::PointD{ 0.,0. };
+			auto spawn_point = geom::Point2D{ 0.,0. };
 			model::ConstPtrRoad road = nullptr;
 
 			if (!session->GetMap()->GetRoads().empty()) {
 				int index = (is_random_positions_) ? std::rand() % session->GetMap()->GetRoads().size() : 0;
 				road = session->GetMap()->GetRoads()[index];
-				spawn_point = model::PointD{ static_cast<double>(road->GetStart().x), static_cast<double>(road->GetStart().y) };
+				spawn_point = geom::Point2D{ static_cast<double>(road->GetStart().x), static_cast<double>(road->GetStart().y) };
 			}
 
 			if (!players_) {
@@ -142,6 +142,23 @@ namespace app {
 			return { token, player.GetId() };
 		}
 		throw GameError(JoinGameErrorReason::INVALIDE_MAP);
+	}
+
+	void JoinGameUseCase::JoinGame(std::shared_ptr<model::Dog> dog, model::GameSession* game_session, Token token) {
+		if (!dog) {
+			throw std::invalid_argument("Invalid ptr dog = nullptr");
+		}
+		if (!game_session) {
+			throw std::invalid_argument("Invalid ptr game_session = nullptr");
+		}
+
+		auto& player = players_->Add(dog, game_session);
+
+		if (!player_tokens_) {
+			throw std::invalid_argument("Invalid ptr player_tokens_ = nullptr");
+		}
+
+		player_tokens_->AddToken(token, player);
 	}
 
 	std::shared_ptr<Players> JoinGameUseCase::GetListPlayersUseCase() const noexcept {
@@ -207,6 +224,10 @@ namespace app {
 		}
 	}
 
+	void Application::JoinGame(std::shared_ptr<model::Dog> dog, model::GameSession* game_session, Token token) {
+		join_game_use_case_.JoinGame(dog, game_session, token);
+	}
+
 	void Application::Tick(std::chrono::milliseconds delta) {
 		UpdateGameState(delta);
 		if (listener_) {
@@ -227,7 +248,7 @@ namespace app {
 
 			json::object obj;
 			for (const auto& dog : dogs) {
-				obj[std::to_string(dog.second->GetId())] = json::value{ {key_name, dog.second->GetName()} };
+				obj[std::to_string(*(dog.second->GetId()))] = json::value{ {key_name, dog.second->GetName()} };
 			}
 			return json::serialize(obj);
 		}
@@ -255,7 +276,7 @@ namespace app {
 			for (const auto& dog : dogs) {
 				json::object player;
 				std::string dir;
-				switch (dog.second->GetDir()) {
+				switch (dog.second->GetDirection()) {
 				case model::Direction::DIR_NORTH:
 					dir = "U"s;
 					break;
@@ -271,17 +292,18 @@ namespace app {
 				}
 
 				json::array arr_pos;
-				arr_pos.push_back(dog.second->GetPos().x);
-				arr_pos.push_back(dog.second->GetPos().y);
+				arr_pos.push_back(dog.second->GetPosition().x);
+				arr_pos.push_back(dog.second->GetPosition().y);
 
 				json::array arr_speed;
 				arr_speed.push_back(dog.second->GetSpeed().x);
 				arr_speed.push_back(dog.second->GetSpeed().y);
-				auto dog_id = std::to_string(dog.second->GetId());
+				auto dog_id = std::to_string(*(dog.second->GetId()));
 
 				json::array bag;
-				for (auto item : dog.second->GetBag()) {
-					bag.push_back(json::object{ {key_id, item.id}, {key_type, item.type} });
+				auto bag_content = dog.second->GetBagContent();
+				for (auto& item : bag_content) {
+					bag.push_back(json::object{ {key_id, *item.id}, {key_type, item.type} });
 				}
 
 				obj[key_players].as_object()[dog_id] =
@@ -299,7 +321,7 @@ namespace app {
 
 				json::object pos;
 				for (int i = 0; i < loots.size(); ++i) {
-					obj[key_lost_objects].as_object()[std::to_string(loots[i].id)] =
+					obj[key_lost_objects].as_object()[std::to_string(*(loots[i].id))] =
 						json::object({ {key_type, loots[i].type},
 							{key_pos, json::array{ static_cast<double>(loots[i].position.x), static_cast<double>(loots[i].position.y)}} });
 				}
@@ -326,22 +348,22 @@ namespace app {
 			auto speed = player->GetGameSession()->GetMap()->GetSpeed();
 
 			if (std::strcmp(dir, "") == 0) {
-				player->SetSpeed({ 0,0 });
+				player->SetSpeed(geom::Vec2D{ 0,0 });
 			}
 			else if (std::strcmp(dir, "L") == 0) {
-				player->SetSpeed({ -speed,0 });
+				player->SetSpeed(geom::Vec2D{ -speed,0 });
 				player->SetDir(model::Direction::DIR_WEST);
 			}
 			else if (std::strcmp(dir, "R") == 0) {
-				player->SetSpeed({ speed,0 });
+				player->SetSpeed(geom::Vec2D{ speed, 0 });
 				player->SetDir(model::Direction::DIR_EAST);
 			}
 			else if (std::strcmp(dir, "U") == 0) {
-				player->SetSpeed({ 0,-speed });
+				player->SetSpeed(geom::Vec2D{ 0,-speed });
 				player->SetDir(model::Direction::DIR_NORTH);
 			}
 			else if (std::strcmp(dir, "D") == 0) {
-				player->SetSpeed({ 0,speed });
+				player->SetSpeed(geom::Vec2D{ 0,speed });
 				player->SetDir(model::Direction::DIR_SOUTH);
 			}
 			else {
@@ -372,8 +394,8 @@ namespace app {
 		}
 	}
 
-	void Application::SetApplicationListener(ApplicationListener listener) {
-		listener_ = std::make_shared<ApplicationListener>();
+	void Application::SetApplicationListener(std::shared_ptr<ApplicationListener> listener) {
+		listener_ = listener;
 	}
 
 	void Application::UpdateGameState(std::chrono::milliseconds delta) {
@@ -405,14 +427,14 @@ namespace app {
 						auto index = std::rand() % roads.size();
 						map->AddLoot(CreateLoot(gen, roads[index], i % loot_desc.size(), loot_desc));
 					}
-					
+
 					auto loots = map->GetLoots();
 
 					std::vector<collision_detector::Item> items;
 					for (const auto& loot : loots) {
 						items.emplace_back(CreateItem(loot.position, item_width));
 					}
-			
+
 					auto offices = map->GetOffices();
 					for (const auto& office : offices) {
 						items.emplace_back(CreateItem(office.GetPosition(), item_width));
@@ -425,14 +447,14 @@ namespace app {
 						auto dog_ = dog.second;
 
 						auto roads = map->GetRoadmap();
-						auto new_x = dog_->GetPos().x + (dog_->GetSpeed().x * time / ms_per_second);
-						auto new_y = dog_->GetPos().y + (dog_->GetSpeed().y * time / ms_per_second);
+						auto new_x = dog_->GetPosition().x + (dog_->GetSpeed().x * time / ms_per_second);
+						auto new_y = dog_->GetPosition().y + (dog_->GetSpeed().y * time / ms_per_second);
 
-						auto cur_dir = dog_->GetDir();
+						auto cur_dir = dog_->GetDirection();
 						double w_road = road_width;
 						double distance = 0.;
 
-						auto start_pos = geom::Point2D{ dog_->GetPos().x, dog_->GetPos().y };
+						auto start_pos = dog_->GetPosition();
 
 						switch (cur_dir) {
 						case model::Direction::DIR_NORTH:
@@ -457,7 +479,7 @@ namespace app {
 							break;
 						}
 
-						auto end_pos = geom::Point2D{ dog_->GetPos().x, dog_->GetPos().y };
+						auto end_pos = dog_->GetPosition();
 
 						if (distance != 0.) {
 							gatherers.emplace_back(start_pos, end_pos, gatherer_width / 2.);
@@ -471,7 +493,7 @@ namespace app {
 					if (auto events = collision_detector::FindGatherEvents(provider); !events.empty()) {
 						for (const auto& event : events) {
 
-							if (event.item_id < loots.size() && set_item_id.count(event.item_id) && !temp_list_dogs[event.gatherer_id]->BagIsFull()) {
+							if (event.item_id < loots.size() && set_item_id.count(event.item_id) && !temp_list_dogs[event.gatherer_id]->IsBagFull()) {
 								temp_list_dogs[event.gatherer_id]->PutItemIntoBag(loots[event.item_id]);
 								set_item_id.insert(event.item_id);
 								map->ExtractLoot(loots[event.item_id].id);
@@ -489,14 +511,18 @@ namespace app {
 		}
 	}
 
+	const std::shared_ptr<model::Game> Application::GetGame() {
+		return game_;
+	}
+
 	double Application::GoToSouth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
 		double res = 0.;
 		auto curr_road = dog->GetCurrentRoad();
-		auto cur_dog_pos = dog->GetPos();
+		auto cur_dog_pos = dog->GetPosition();
 		int max_pos = std::max(curr_road->GetStart().y, curr_road->GetEnd().y);
 
 		if (new_pos <= max_pos + w_road) {
-			dog->SetPos(model::PointD(dog->GetPos().x, new_pos));
+			dog->SetPosition(geom::Point2D(dog->GetPosition().x, new_pos));
 			return res;
 		}
 
@@ -519,12 +545,12 @@ namespace app {
 
 		if (road != roadmap.end()) {
 			dog->SetNewRoad(road->second);
-			dog->SetPos(model::PointD(dog->GetPos().x, new_pos));
+			dog->SetPosition(geom::Point2D(dog->GetPosition().x, new_pos));
 			res = new_pos;
 		}
 		else {
-			dog->SetSpeed(model::PlayerSpeed{ 0, 0 });
-			dog->SetPos(model::PointD(dog->GetPos().x, max_pos + w_road));
+			dog->SetSpeed(geom::Vec2D{ 0, 0 });
+			dog->SetPosition(geom::Point2D(dog->GetPosition().x, max_pos + w_road));
 			res = max_pos + w_road;
 		}
 		return res;
@@ -533,11 +559,11 @@ namespace app {
 	double Application::GoToNorth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
 		double res = 0.;
 		auto curr_road = dog->GetCurrentRoad();
-		auto cur_dog_pos = dog->GetPos();
+		auto cur_dog_pos = dog->GetPosition();
 		int min_pos = std::min(curr_road->GetStart().y, curr_road->GetEnd().y);
 
 		if (new_pos >= min_pos - w_road) {
-			dog->SetPos(model::PointD(dog->GetPos().x, new_pos));
+			dog->SetPosition(geom::Point2D(dog->GetPosition().x, new_pos));
 			return res;
 		}
 
@@ -561,12 +587,12 @@ namespace app {
 
 		if (road != roadmap.end()) {
 			dog->SetNewRoad(road->second);
-			dog->SetPos(model::PointD(dog->GetPos().x, new_pos));
+			dog->SetPosition(geom::Point2D(dog->GetPosition().x, new_pos));
 			res = new_pos;
 		}
 		else {
-			dog->SetSpeed(model::PlayerSpeed{ 0, 0 });
-			dog->SetPos(model::PointD(dog->GetPos().x, min_pos - w_road));
+			dog->SetSpeed(geom::Vec2D{ 0, 0 });
+			dog->SetPosition(geom::Point2D(dog->GetPosition().x, min_pos - w_road));
 			res = min_pos - w_road;
 		}
 		return res;
@@ -575,11 +601,11 @@ namespace app {
 	double Application::GoToWest(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
 		double res = 0.;
 		auto curr_road = dog->GetCurrentRoad();
-		auto cur_dog_pos = dog->GetPos();
+		auto cur_dog_pos = dog->GetPosition();
 		int min_pos = std::min(curr_road->GetStart().x, curr_road->GetEnd().x);
 
 		if (new_pos >= min_pos - w_road) {
-			dog->SetPos(model::PointD(new_pos, dog->GetPos().y));
+			dog->SetPosition(geom::Point2D(new_pos, dog->GetPosition().y));
 			return res;
 		}
 
@@ -604,12 +630,12 @@ namespace app {
 
 		if (road != roadmap.end()) {
 			dog->SetNewRoad(road->second);
-			dog->SetPos(model::PointD(new_pos, dog->GetPos().y));
+			dog->SetPosition(geom::Point2D(new_pos, dog->GetPosition().y));
 			res = new_pos;
 		}
 		else {
-			dog->SetSpeed(model::PlayerSpeed{ 0, 0 });
-			dog->SetPos(model::PointD(min_pos - w_road, dog->GetPos().y));
+			dog->SetSpeed(geom::Vec2D{ 0, 0 });
+			dog->SetPosition(geom::Point2D(min_pos - w_road, dog->GetPosition().y));
 			res = min_pos - w_road;
 		}
 		return res;
@@ -618,11 +644,11 @@ namespace app {
 	double Application::GoToEast(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {
 		double res = 0.;
 		auto curr_road = dog->GetCurrentRoad();
-		auto cur_dog_pos = dog->GetPos();
+		auto cur_dog_pos = dog->GetPosition();
 		int max_pos = std::max(curr_road->GetStart().x, curr_road->GetEnd().x);
 
 		if (new_pos <= max_pos + w_road) {
-			dog->SetPos(model::PointD(new_pos, dog->GetPos().y));
+			dog->SetPosition(geom::Point2D(new_pos, dog->GetPosition().y));
 			return res;
 		}
 
@@ -647,12 +673,12 @@ namespace app {
 
 		if (road != roadmap.end()) {
 			dog->SetNewRoad(road->second);
-			dog->SetPos(model::PointD(new_pos, dog->GetPos().y));
+			dog->SetPosition(geom::Point2D(new_pos, dog->GetPosition().y));
 			res = new_pos;
 		}
 		else {
-			dog->SetSpeed(model::PlayerSpeed{ 0, 0 });
-			dog->SetPos(model::PointD(max_pos + w_road, dog->GetPos().y));
+			dog->SetSpeed(geom::Vec2D{ 0, 0 });
+			dog->SetPosition(geom::Point2D(max_pos + w_road, dog->GetPosition().y));
 			res = max_pos + w_road;
 		}
 		return res;

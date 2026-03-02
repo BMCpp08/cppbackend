@@ -1,4 +1,4 @@
-#include <boost/archive/text_iarchive.hpp>
+﻿#include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <sstream>
@@ -39,10 +39,10 @@ SCENARIO_METHOD(Fixture, "Point serialization") {
 SCENARIO_METHOD(Fixture, "Dog Serialization") {
     GIVEN("a dog") {
         const auto dog = [] {
-            Dog dog{Dog::Id{42}, "Pluto"s, {42.2, 12.5}, 3};
+            Dog dog{ geom::Point2D{42.2, 12.5}, "Pluto"s, Dog::Id{42}, nullptr, 3};
             dog.AddScore(42);
-            CHECK(dog.PutToBag({FoundObject::Id{10}, 2u}));
-            dog.SetDirection(Direction::EAST);
+            CHECK(dog.PutItemIntoBag({Loot::Id{10}, 2u}));
+            dog.SetDirection(Direction::DIR_EAST);
             dog.SetSpeed({2.3, -1.2});
             return dog;
         }();

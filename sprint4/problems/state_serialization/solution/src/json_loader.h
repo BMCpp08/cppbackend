@@ -6,7 +6,7 @@
 #include <string>
 
 #include "model.h"
-#include "extra_data.h"
+#include "game_details.h"
 
 namespace json_loader {
 
