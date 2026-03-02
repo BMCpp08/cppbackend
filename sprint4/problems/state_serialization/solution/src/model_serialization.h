@@ -30,46 +30,7 @@ void serialize(Archive& ar, model::Point& point, [[maybe_unused]] const unsigned
     ar& point.x;
     ar& point.y;
 }
-
-//template <typename Archive>
-//void serialize(Archive& ar, model::Direction& dir, unsigned) {
-//    int val = static_cast<int>(dir);
-//    ar& val;
-//    if constexpr (Archive::is_loading::value) {
-//        dir = static_cast<model::Direction>(val);
-//    }
-//}
-//template <typename Archive>
-//void serialize(Archive& ar, model::Dog::Id& id, unsigned) {
-//    uint32_t val = *id;                // предполагаем operator* возвращает значение
-//    ar& val;
-//    if constexpr (Archive::is_loading::value) {
-//        id = model::Dog::Id(val);
-//    }
-//}
 }  // namespace model
-
-//namespace app {
-//    template <typename Archive>
-//    void serialize(Archive& ar, app::Token& token, unsigned) {
-//        std::string str = *token;          // если operator* возвращает строку
-//        ar& str;
-//        if constexpr (Archive::is_loading::value) {
-//            token = app::Token(str);
-//        }
-//    }
-//}
-
-//namespace game_details {
-//    template <typename Archive>
-//    void serialize(Archive& ar, model::LootType& type, unsigned) {
-//        unsigned val = static_cast<unsigned>(type);
-//        ar& val;
-//        if constexpr (Archive::is_loading::value) {
-//            type = static_cast<model::LootType>(val);
-//        }
-//    }
-//}
 
 namespace serialization {
 

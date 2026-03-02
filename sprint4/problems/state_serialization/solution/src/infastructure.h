@@ -35,7 +35,6 @@ namespace infrastructure {
 				if (!ofs) {
 					throw std::runtime_error("Cannot open temp file!");
 				}
-
 				OutputArchive output_archive(ofs);
 				const auto& game = app_.GetGame();
 				const auto& maps = game->GetMaps();
@@ -43,7 +42,6 @@ namespace infrastructure {
 				if (!game) {
 					throw std::logic_error("Ptr game if null!");
 				}
-
 
 				auto players = app_.GetListPlayersUseCase();
 				std::vector<serialization::MapRepr> maps_repr;
@@ -53,25 +51,19 @@ namespace infrastructure {
 					std::vector<serialization::PlayerRepr> players_repr;
 
 					if (auto* session = game->FindGameSessions(map->GetId()); session) {
-
-
 						auto dogs = session->GetDogs();
+
 						for (const auto& dog : dogs) {
 							dogs_repr.emplace_back(*dog.second);
-
-
 							const app::Player* player = players->FindByDogIdAndMapId(dog.second->GetName(), map->GetId());
 							players_repr.emplace_back(player, player->GetToken());
 						}
+
 						auto loots = map->GetLoots();
 						for (const auto& loot : loots) {
 							loots_repr.emplace_back(loot);
 						}
-
-
 					}
-
-
 					maps_repr.push_back(serialization::MapRepr{ map->GetId(), players_repr, loots_repr, dogs_repr });
 				}
 
@@ -86,8 +78,8 @@ namespace infrastructure {
 					std::filesystem::perms::owner_read | std::filesystem::perms::owner_write,
 					std::filesystem::perm_options::replace);
 			}
-			catch (const std::exception& e) {
-				std::cerr << "Save error: " << e.what() << std::endl;
+			catch (const std::exception& exc) {
+				std::cerr << "Save error: " << exc.what() << std::endl;
 				std::filesystem::remove(tmp_file);
 			}
 		}
@@ -97,7 +89,6 @@ namespace infrastructure {
 				if (!std::filesystem::exists(state_file_)) {
 					return;
 				}
-
 				std::ifstream ifs(state_file);
 				if (!ifs.is_open()) { 
 					return;
@@ -108,10 +99,7 @@ namespace infrastructure {
 				std::vector<serialization::MapRepr> maps_repr;
 			
 				input_archive >> maps_repr;
-
 				const auto& game = app_.GetGame();
-
-
 				for (auto& map_repr : maps_repr) {
 					auto map_data = map_repr.Restore();
 					if (auto* session = game->FindGameSessions(map_data.id_); session) {
@@ -138,16 +126,14 @@ namespace infrastructure {
 						for (auto loot_repr : map_data.loots_) {
 							map->AddLoot(loot_repr.Restore());
 						}
-
 					}
 				}
 			}
-			catch (const std::exception& e) {
-				std::cerr << e.what() << std::endl;
+			catch (const std::exception& exc) {
+				std::cerr << exc.what() << std::endl;
 			}
 		}
 	private:
-
 		std::string state_file_;
 		app::Application& app_;
 		std::chrono::milliseconds time_since_save_;
