@@ -73,8 +73,6 @@ namespace infrastructure {
 
 
 					maps_repr.push_back(serialization::MapRepr{ map->GetId(), players_repr, loots_repr, dogs_repr });
-					/*output_archive << serialization::MapRepr{ map->GetId(), players_repr, loots_repr, dogs_repr };
-					break;*/
 				}
 
 				output_archive << maps_repr;
