@@ -231,7 +231,8 @@ namespace app {
 	void Application::Tick(std::chrono::milliseconds delta) {
 		UpdateGameState(delta);
 		if (listener_) {
-			listener_->OnTick(delta);
+			auto now = std::chrono::system_clock::now();
+			listener_->OnTick(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()));
 		}
 	}
 
