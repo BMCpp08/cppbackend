@@ -70,9 +70,12 @@ namespace infrastructure {
 
 
 					}
-					maps_repr.emplace_back(serialization::DescMap{ map->GetId(), players_repr, loots_repr, dogs_repr });
-				}
 
+
+					maps_repr.push_back(serialization::MapRepr{ map->GetId(), players_repr, loots_repr, dogs_repr });
+					/*output_archive << serialization::MapRepr{ map->GetId(), players_repr, loots_repr, dogs_repr };
+					break;*/
+				}
 
 				output_archive << maps_repr;
 
@@ -93,7 +96,7 @@ namespace infrastructure {
 
 		void RestoreGameState(const std::string& state_file) {
 			try {
-				if (std::filesystem::exists(state_file_)) {
+				if (!std::filesystem::exists(state_file_)) {
 					return;
 				}
 
@@ -101,9 +104,11 @@ namespace infrastructure {
 				if (!ifs.is_open()) { 
 					return;
 				}
+				auto size = std::filesystem::file_size(state_file_);
 
 				InputArchive input_archive(ifs);
 				std::vector<serialization::MapRepr> maps_repr;
+			
 				input_archive >> maps_repr;
 
 				const auto& game = app_.GetGame();
@@ -111,15 +116,15 @@ namespace infrastructure {
 
 				for (auto& map_repr : maps_repr) {
 					auto map_data = map_repr.Restore();
-					if (auto* session = game->FindGameSessions(map_data.id); session) {
+					if (auto* session = game->FindGameSessions(map_data.id_); session) {
 
 						const auto& map = session->GetMap();
 						std::vector<app::Player> players;
-						for (auto player_repr : map_data.players) {
+						for (auto player_repr : map_data.players_) {
 							players.emplace_back(player_repr.Restore());
 						}
 
-						for (auto dog_repr : map_data.dogs) {
+						for (auto dog_repr : map_data.dogs_) {
 							model::Dog dog = dog_repr.Restore();
 
 							auto road = map->GetRoads().at(*dog.GetRoadId());
@@ -132,7 +137,7 @@ namespace infrastructure {
 								app_.JoinGame(session->AddDog(dog), session, f_player->GetToken());
 							}
 						}
-						for (auto loot_repr : map_data.loots) {
+						for (auto loot_repr : map_data.loots_) {
 							map->AddLoot(loot_repr.Restore());
 						}
 
@@ -141,7 +146,6 @@ namespace infrastructure {
 			}
 			catch (const std::exception& e) {
 				std::cerr << e.what() << std::endl;
-
 			}
 		}
 	private:

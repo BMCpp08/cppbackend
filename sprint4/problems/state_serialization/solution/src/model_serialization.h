@@ -1,5 +1,5 @@
 ﻿#include <boost/serialization/vector.hpp>
-
+#include <boost/serialization/string.hpp>
 #include "model.h"
 #include "app.h"
 namespace geom {
@@ -30,7 +30,46 @@ void serialize(Archive& ar, model::Point& point, [[maybe_unused]] const unsigned
     ar& point.x;
     ar& point.y;
 }
+
+template <typename Archive>
+void serialize(Archive& ar, model::Direction& dir, unsigned) {
+    int val = static_cast<int>(dir);
+    ar& val;
+    if constexpr (Archive::is_loading::value) {
+        dir = static_cast<model::Direction>(val);
+    }
+}
+template <typename Archive>
+void serialize(Archive& ar, model::Dog::Id& id, unsigned) {
+    uint32_t val = *id;                // предполагаем operator* возвращает значение
+    ar& val;
+    if constexpr (Archive::is_loading::value) {
+        id = model::Dog::Id(val);
+    }
+}
 }  // namespace model
+
+namespace app {
+    template <typename Archive>
+    void serialize(Archive& ar, app::Token& token, unsigned) {
+        std::string str = *token;          // если operator* возвращает строку
+        ar& str;
+        if constexpr (Archive::is_loading::value) {
+            token = app::Token(str);
+        }
+    }
+}
+
+namespace game_details {
+    template <typename Archive>
+    void serialize(Archive& ar, model::LootType& type, unsigned) {
+        unsigned val = static_cast<unsigned>(type);
+        ar& val;
+        if constexpr (Archive::is_loading::value) {
+            type = static_cast<model::LootType>(val);
+        }
+    }
+}
 
 namespace serialization {
 
@@ -131,7 +170,7 @@ public:
         : id_(player->GetId())
         , token_(player->GetToken()) {
     }
-
+ 
     [[nodiscard]] app::Player Restore() const {
         app::Player player(id_);
         player.SetToken(token_);
@@ -150,27 +189,41 @@ private:
    
 };
 
-struct DescMap {
-    model::Map::Id id;
-    std::vector<PlayerRepr> players;
-    std::vector<LootRepr> loots;
-    std::vector<DogRepr> dogs;
-};
+//class DescMap {
+//public:
+//    DescMap() = default;
+//    model::Map::Id id_ = model::Map::Id{ 0u };
+//    std::vector<PlayerRepr> players_;
+//    std::vector<LootRepr> loots_;
+//    std::vector<DogRepr> dogs_;
+//
+//    template <typename Archive>
+//    void serialize(Archive& ar, [[maybe_unused]] const unsigned version) {
+//        ar&* id_;
+//        ar&* players_;
+//        ar&* loots_;
+//        ar&* dogs_;
+//    }
+//
+//};
 
 class MapRepr {
 public:
 
     MapRepr() = default;
 
-    explicit MapRepr(const DescMap& map)
-        : id_(map.id)
-        , players_(map.players)
-        , loots_(map.loots)
-        , dogs_(map.dogs) {
+    explicit MapRepr(const model::Map::Id& id, 
+        const std::vector<PlayerRepr>& players, 
+        const std::vector<LootRepr>& loots, 
+        const std::vector<DogRepr>& dogs)
+        : id_(id)
+        , players_(players)
+        , loots_(loots)
+        , dogs_(dogs) {
     }
 
-    [[nodiscard]] DescMap Restore() const {
-        DescMap map{ id_, players_, loots_, dogs_ };
+    [[nodiscard]] MapRepr Restore() const {
+        MapRepr map{ id_, players_, loots_, dogs_ };
         return map;
     }
 
@@ -181,8 +234,8 @@ public:
         ar& loots_;
         ar& dogs_;
     }
-private:
-    model::Map::Id id_ = model::Map::Id{ 0u };
+public:
+    model::Map::Id id_ = model::Map::Id{ std::to_string(0) };
     std::vector<PlayerRepr> players_;
     std::vector<LootRepr> loots_;
     std::vector<DogRepr> dogs_;
