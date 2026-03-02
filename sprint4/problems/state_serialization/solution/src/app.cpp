@@ -386,7 +386,8 @@ namespace app {
 		try {
 			auto json_obj = json::parse(base_body).as_object();
 			std::chrono::milliseconds time(json_obj.at(key_time_delta).as_int64());
-			UpdateGameState(time);
+			/*UpdateGameState(time);*/
+			Tick(time);
 			return json::serialize(json::object());
 		}
 		catch (...) {

@@ -30,7 +30,6 @@ namespace infrastructure {
 
 		void SaveState() {
 			std::string tmp_file = state_file_ + ".tmp"s;
-
 			try {
 				std::ofstream ofs(tmp_file, std::ios::binary);
 				if (!ofs) {
@@ -97,6 +96,10 @@ namespace infrastructure {
 
 		void RestoreGameState(const std::string& state_file) {
 			try {
+				if (std::filesystem::exists(state_file_)) {
+					return;
+				}
+
 				std::ifstream ifs(state_file);
 				if (!ifs.is_open()) { 
 					return;
