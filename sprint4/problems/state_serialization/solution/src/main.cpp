@@ -128,7 +128,6 @@ int main(int argc, const char* argv[]) {
 				auto period = args->save_state_period_ms.value_or(std::chrono::milliseconds::zero());
 				serializing_listener = std::make_shared<infrastructure::SerializingListener>(
 					args->state_file.value(), application, period);
-
 				serializing_listener->RestoreGameState(args->state_file.value());
 			}
 
