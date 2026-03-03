@@ -149,7 +149,7 @@ int main(int argc, const char* argv[]) {
 
 								json::array arr;
 								pqxx::read_transaction r(conn);
-								auto rows = r.query<std::optional<int>, std::optional<std::string>, std::optional<std::string>, std::optional<int>, std::optional<std::string>>("SELECT id, title, author, year, isbn FROM books ORDER BY ORDER BY year DESC, title ASC, author ASC, isbn ASC;"_zv);
+								//auto rows = r.query<std::optional<int>, std::optional<std::string>, std::optional<std::string>, std::optional<int>, std::optional<std::string>>("SELECT id, title, author, year, isbn FROM books ORDER BY ORDER BY year DESC, title ASC, author ASC, isbn ASC;"_zv);
 								for (auto [id, title, author, year, ISBN] : r.query<std::optional<int>, std::optional<std::string>, std::optional<std::string>, std::optional<int>, std::optional<std::string>>("SELECT id, title, author, year, isbn FROM books ORDER BY ORDER BY year DESC, title ASC, author ASC, isbn ASC;"_zv)) {
 									arr.emplace_back(json::object{ {"id", id.value_or(-9999)},
 																				{"title", title.value_or("")},
