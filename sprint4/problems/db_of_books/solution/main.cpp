@@ -147,18 +147,20 @@ int main(int argc, const char* argv[]) {
 						else if (cmd == tag_all_books /*&& it_payload->is_object() && it_payload->as_object().empty()*/) {
 							if (1) {
 
-								json::array arr;
+								json::array books;
 								pqxx::read_transaction r(conn);
-								for (auto [id, title, author, year, ISBN] :
+								for (auto& [id, title, author, year, ISBN] :
 									r.query<std::optional<int>, std::optional<std::string>, std::optional<std::string>, std::optional<int>, std::optional<char>>("SELECT id, title, author, year, isbn FROM books ORDER BY ORDER BY year DESC, title ASC, author ASC, isbn ASC;"_zv)) {
-									arr.emplace_back(json::object{ {"id", id.value_or(-9999)},
-																				{"title", title.value_or("")},
-																				{"author", author.value_or("")},
-																				{"year", year.value_or(-9999)},
-																				{"ISBN", ISBN.value_or("null")}} );
-								}
+									json::object book;
+
+									book["id"] = id.value_or(-9999);
+									book["title"] = title.value_or("");
+									book["author"] = author.value_or("");
+									book["year"] = year.value_or(-9999);
+									book["ISBN"] = ISBN.value_or("null");
+									books.push_back(book);
 								r.commit();
-								std::cout << json::serialize(arr) << std::endl;
+								std::cout << json::serialize(books) << std::endl;
 
 							}
 						}
