@@ -129,8 +129,7 @@ int main(int argc, const char* argv[]) {
 										}
 										else {
 										
-											r.exec_prepared(tag_add_book_without_isbn, req_add_book.title, req_add_book.author, req_add_book.year,
-												req_add_book.isbn.value());
+											r.exec_prepared(tag_add_book_without_isbn, req_add_book.title, req_add_book.author, req_add_book.year);
 										}
 										
 										
