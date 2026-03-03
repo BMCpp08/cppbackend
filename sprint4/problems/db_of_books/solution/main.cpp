@@ -92,7 +92,7 @@ int main(int argc, const char* argv[]) {
 			if (line.empty()) {
 				continue;
 			}
-			std::cout << json::serialize(json::object{ {"result", true} });
+			std::cout << json::serialize(json::object{ {"result", true} }) << std::endl;;
 			//try {
 			//	json::value value = json::parse(line);
 
