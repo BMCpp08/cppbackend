@@ -12,5 +12,5 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 add_executable(book_manager main.cpp)
-target_include_directoriesbook_manager PRIVATE CONAN_PKG::boost)
-target_link_librariesbook_manager CONAN_PKG::boost CONAN_PKG::libpqxx)
+target_include_directories(book_manager PRIVATE CONAN_PKG::boost)
+target_link_libraries(book_manager CONAN_PKG::boost CONAN_PKG::libpqxx)
