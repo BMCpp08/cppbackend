@@ -156,7 +156,7 @@ int main(int argc, const char* argv[]) {
 									book["title"] = title.value_or("");
 									book["author"] = author.value_or("");
 									book["year"] = year.value_or(-9999);
-									book["ISBN"] = ISBN.value_or(nullptr);
+									book["ISBN"] = ISBN.value_or("null");
 									books.push_back(book);
 									
 								}
