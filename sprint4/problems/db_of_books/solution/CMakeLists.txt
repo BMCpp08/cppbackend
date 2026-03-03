@@ -11,6 +11,6 @@ get_property(importTargets DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY IMPORTED_TAR
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-add_executable(db_example main.cpp)
-target_include_directories(db_example PRIVATE CONAN_PKG::boost)
-target_link_libraries(db_example CONAN_PKG::boost CONAN_PKG::libpqxx)
+add_executablebook_manager main.cpp)
+target_include_directoriesbook_manager PRIVATE CONAN_PKG::boost)
+target_link_librariesbook_manager CONAN_PKG::boost CONAN_PKG::libpqxx)
