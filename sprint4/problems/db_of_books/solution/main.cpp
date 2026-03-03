@@ -71,7 +71,7 @@ int main(int argc, const char* argv[]) {
 		// Создаём транзакцию. Это понятие будет разобрано в следующих уроках.
 		// Транзакция нужна, чтобы выполнять запросы.
 		//pqxx::work w(conn);
-		pqxx::work  r(conn);
+		pqxx::work  w(conn);
 
 		// Используя транзакцию создадим таблицу в выбранной базе данных:
 		r.exec(
@@ -91,7 +91,7 @@ int main(int argc, const char* argv[]) {
 
 		constexpr auto tag_exit = "exit"_zv;
 
-		r.commit();
+		w.commit();
 		std::string line;
 		while (std::getline(std::cin, line)) {
 			if (line.empty()) {
@@ -123,16 +123,16 @@ int main(int argc, const char* argv[]) {
 									if (ParseReqAddBook(it_payload->as_object(), req_add_book) && !req_add_book.author.empty() && !req_add_book.title.empty()) {
 
 										if (req_add_book.isbn.has_value()) {
-											r.exec_prepared(tag_add_book, req_add_book.title, req_add_book.author, req_add_book.year,
+											w.exec_prepared(tag_add_book, req_add_book.title, req_add_book.author, req_add_book.year,
 												req_add_book.isbn.value());
 										}
 										else {
 										
-											r.exec_prepared(tag_add_book_without_isbn, req_add_book.title, req_add_book.author, req_add_book.year);
+											w.exec_prepared(tag_add_book_without_isbn, req_add_book.title, req_add_book.author, req_add_book.year);
 										}
 										
 										std::cout << json::serialize(json::object{ {"result", true} }) << std::endl;
-										r.commit();
+										w.commit();
 									}
 									else {
 										std::cout << json::serialize(json::object{ {"result", false} }) << std::endl;
@@ -148,7 +148,7 @@ int main(int argc, const char* argv[]) {
 							if (1) {
 
 								json::array arr;
-
+								pqxx::read_transaction r(conn);
 								for (auto [id, title, author, year, ISBN] :
 									r.query<std::optional<int>, std::optional<std::string>, std::optional<std::string>, std::optional<int>, std::optional<std::string>>("SELECT id, title, author, year, isbn FROM books ORDER BY ORDER BY year DESC, title ASC, author ASC, isbn ASC;"_zv)) {
 									arr.emplace_back(json::array{ json::object{ {"id", id.value_or(-9999)},
@@ -157,7 +157,9 @@ int main(int argc, const char* argv[]) {
 																				{"year", year.value_or(-9999)},
 																				{"ISBN", ISBN.value_or("null")}} });
 								}
+								r.commit();
 								std::cout << json::serialize(arr) << std::endl;
+
 							}
 						}
 						else if (cmd == tag_exit && it_payload->is_object() && it_payload->as_object().empty()) {
