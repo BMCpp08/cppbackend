@@ -149,13 +149,13 @@ int main(int argc, const char* argv[]) {
 
 								json::array arr;
 								pqxx::read_transaction r(conn);
-								for (auto [id, title, author, year, ISBN] :
-									r.query<std::optional<int>, std::optional<std::string>, std::optional<std::string>, std::optional<int>, std::optional<std::string>>("SELECT id, title, author, year, isbn FROM books ORDER BY ORDER BY year DESC, title ASC, author ASC, isbn ASC;"_zv)) {
-									arr.emplace_back(json::array{ json::object{ {"id", id.value_or(-9999)},
+								auto rows = r.query<std::optional<int>, std::optional<std::string>, std::optional<std::string>, std::optional<int>, std::optional<std::string>>("SELECT id, title, author, year, isbn FROM books ORDER BY ORDER BY year DESC, title ASC, author ASC, isbn ASC;"_zv);
+								for (auto [id, title, author, year, ISBN] : rows) {
+									arr.emplace_back(json::object{ {"id", id.value_or(-9999)},
 																				{"title", title.value_or("")},
 																				{"author", author.value_or("")},
 																				{"year", year.value_or(-9999)},
-																				{"ISBN", ISBN.value_or("null")}} });
+																				{"ISBN", ISBN.value_or("null")}});
 								}
 								r.commit();
 								std::cout << json::serialize(arr) << std::endl;
@@ -169,7 +169,7 @@ int main(int argc, const char* argv[]) {
 				}
 			}
 			catch (const pqxx::sql_error& e) {
-				std::cout << json::serialize(json::object{ {"result", false} }) << std::endl;
+				/*std::cout << json::serialize(json::object{ {"result", false} }) << std::endl;*/
 			}
 			std::cin >> std::ws;
 		}
