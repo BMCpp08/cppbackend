@@ -175,7 +175,7 @@ int main(int argc, const char* argv[]) {
 				}
 			}
 			catch (const pqxx::sql_error& e) {
-				/*std::cout << json::serialize(json::object{ {"result", false} }) << std::endl;*/
+				std::cout << json::serialize(json::object{ {"result", false} }) << std::endl;
 			}
 			std::cin >> std::ws;
 		}
@@ -183,7 +183,7 @@ int main(int argc, const char* argv[]) {
 	}
 	catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
-		/*std::cout << json::serialize(json::object{ {"result", false} }) << std::endl;*/
+		std::cout << json::serialize(json::object{ {"result", false} }) << std::endl;
 		return EXIT_FAILURE;
 	}
 }
