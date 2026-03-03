@@ -77,17 +77,21 @@ int main(int argc, const char* argv[]) {
 		r.exec(
 			"CREATE TABLE IF NOT EXISTS books (id SERIAL PRIMARY KEY, title varchar(100) NOT NULL, author varchar(100) NOT NULL, year integer NOT NULL, ISBN char(13) NULL UNIQUE);"_zv);
 
+
 		// Применяем все изменения
-		r.commit();
+		
 
 		constexpr auto tag_add_book = "add_book"_zv;
+		constexpr auto tag_add_book_without_isbn = "add_book_without_isbn"_zv;
 		conn.prepare(tag_add_book, "INSERT INTO books (title, author, year, ISBN) VALUES ($1, $2, $3, $4)"_zv);
+		conn.prepare(tag_add_book_without_isbn, "INSERT INTO books (title, author, year) VALUES ($1, $2, $3)"_zv);
 
 		constexpr auto tag_all_books = "all_books"_zv;
 
 
 		constexpr auto tag_exit = "exit"_zv;
 
+		r.commit();
 		std::string line;
 		while (std::getline(std::cin, line)) {
 			if (line.empty()) {
@@ -118,9 +122,21 @@ int main(int argc, const char* argv[]) {
 
 								try {
 									if (ParseReqAddBook(it_payload->as_object(), req_add_book) && !req_add_book.author.empty() && !req_add_book.title.empty()) {
-										r.exec_prepared(tag_add_book, req_add_book.title, req_add_book.author, req_add_book.year,
-											req_add_book.isbn.value_or("null"));
+
+										if (req_add_book.isbn.has_value()) {
+											r.exec_prepared(tag_add_book, req_add_book.title, req_add_book.author, req_add_book.year,
+												req_add_book.isbn.value());
+										}
+										else {
 										
+											r.exec_prepared(tag_add_book_without_isbn, req_add_book.title, req_add_book.author, req_add_book.year,
+												req_add_book.isbn.value());
+										}
+										
+										
+
+
+
 										std::cout << json::serialize(json::object{ {"result", true} }) << std::endl;
 										r.commit();
 									}
