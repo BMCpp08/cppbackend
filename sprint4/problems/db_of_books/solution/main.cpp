@@ -144,10 +144,11 @@ int main(int argc, const char* argv[]) {
 							}
 
 						}
-						else if (cmd == tag_all_books && it_payload->is_object() && it_payload->as_object().empty()) {
+						else if (cmd == tag_all_books /*&& it_payload->is_object() && it_payload->as_object().empty()*/) {
 							if (1) {
 
 								json::array arr;
+
 								for (auto [id, title, author, year, ISBN] :
 									r.query<std::optional<int>, std::optional<std::string>, std::optional<std::string>, std::optional<int>, std::optional<std::string>>("SELECT id, title, author, year, isbn FROM books ORDER BY ORDER BY year DESC, title ASC, author ASC, isbn ASC;"_zv)) {
 									arr.emplace_back(json::array{ json::object{ {"id", id.value_or(-9999)},
