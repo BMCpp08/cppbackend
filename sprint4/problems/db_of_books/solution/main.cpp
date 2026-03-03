@@ -74,7 +74,7 @@ int main(int argc, const char* argv[]) {
 		pqxx::work  w(conn);
 
 		// Используя транзакцию создадим таблицу в выбранной базе данных:
-		r.exec(
+		w.exec(
 			"CREATE TABLE IF NOT EXISTS books (id SERIAL PRIMARY KEY, title varchar(100) NOT NULL, author varchar(100) NOT NULL, year integer NOT NULL, ISBN char(13) NULL UNIQUE);"_zv);
 
 
