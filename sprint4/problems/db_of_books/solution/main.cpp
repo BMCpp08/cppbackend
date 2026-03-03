@@ -88,12 +88,17 @@ int main(int argc, const char* argv[]) {
 		constexpr auto tag_exit = "exit"_zv;
 
 		std::string line;
-		while (std::getline(std::cin, line)) {
-			if (line.empty()) {
-				continue;
-			}
+		//while (std::getline(std::cin, line)) {
+		//	if (line.empty()) {
+		//		continue;
+		//	}
 
 			try {
+				std::cin >> line;
+				if (line.empty()) {
+					return;
+				}
+
 				json::value value = json::parse(line);
 
 				if (value.is_object()) {
@@ -113,6 +118,7 @@ int main(int argc, const char* argv[]) {
 									if (ParseReqAddBook(it_payload->as_object(), req_add_book)) {
 										r.exec_prepared(tag_add_book, req_add_book.title, req_add_book.author, req_add_book.year,
 											req_add_book.isbn ? pqxx::to_string(*req_add_book.isbn) : nullptr);
+										r.commit();
 										std::cout << json::serialize(json::object{ {"result", true} });
 									}
 									else {
@@ -141,20 +147,18 @@ int main(int argc, const char* argv[]) {
 							}
 						}
 						else if (cmd == tag_exit && it_payload->is_object() && it_payload->as_object().empty()) {
-							break;
+							
 						}
 					}
 				}
 			}
-			catch (const pqxx::sql_error& e) {
-
+			catch (const std::exception& e) {
+				std::cerr << e.what() << std::endl;
+				return EXIT_FAILURE;
 			}
 			std::cin >> std::ws;
-		}
+		
+		return 0;
 
-	}
-	catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
+
 }
