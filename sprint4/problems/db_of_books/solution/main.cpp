@@ -30,18 +30,19 @@ bool ParseReqAddBook(const json::object& payload, ReqBook& req_add_book) {
 				if (auto it_year = payload.if_contains("year"); it_year) {
 					if (it_year->is_int64()) {
 						req_add_book.year = it_year->as_int64();
+						result_is_ok = true;
+
 
 						if (auto it = payload.find("ISBN"); it != payload.end()) {
 							auto const& val = it->value();
 							if (!val.is_null()) {
 								if (val.is_string()) {
 									req_add_book.isbn = json::value_to<std::string>(val);
-									result_is_ok = true;
+								}
+								else {
+									result_is_ok = false;
 								}
 							}
-						}
-						else {
-							result_is_ok = true;
 						}
 					}
 				}
