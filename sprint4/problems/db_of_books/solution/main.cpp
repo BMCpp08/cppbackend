@@ -94,7 +94,7 @@ int main(int argc, const char* argv[]) {
 		//	}
 
 
-		std::cin >> line;
+		std::getline(std::cin, line);
 		if (line.empty()) {
 			return 0;
 		}
