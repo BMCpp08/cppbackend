@@ -150,14 +150,14 @@ int main(int argc, const char* argv[]) {
 								json::array books;
 								pqxx::read_transaction r(conn);
 								for (auto& [id, title, author, year, ISBN] :
-									r.query<std::optional<int>, std::optional<std::string>, std::optional<std::string>, std::optional<int>, std::optional<std::string>>("SELECT id, title, author, year, isbn FROM books ORDER BY ORDER BY year DESC, title ASC, author ASC, isbn ASC;"_zv)) {
+									r.query<int, std::optional<std::string>, std::optional<std::string>, std::optional<int>, std::optional<std::string>>("SELECT id, title, author, year, isbn FROM books ORDER BY year DESC, title ASC, author ASC, isbn ASC;"_zv)) {
 									json::object book;
 
-									book["id"] = id.value_or(-9999);
+									book["id"] = id;
 									book["title"] = title.value_or("");
 									book["author"] = author.value_or("");
 									book["year"] = year.value_or(-9999);
-									book["ISBN"] = ISBN.value_or("null");
+									book["ISBN"] = ISBN.value_or(nullptr);
 									books.push_back(book);
 									
 								}
