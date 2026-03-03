@@ -88,79 +88,75 @@ int main(int argc, const char* argv[]) {
 		constexpr auto tag_exit = "exit"_zv;
 
 		std::string line;
-		//while (std::getline(std::cin, line)) {
-		//	if (line.empty()) {
-		//		continue;
-		//	}
-
-
-		std::getline(std::cin, line);
-		if (line.empty()) {
-			return 0;
-		}
-
-		json::value value = json::parse(line);
-
-		if (value.is_object()) {
-
-			auto const& data = value.as_object();
-			auto it_action = data.if_contains("action");
-			auto it_payload = data.if_contains("payload");
-
-			if (it_action && it_payload) {
-
-				auto cmd = it_action->as_string().c_str();
-				if (cmd == tag_add_book) {
-
-					if (it_payload->is_object()) {
-						ReqBook req_add_book;
-						try {
-							if (ParseReqAddBook(it_payload->as_object(), req_add_book)) {
-								r.exec_prepared(tag_add_book, req_add_book.title, req_add_book.author, req_add_book.year,
-									req_add_book.isbn ? pqxx::to_string(*req_add_book.isbn) : nullptr);
-								
-								std::cout << json::serialize(json::object{ {"result", true} });
-								
-								r.commit();
-							}
-							else {
-								std::cout << json::serialize(json::object{ {"result", false} });
-							}
-						}
-						catch (const pqxx::sql_error& e) {
-							std::cout << json::serialize(json::object{ {"result", false} });
-						}
-					}
-
-				}
-				else if (cmd == tag_all_books && it_payload->is_object() && it_payload->as_object().empty()) {
-					if (1) {
-
-						json::array arr;
-						for (auto [id, title, author, year, ISBN] :
-							r.query<std::optional<int>, std::optional<std::string>, std::optional<std::string>, std::optional<int>, std::optional<std::string>>("SELECT id, title, author, year, isbn FROM books ORDER BY ORDER BY year DESC, title ASC, author ASC, isbn ASC;"_zv)) {
-							arr.emplace_back(json::array{ json::object{ {"id", id.value_or(-9999)},
-																		{"title", title.value_or("")},
-																		{"author", author.value_or("")},
-																		{"year", year.value_or(-9999)},
-																		{"ISBN", ISBN.value_or("null")}} });
-						}
-						std::cout << json::serialize(arr);
-					}
-				}
-				else if (cmd == tag_exit && it_payload->is_object() && it_payload->as_object().empty()) {
-
-				}
+		while (std::getline(std::cin, line)) {
+			if (line.empty()) {
+				continue;
 			}
+			std::cout << json::serialize(json::object{ {"result", true} });
+			//try {
+			//	json::value value = json::parse(line);
+
+			//	if (value.is_object()) {
+
+			//		auto const& data = value.as_object();
+			//		auto it_action = data.if_contains("action");
+			//		auto it_payload = data.if_contains("payload");
+
+			//		if (it_action && it_payload) {
+
+			//			auto cmd = it_action->as_string().c_str();
+			//			if (cmd == tag_add_book) {
+
+			//				if (it_payload->is_object()) {
+			//					ReqBook req_add_book;
+			//					try {
+			//						if (ParseReqAddBook(it_payload->as_object(), req_add_book)) {
+			//							r.exec_prepared(tag_add_book, req_add_book.title, req_add_book.author, req_add_book.year,
+			//								req_add_book.isbn ? pqxx::to_string(*req_add_book.isbn) : nullptr);
+			//							
+			//							std::cout << json::serialize(json::object{ {"result", true} });
+			//							r.commit();
+			//						}
+			//						else {
+			//							std::cout << json::serialize(json::object{ {"result", false} });
+			//						}
+			//					}
+			//					catch (const pqxx::sql_error& e) {
+			//						std::cout << json::serialize(json::object{ {"result", false} });
+			//					}
+			//				}
+
+			//			}
+			//			else if (cmd == tag_all_books && it_payload->is_object() && it_payload->as_object().empty()) {
+			//				if (1) {
+
+			//					json::array arr;
+			//					for (auto [id, title, author, year, ISBN] :
+			//						r.query<std::optional<int>, std::optional<std::string>, std::optional<std::string>, std::optional<int>, std::optional<std::string>>("SELECT id, title, author, year, isbn FROM books ORDER BY ORDER BY year DESC, title ASC, author ASC, isbn ASC;"_zv)) {
+			//						arr.emplace_back(json::array{ json::object{ {"id", id.value_or(-9999)},
+			//																	{"title", title.value_or("")},
+			//																	{"author", author.value_or("")},
+			//																	{"year", year.value_or(-9999)},
+			//																	{"ISBN", ISBN.value_or("null")}} });
+			//					}
+			//					std::cout << json::serialize(arr);
+			//				}
+			//			}
+			//			else if (cmd == tag_exit && it_payload->is_object() && it_payload->as_object().empty()) {
+			//				break;
+			//			}
+			//		}
+			//	}
+			//}
+			//catch (const pqxx::sql_error& e) {
+
+			//}
+			//std::cin >> std::ws;
 		}
+
 	}
 	catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
-	std::cin >> std::ws;
-
-	return 0;
-
-
 }
