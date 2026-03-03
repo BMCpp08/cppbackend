@@ -109,6 +109,12 @@ int main(int argc, const char* argv[]) {
 
 							if (it_payload->is_object()) {
 								ReqBook req_add_book;
+								if (it_payload->as_object().empty()) {
+									std::cout << json::serialize(json::object{ {"result", false} }) << std::endl;
+									return 0;
+								}
+								
+
 								try {
 									if (ParseReqAddBook(it_payload->as_object(), req_add_book)) {
 										r.exec_prepared(tag_add_book, req_add_book.title, req_add_book.author, req_add_book.year,
