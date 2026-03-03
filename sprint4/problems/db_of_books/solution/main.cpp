@@ -126,7 +126,6 @@ int main(int argc, const char* argv[]) {
 												req_add_book.isbn.value());
 										}
 										else {
-										
 											w.exec_prepared(tag_add_book_without_isbn, req_add_book.title, req_add_book.author, req_add_book.year);
 										}
 										
@@ -156,7 +155,13 @@ int main(int argc, const char* argv[]) {
 									book["title"] = title.value_or("");
 									book["author"] = author.value_or("");
 									book["year"] = year.value_or(-9999);
-									book["ISBN"] = ISBN.value_or(json::value(nullptr));
+									if (ISBN.has_value()) {
+										book["ISBN"] = ISBN.value();
+									}
+									else {
+										book["ISBN"] = json::value(nullptr);
+									}
+									
 									books.push_back(book);
 									
 								}
