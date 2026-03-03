@@ -119,7 +119,6 @@ int main(int argc, const char* argv[]) {
 									return 0;
 								}
 								
-
 								try {
 									if (ParseReqAddBook(it_payload->as_object(), req_add_book) && !req_add_book.author.empty() && !req_add_book.title.empty()) {
 
@@ -132,10 +131,6 @@ int main(int argc, const char* argv[]) {
 											r.exec_prepared(tag_add_book_without_isbn, req_add_book.title, req_add_book.author, req_add_book.year);
 										}
 										
-										
-
-
-
 										std::cout << json::serialize(json::object{ {"result", true} }) << std::endl;
 										r.commit();
 									}
