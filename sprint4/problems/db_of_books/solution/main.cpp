@@ -78,8 +78,6 @@ int main(int argc, const char* argv[]) {
 			"CREATE TABLE IF NOT EXISTS books (id SERIAL PRIMARY KEY, title varchar(100) NOT NULL, author varchar(100) NOT NULL, year integer NOT NULL, ISBN char(13) NULL UNIQUE);"_zv);
 
 
-		// Применяем все изменения
-		
 
 		constexpr auto tag_add_book = "add_book"_zv;
 		constexpr auto tag_add_book_without_isbn = "add_book_without_isbn"_zv;
@@ -91,6 +89,7 @@ int main(int argc, const char* argv[]) {
 
 		constexpr auto tag_exit = "exit"_zv;
 
+		// Применяем все изменения
 		w.commit();
 		std::string line;
 		while (std::getline(std::cin, line)) {
@@ -145,7 +144,7 @@ int main(int argc, const char* argv[]) {
 
 						}
 						else if (cmd == tag_all_books /*&& it_payload->is_object() && it_payload->as_object().empty()*/) {
-							if (1) {
+							try {
 
 								json::array books;
 								pqxx::read_transaction r(conn);
@@ -164,6 +163,9 @@ int main(int argc, const char* argv[]) {
 								r.commit();
 								std::cout << json::serialize(books) << std::endl;
 
+							}
+							catch (const pqxx::sql_error& e) {
+								std::cout << json::serialize(json::object{ {"result", false} }) << std::endl;
 							}
 						}
 						else if (cmd == tag_exit && it_payload->is_object() && it_payload->as_object().empty()) {
