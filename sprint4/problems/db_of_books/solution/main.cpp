@@ -96,7 +96,7 @@ int main(int argc, const char* argv[]) {
 
 		std::cin >> line;
 		if (line.empty()) {
-			return;
+			return 0;
 		}
 
 		json::value value = json::parse(line);
