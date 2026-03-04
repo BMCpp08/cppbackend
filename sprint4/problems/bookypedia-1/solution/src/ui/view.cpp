@@ -70,7 +70,7 @@ bool View::AddAuthor(std::istream& cmd_input) const {
 bool View::AddBook(std::istream& cmd_input) const {
     try {
         if (auto params = GetBookParams(cmd_input)) {
-           /* assert(!"TODO: implement book adding");*/
+
             if (!params.has_value()) {
                 throw std::logic_error("The author was not found"s);
             }
