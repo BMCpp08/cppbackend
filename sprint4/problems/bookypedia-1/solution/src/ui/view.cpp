@@ -71,12 +71,12 @@ bool View::AddBook(std::istream& cmd_input) const {
     try {
         if (auto params = GetBookParams(cmd_input)) {
            /* assert(!"TODO: implement book adding");*/
-            if (!params.has_value()) {
+           /* if (!params.has_value()) {
                 throw std::logic_error("The author was not found"s);
             }
             if (params->title.empty()) {
                 throw std::logic_error("Book title is empty"s);
-            }
+            }*/
             use_cases_.AddBook(params->author_id, params->title, params->publication_year);
         }
     } catch (const std::exception&) {

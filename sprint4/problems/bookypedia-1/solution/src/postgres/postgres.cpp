@@ -58,7 +58,13 @@ ON CONFLICT (id) DO UPDATE SET author_id=$2 title = $3, publication_year = $4;
 book.GetId().ToString(), book.GetAuthorId().ToString(), book.GetTitle(), book.GetPublicationYear());
     work.commit();
 }
-
+//work.exec(
+//    R"(CREATE TABLE IF NOT EXISTS books (
+//    id UUID CONSTRAINT book_id_constraint PRIMARY KEY,
+//    author_id UUID NOT NULL,
+//    title varchar(100) NOT NULL,
+//    publication_year integer NOT NULL
+//);
 const std::vector<domain::Book> BookRepositoryImpl::GetAllBooks() {
     try {
         std::vector<domain::Book>  res;
