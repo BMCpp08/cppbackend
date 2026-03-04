@@ -14,19 +14,19 @@ void AuthorRepositoryImpl::Save(const domain::Author& author) {
     // запросов выполнить в рамках одной транзакции.
     // Вы также может самостоятельно почитать информацию про этот паттерн и применить его здесь.
     pqxx::work work{connection_};
-    constexpr auto tag_author = "add_author"_zv;
+    //constexpr auto tag_author = "add_author"_zv;
 
-    connection_.prepare(tag_author, "INSERT INTO authors (id, name) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET name=$2"_zv);
-    work.exec_prepared(tag_author, author.GetId().ToString(), author.GetName());
-    work.commit();
+    //connection_.prepare(tag_author, "INSERT INTO authors (id, name) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET name=$2"_zv);
+    //work.exec_prepared(tag_author, author.GetId().ToString(), author.GetName());
+    //work.commit();
 
-    /*work.exec_params(
+    work.exec_params(
         R"(
 INSERT INTO authors (id, name) VALUES ($1, $2)
 ON CONFLICT (id) DO UPDATE SET name=$2;
 )"_zv,
         author.GetId().ToString(), author.GetName());
-    work.commit();*/
+    work.commit();
 }
 
 const domain::Author AuthorRepositoryImpl::LoadAuthorById() {
@@ -60,13 +60,13 @@ CREATE TABLE IF NOT EXISTS authors (
 );
 )"_zv);
     // ... создать другие таблицы
-    work.exec(
-        R"(CREATE TABLE IF NOT EXISTS books (
-        id UUID CONSTRAINT book_id_constraint PRIMARY KEY, 
-        author_id UUID NOT NULL, 
-        title varchar(100) NOT NULL, 
-        publication_year integer NOT NULL,
-        CONSTRAINT f_books FOREIGN KEY(author_id) REFERENCES authors(id);)"_zv);
+    //work.exec(
+    //    R"(CREATE TABLE IF NOT EXISTS books (
+    //    id UUID CONSTRAINT book_id_constraint PRIMARY KEY, 
+    //    author_id UUID NOT NULL, 
+    //    title varchar(100) NOT NULL, 
+    //    publication_year integer NOT NULL,
+    //    CONSTRAINT f_books FOREIGN KEY(author_id) REFERENCES authors(id);)"_zv);
 
     // коммитим изменения
     work.commit();
