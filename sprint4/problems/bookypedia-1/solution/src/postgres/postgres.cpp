@@ -53,7 +53,7 @@ void BookRepositoryImpl::Save(const domain::Book& book) {
     work.exec_params(
         R"(
 INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4)
-ON CONFLICT (id) DO UPDATE SET author_id=$2 title = $3, publication_year = $4;
+ON CONFLICT (id) DO UPDATE SET author_id=$2 title=$3, publication_year=$4;
 )"_zv,
 book.GetId().ToString(), book.GetAuthorId().ToString(), book.GetTitle(), book.GetPublicationYear());
     work.commit();
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS authors (
     name varchar(100) UNIQUE NOT NULL
 );
 )"_zv);
-   
+    work.commit();
     // ... создать другие таблицы
     work.exec(
     R"(CREATE TABLE IF NOT EXISTS books (
