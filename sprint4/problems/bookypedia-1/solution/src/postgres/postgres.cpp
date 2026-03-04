@@ -64,7 +64,7 @@ author.GetId().ToString(), author.GetName());
 		try {
 			std::vector<domain::Book>  res;
 			pqxx::read_transaction read(connection_);
-			auto rows = read.query<std::string, std::string, std::optional<std::string>, std::optional<int>>("SELECT id, author_id, title, publication_year FROM books ORDER BY publication_year DESC, title ASC;"_zv);
+			auto rows = read.query<std::string, std::string, std::optional<std::string>, std::optional<int>>("SELECT id, author_id, title, publication_year FROM books ORDER BY title ASC, publication_year DESC;"_zv);
 
 			for (auto& [id, author_id, title, publication_year] : rows) {
 				res.emplace_back(domain::BookId::FromString(id), domain::AuthorId::FromString(author_id), title.value_or(""), publication_year.value_or(-9999));
