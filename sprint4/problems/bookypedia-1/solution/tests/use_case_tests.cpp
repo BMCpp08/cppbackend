@@ -11,10 +11,6 @@ struct MockAuthorRepository : domain::AuthorRepository {
     void Save(const domain::Author& author) override {
         saved_authors.emplace_back(author);
     }
-    const domain::Author LoadAuthorById() override {
-        domain::Author res(domain::AuthorId::FromString(""), "");
-        return  res;
-    }
 
     const std::vector<domain::Author> GetAllAuthor() override { 
         std::vector<domain::Author>  res; 
@@ -22,15 +18,29 @@ struct MockAuthorRepository : domain::AuthorRepository {
     };
 };
 
+struct MockBookRepository : domain::BookRepository {
+    std::vector<domain::Book> saved_authors;
+
+    void Save(const domain::Book& author) override {
+        saved_authors.emplace_back(author);
+    }
+
+    const std::vector<domain::Book> GetAllBooks() override {
+        std::vector<domain::Book>  res;
+        return res;
+    };
+};
+
 struct Fixture {
     MockAuthorRepository authors;
+    MockBookRepository books;
 };
 
 }  // namespace
 
 SCENARIO_METHOD(Fixture, "Book Adding") {
     GIVEN("Use cases") {
-        app::UseCasesImpl use_cases{authors};
+        app::UseCasesImpl use_cases{authors, books };
 
         WHEN("Adding an author") {
             const auto author_name = "Joanne Rowling";

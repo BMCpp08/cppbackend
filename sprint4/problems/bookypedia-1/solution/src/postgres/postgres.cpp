@@ -29,17 +29,13 @@ ON CONFLICT (id) DO UPDATE SET name=$2;
     work.commit();
 }
 
-const domain::Author AuthorRepositoryImpl::LoadAuthorById() {
-    return { domain::AuthorId::FromString("id"), ("") };
-}
-
 const std::vector<domain::Author> AuthorRepositoryImpl::GetAllAuthor() {
     try {
         std::vector<domain::Author> res;
         pqxx::read_transaction read(connection_);
-        auto r = read.query< std::string, std::optional<std::string>>("SELECT id, name FROM authors ORDER BY name;"_zv);
+        auto rows = read.query< std::string, std::optional<std::string>>("SELECT id, name FROM authors ORDER BY name;"_zv);
         
-        for (auto& [id, name] : r){
+        for (auto& [id, name] : rows){
             res.emplace_back(domain::AuthorId::FromString(id), name.value_or(""));
         }
 
@@ -51,6 +47,35 @@ const std::vector<domain::Author> AuthorRepositoryImpl::GetAllAuthor() {
     }
 }
 
+void BookRepositoryImpl::Save(const domain::Book& book) {
+    pqxx::work work{ connection_ };
+ 
+    work.exec_params(
+        R"(
+INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4)
+ON CONFLICT (id) DO UPDATE SET author_id=$2 title = $3, publication_year = $4;
+)"_zv,
+book.GetId().ToString(), book.GetAuthorId().ToString(), book.GetTitle(), book.GetPublicationYear());
+    work.commit();
+}
+
+const std::vector<domain::Book> BookRepositoryImpl::GetAllBooks() {
+    try {
+        std::vector<domain::Book>  res;
+        pqxx::read_transaction read(connection_);
+        auto rows = read.query<std::string, std::string, std::optional<std::string>, std::optional<int>>("SELECT id, author_id, title, publication_year FROM books ORDER BY publication_year ASC, title ASC;"_zv);
+
+        for (auto& [id, author_id, title, publication_year] : rows) {
+            res.emplace_back(domain::BookId::FromString(id), domain::AuthorId::FromString(author_id), title.value_or(""), publication_year.value_or(-9999));
+        }
+
+        read.commit();
+        return res;
+    }
+    catch (const pqxx::sql_error& e) {
+        throw e;
+    }
+};
 
 Database::Database(pqxx::connection connection)
     : connection_{std::move(connection)} {

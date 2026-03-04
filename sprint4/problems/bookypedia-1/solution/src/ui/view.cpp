@@ -58,7 +58,7 @@ bool View::AddAuthor(std::istream& cmd_input) const {
         boost::algorithm::trim(name);
 
         if (name.empty()) {
-            throw std::logic_error("");
+            throw std::logic_error("Name is empty"s);
         }
         use_cases_.AddAuthor(std::move(name));
     } catch (const std::exception&) {
@@ -70,7 +70,14 @@ bool View::AddAuthor(std::istream& cmd_input) const {
 bool View::AddBook(std::istream& cmd_input) const {
     try {
         if (auto params = GetBookParams(cmd_input)) {
-            assert(!"TODO: implement book adding");
+           /* assert(!"TODO: implement book adding");*/
+            if (!params.has_value()) {
+                throw std::logic_error("The author was not found"s);
+            }
+            if (params->title.empty()) {
+                throw std::logic_error("Book title is empty"s);
+            }
+            use_cases_.AddBook(params->author_id, params->title, params->publication_year);
         }
     } catch (const std::exception&) {
         output_ << "Failed to add book"sv << std::endl;
@@ -95,7 +102,7 @@ bool View::ShowAuthorBooks() const {
             PrintVector(output_, GetAuthorBooks(*author_id));
         }
     } catch (const std::exception&) {
-        throw std::runtime_error("Failed to Show Books");
+        throw std::runtime_error("Failed to Show Books"s);
     }
     return true;
 }
@@ -145,19 +152,21 @@ std::optional<std::string> View::SelectAuthor() const {
 std::vector<detail::AuthorInfo> View::GetAuthors() const {
     std::vector<detail::AuthorInfo> dst_autors;
 
-
     for (const auto& author : use_cases_.GetAllAuthor()) {
         dst_autors.emplace_back(author.GetId().ToString(), author.GetName());
     }
-
     return dst_autors;
 }
 
 std::vector<detail::BookInfo> View::GetBooks() const {
     std::vector<detail::BookInfo> books;
-    assert(!"TODO: implement GetBooks()");
+
+    for (const auto& book : use_cases_.GetAllBook()) {
+        books.emplace_back(book.GetTitle(), book.GetPublicationYear());
+    }
     return books;
 }
+
 
 std::vector<detail::BookInfo> View::GetAuthorBooks(const std::string& author_id) const {
     std::vector<detail::BookInfo> books;

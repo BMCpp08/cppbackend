@@ -13,8 +13,20 @@ public:
     }
 
     void Save(const domain::Author& author) override;
-    const domain::Author LoadAuthorById() override;
     const std::vector<domain::Author> GetAllAuthor() override;
+
+private:
+    pqxx::connection& connection_;
+};
+
+class BookRepositoryImpl : public domain::BookRepository {
+public:
+    explicit BookRepositoryImpl(pqxx::connection& connection)
+        : connection_{ connection } {
+    }
+
+    void Save(const domain::Book& book) override;
+    const std::vector<domain::Book> GetAllBooks() override;
 
 private:
     pqxx::connection& connection_;
@@ -28,9 +40,13 @@ public:
         return authors_;
     }
 
+    BookRepositoryImpl& GetBooks()& {
+        return books_;
+    }
 private:
     pqxx::connection connection_;
     AuthorRepositoryImpl authors_{connection_};
+    BookRepositoryImpl books_{ connection_ };
 };
 
 }  // namespace postgres
