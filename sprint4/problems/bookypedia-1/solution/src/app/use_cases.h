@@ -13,6 +13,7 @@ public:
 
     virtual void AddBook(const std::string& title, const std::string& author_id, const int publication_year) = 0;
     virtual const std::vector<domain::Book> GetAllBook() = 0;
+    virtual const std::vector<domain::Book> GetAuthorBooks(const std::string& author_id) = 0;
 protected:
     ~UseCases() = default;
 };

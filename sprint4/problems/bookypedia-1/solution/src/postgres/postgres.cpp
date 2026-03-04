@@ -77,6 +77,28 @@ const std::vector<domain::Book> BookRepositoryImpl::GetAllBooks() {
     }
 };
 
+const std::vector<domain::Book> BookRepositoryImpl::GetAuthorBooks(domain::AuthorId author_id) {
+    try {
+        std::vector<domain::Book>  res;
+        pqxx::read_transaction read(connection_);
+        auto rows = read.query<std::string, std::string, std::optional<std::string>, std::optional<int>>("SELECT id, title, publication_year FROM books "
+                                                                                                            "WHERE author_id = $1 "
+                                                                                                            "ORDER BY publication_year ASC, title ASC;"_zv,
+                                                                                                            author_id.ToString());
+        for (auto& [id, author_id, title, publication_year] : rows) {
+            res.emplace_back(domain::BookId::FromString(id), domain::AuthorId::FromString(author_id), title.value_or(""), publication_year.value_or(-9999));
+        }
+
+        read.commit();
+        return res;
+
+
+    }
+    catch (const pqxx::sql_error& e) {
+        throw e;
+    }
+}
+
 Database::Database(pqxx::connection connection)
     : connection_{std::move(connection)} {
     pqxx::work work{connection_};

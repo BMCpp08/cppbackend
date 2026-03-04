@@ -170,7 +170,11 @@ std::vector<detail::BookInfo> View::GetBooks() const {
 
 std::vector<detail::BookInfo> View::GetAuthorBooks(const std::string& author_id) const {
     std::vector<detail::BookInfo> books;
-    assert(!"TODO: implement GetAuthorBooks()");
+
+    for (const auto& book : use_cases_.GetAuthorBooks(author_id)) {
+        books.emplace_back(book.GetTitle(), book.GetPublicationYear());
+    }
+
     return books;
 }
 

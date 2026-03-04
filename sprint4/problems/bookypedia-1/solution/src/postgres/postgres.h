@@ -27,6 +27,7 @@ public:
 
     void Save(const domain::Book& book) override;
     const std::vector<domain::Book> GetAllBooks() override;
+    const std::vector<domain::Book> GetAuthorBooks(domain::AuthorId author_id) override;
 
 private:
     pqxx::connection& connection_;

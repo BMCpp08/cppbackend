@@ -29,6 +29,11 @@ struct MockBookRepository : domain::BookRepository {
         std::vector<domain::Book>  res;
         return res;
     };
+
+    const std::vector<domain::Book> GetAuthorBooks(domain::AuthorId author_id) override {
+        std::vector<domain::Book> res;
+        return res;
+    };
 };
 
 struct Fixture {

@@ -78,6 +78,7 @@ class BookRepository {
 public:
     virtual void Save(const Book& book) = 0;
     virtual const std::vector<domain::Book> GetAllBooks() = 0;
+    virtual const std::vector<domain::Book> GetAuthorBooks(domain::AuthorId author_id) = 0;
 protected:
     ~BookRepository() = default;
 };

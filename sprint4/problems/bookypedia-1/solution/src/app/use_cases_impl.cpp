@@ -20,4 +20,9 @@ void UseCasesImpl::AddBook(const std::string& author_id, const std::string& titl
 const std::vector<domain::Book> UseCasesImpl::GetAllBook() {
     return book_.GetAllBooks();
 }
+
+const std::vector<domain::Book> UseCasesImpl::GetAuthorBooks(const std::string& author_id) {
+    return book_.GetAuthorBooks(AuthorId::FromString(author_id));
+};
+
 }  // namespace app
