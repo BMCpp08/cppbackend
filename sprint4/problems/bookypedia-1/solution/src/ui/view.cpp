@@ -167,7 +167,6 @@ std::vector<detail::BookInfo> View::GetBooks() const {
     return books;
 }
 
-
 std::vector<detail::BookInfo> View::GetAuthorBooks(const std::string& author_id) const {
     std::vector<detail::BookInfo> books;
 

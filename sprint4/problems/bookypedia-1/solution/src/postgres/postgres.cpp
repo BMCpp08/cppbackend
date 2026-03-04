@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS authors (
     name varchar(100) UNIQUE NOT NULL
 );
 )"_zv);
-     work.commit();
+   
     // ... создать другие таблицы
     work.exec(
         R"(CREATE TABLE IF NOT EXISTS books (
