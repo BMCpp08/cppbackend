@@ -144,7 +144,7 @@ std::optional<std::string> View::SelectAuthor() const {
 
 std::vector<detail::AuthorInfo> View::GetAuthors() const {
     std::vector<detail::AuthorInfo> dst_autors;
-    /*assert(!"TODO: implement GetAuthors()");*/
+
 
     for (const auto& author : use_cases_.GetAllAuthor()) {
         dst_autors.emplace_back(author.GetId().ToString(), author.GetName());
