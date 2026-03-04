@@ -4,124 +4,110 @@
 
 namespace postgres {
 
-using namespace std::literals;
-using pqxx::operator"" _zv;
+	using namespace std::literals;
+	using pqxx::operator"" _zv;
 
-void AuthorRepositoryImpl::Save(const domain::Author& author) {
+	void AuthorRepositoryImpl::Save(const domain::Author& author) {
 
-    // Пока каждое обращение к репозиторию выполняется внутри отдельной транзакции
-    // В будущих уроках вы узнаете про паттерн Unit of Work, при помощи которого сможете несколько
-    // запросов выполнить в рамках одной транзакции.
-    // Вы также может самостоятельно почитать информацию про этот паттерн и применить его здесь.
-    pqxx::work work{connection_};
-    //constexpr auto tag_author = "add_author"_zv;
+		// Пока каждое обращение к репозиторию выполняется внутри отдельной транзакции
+		// В будущих уроках вы узнаете про паттерн Unit of Work, при помощи которого сможете несколько
+		// запросов выполнить в рамках одной транзакции.
+		// Вы также может самостоятельно почитать информацию про этот паттерн и применить его здесь.
+		pqxx::work work{ connection_ };
+		//constexpr auto tag_author = "add_author"_zv;
 
-    //connection_.prepare(tag_author, "INSERT INTO authors (id, name) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET name=$2"_zv);
-    //work.exec_prepared(tag_author, author.GetId().ToString(), author.GetName());
-    //work.commit();
+		//connection_.prepare(tag_author, "INSERT INTO authors (id, name) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET name=$2"_zv);
+		//work.exec_prepared(tag_author, author.GetId().ToString(), author.GetName());
+		//work.commit();
 
-    work.exec_params(
-        R"(
+		work.exec_params(
+			R"(
 INSERT INTO authors (id, name) VALUES ($1, $2)
 ON CONFLICT (id) DO UPDATE SET name=$2;
 )"_zv,
-        author.GetId().ToString(), author.GetName());
-    work.commit();
-}
+author.GetId().ToString(), author.GetName());
+		work.commit();
+	}
 
-const std::vector<domain::Author> AuthorRepositoryImpl::GetAllAuthor() {
-    try {
-        std::vector<domain::Author> res;
-        pqxx::read_transaction read(connection_);
-        auto rows = read.query< std::string, std::optional<std::string>>("SELECT id, name FROM authors ORDER BY name;"_zv);
-        
-        for (auto& [id, name] : rows){
-            res.emplace_back(domain::AuthorId::FromString(id), name.value_or(""));
-        }
+	const std::vector<domain::Author> AuthorRepositoryImpl::GetAllAuthor() {
+		try {
+			std::vector<domain::Author> res;
+			pqxx::read_transaction read(connection_);
+			auto rows = read.query< std::string, std::optional<std::string>>("SELECT id, name FROM authors ORDER BY name;"_zv);
 
-        read.commit();
-        return res;
-    }
-    catch (const pqxx::sql_error& e) {
-        throw e;
-    }
-}
+			for (auto& [id, name] : rows) {
+				res.emplace_back(domain::AuthorId::FromString(id), name.value_or(""));
+			}
 
-void BookRepositoryImpl::Save(const domain::Book& book) {
-    pqxx::work work{ connection_ };
- 
-    work.exec_params(
-//        R"(
-//INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4)
-//ON CONFLICT (id) DO UPDATE SET author_id=$2 title=$3, publication_year=$4;
-//)"_zv,
-R"(
-INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4)
-ON CONFLICT (id) DO UPDATE SET author_id=$2, title=$3, publication_year=$4;
-)"_zv,
-book.GetId().ToString(), book.GetAuthorId().ToString(), book.GetTitle(), book.GetPublicationYear());
-    work.commit();
-}
-//work.exec(
-//    R"(CREATE TABLE IF NOT EXISTS books (
-//    id UUID CONSTRAINT book_id_constraint PRIMARY KEY,
-//    author_id UUID NOT NULL,
-//    title varchar(100) NOT NULL,
-//    publication_year integer NOT NULL
-//);
-const std::vector<domain::Book> BookRepositoryImpl::GetAllBooks() {
-    try {
-        std::vector<domain::Book>  res;
-        pqxx::read_transaction read(connection_);
-        auto rows = read.query<std::string, std::string, std::optional<std::string>, std::optional<int>>("SELECT id, author_id, title, publication_year FROM books ORDER BY publication_year ASC, title ASC;"_zv);
+			read.commit();
+			return res;
+		}
+		catch (const pqxx::sql_error& e) {
+			throw e;
+		}
+	}
 
-        for (auto& [id, author_id, title, publication_year] : rows) {
-            res.emplace_back(domain::BookId::FromString(id), domain::AuthorId::FromString(author_id), title.value_or(""), publication_year.value_or(-9999));
-        }
+	void BookRepositoryImpl::Save(const domain::Book& book) {
+		pqxx::work work{ connection_ };
 
-        read.commit();
-        return res;
-    }
-    catch (const pqxx::sql_error& e) {
-        throw e;
-    }
-};
+		work.exec_params(
 
-const std::vector<domain::Book> BookRepositoryImpl::GetAuthorBooks(domain::AuthorId author_id) {
-    try {
-        std::vector<domain::Book>  res;
-        pqxx::read_transaction read(connection_);
-        auto rows = read.query<std::string, std::string, std::optional<std::string>, std::optional<int>>("SELECT id, title, publication_year FROM books "
-                                                                                                            "WHERE author_id = $1 "
-                                                                                                            "ORDER BY publication_year ASC, title ASC;"_zv,
-                                                                                                            author_id.ToString());
-        for (auto& [id, author_id, title, publication_year] : rows) {
-            res.emplace_back(domain::BookId::FromString(id), domain::AuthorId::FromString(author_id), title.value_or(""), publication_year.value_or(-9999));
-        }
+			R"(
+    INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4)
+    ON CONFLICT (id) DO UPDATE SET author_id=$2, title=$3, publication_year=$4;
+    )"_zv,
+			book.GetId().ToString(), book.GetAuthorId().ToString(), book.GetTitle(), book.GetPublicationYear());
+		work.commit();
+	}
 
-        read.commit();
-        return res;
+	const std::vector<domain::Book> BookRepositoryImpl::GetAllBooks() {
+		try {
+			std::vector<domain::Book>  res;
+			pqxx::read_transaction read(connection_);
+			auto rows = read.query<std::string, std::string, std::optional<std::string>, std::optional<int>>("SELECT id, author_id, title, publication_year FROM books ORDER BY publication_year ASC, title ASC;"_zv);
 
+			for (auto& [id, author_id, title, publication_year] : rows) {
+				res.emplace_back(domain::BookId::FromString(id), domain::AuthorId::FromString(author_id), title.value_or(""), publication_year.value_or(-9999));
+			}
 
-    }
-    catch (const pqxx::sql_error& e) {
-        throw e;
-    }
-}
+			read.commit();
+			return res;
+		}
+		catch (const pqxx::sql_error& e) {
+			throw e;
+		}
+	};
 
-Database::Database(pqxx::connection connection)
-    : connection_{std::move(connection)} {
-    pqxx::work work{connection_};
-    work.exec(R"(
+	const std::vector<domain::Book> BookRepositoryImpl::GetAuthorBooks(domain::AuthorId author_id) {
+		try {
+			std::vector<domain::Book>  res;
+			pqxx::read_transaction read(connection_);
+			auto rows = read.query<std::string, std::string, std::optional<std::string>, std::optional<int>>("SELECT id, author_id, title, publication_year FROM books WHERE author_id = $1 ORDER BY publication_year ASC, title ASC;"_zv,	author_id.ToString());
+			for (auto& [id, author_id, title, publication_year] : rows) {
+				res.emplace_back(domain::BookId::FromString(id), domain::AuthorId::FromString(author_id), title.value_or(""), publication_year.value_or(-9999));
+			}
+
+			read.commit();
+			return res;
+		}
+		catch (const pqxx::sql_error& e) {
+			throw e;
+		}
+	}
+
+	Database::Database(pqxx::connection connection)
+		: connection_{ std::move(connection) } {
+		pqxx::work work{ connection_ };
+		work.exec(R"(
 CREATE TABLE IF NOT EXISTS authors (
     id UUID CONSTRAINT author_id_constraint PRIMARY KEY,
     name varchar(100) UNIQUE NOT NULL
 );
 )"_zv);
 
-    // ... создать другие таблицы
-    work.exec(
-    R"(CREATE TABLE IF NOT EXISTS books (
+		// ... создать другие таблицы
+		work.exec(
+			R"(CREATE TABLE IF NOT EXISTS books (
     id UUID CONSTRAINT book_id_constraint PRIMARY KEY,
     author_id UUID NOT NULL,
     title varchar(100) NOT NULL,
@@ -129,8 +115,8 @@ CREATE TABLE IF NOT EXISTS authors (
 );
 )"_zv);
 
-    //// коммитим изменения
-    work.commit();
-}
+		//// коммитим изменения
+		work.commit();
+	}
 
 }  // namespace postgres
