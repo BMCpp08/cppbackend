@@ -69,8 +69,8 @@ public:
 
 private:
     BookId id_;
-    std::string title_;
     AuthorId author_id_;
+    std::string title_;
     int publication_year_;
 }; 
 
