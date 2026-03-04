@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <pqxx/connection>
 #include <pqxx/transaction>
 
@@ -13,6 +13,8 @@ public:
     }
 
     void Save(const domain::Author& author) override;
+    const domain::Author LoadAuthorById() override;
+    const std::vector<domain::Author> GetAllAuthor() override;
 
 private:
     pqxx::connection& connection_;

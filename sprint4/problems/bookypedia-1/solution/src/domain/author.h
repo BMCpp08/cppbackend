@@ -1,6 +1,6 @@
-#pragma once
+﻿#pragma once
 #include <string>
-
+#include <vector>
 #include "../util/tagged_uuid.h"
 
 namespace domain {
@@ -34,7 +34,8 @@ private:
 class AuthorRepository {
 public:
     virtual void Save(const Author& author) = 0;
-
+    virtual const domain::Author LoadAuthorById() = 0;
+    virtual const std::vector<domain::Author> GetAllAuthor() = 0;
 protected:
     ~AuthorRepository() = default;
 };

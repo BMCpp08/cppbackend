@@ -1,4 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
+﻿#include <catch2/catch_test_macros.hpp>
 
 #include "../src/app/use_cases_impl.h"
 #include "../src/domain/author.h"
@@ -11,6 +11,15 @@ struct MockAuthorRepository : domain::AuthorRepository {
     void Save(const domain::Author& author) override {
         saved_authors.emplace_back(author);
     }
+    const domain::Author LoadAuthorById() override {
+        domain::Author res(domain::AuthorId::FromString(""), "");
+        return  res;
+    }
+
+    const std::vector<domain::Author> GetAllAuthor() override { 
+        std::vector<domain::Author>  res; 
+        return res;
+    };
 };
 
 struct Fixture {
