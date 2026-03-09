@@ -39,9 +39,20 @@ namespace postgres {
 	}
 
 	void AuthorRepositoryImpl::DeleteAuthor(const domain::AuthorId& author_id) {
-		try {
+		/*try {
 			work_.exec_params("DELETE FROM books WHERE author_id = $1", author_id.ToString());
 			auto res = work_.exec_params("DELETE FROM authors WHERE id = $1 RETURNING id", author_id.ToString());
+			if (res.empty()) {
+				throw std::runtime_error("Author not found");
+			}
+		}
+		catch (const pqxx::sql_error& e) {
+			throw e;
+		}*/
+		try {
+			auto res = work_.exec_params(
+				"DELETE FROM authors WHERE id = $1 RETURNING id", author_id.ToString()
+			);
 			if (res.empty()) {
 				throw std::runtime_error("Author not found");
 			}
@@ -240,15 +251,21 @@ namespace postgres {
 		)"_zv);
 
 		//Таблица книг
+		//work.exec(R"(
+		//	CREATE TABLE IF NOT EXISTS books (
+		//	id UUID CONSTRAINT book_id_constraint PRIMARY KEY,
+		//	author_id uuid references authors(id)  NOT NULL,
+		//	title varchar(100) NOT NULL,
+		//	publication_year integer NOT NULL
+		//);
+		//)"_zv);
 		work.exec(R"(
-			CREATE TABLE IF NOT EXISTS books (
 			id UUID CONSTRAINT book_id_constraint PRIMARY KEY,
-			author_id uuid references authors(id)  NOT NULL,
+			author_id uuid references authors(id) ON DELETE CASCADE NOT NULL,
 			title varchar(100) NOT NULL,
 			publication_year integer NOT NULL
 		);
 		)"_zv);
-
 
 		work.exec(R"(
 			CREATE TABLE IF NOT EXISTS book_tags (
