@@ -139,7 +139,7 @@ namespace app {
                 std::cerr << ">>> Commit: successful" << std::endl;
 
                 std::cerr << ">>> Commit: creating new UnitOfWork" << std::endl;
-                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
+                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 std::cerr << ">>> Commit: new UnitOfWork created" << std::endl;
             }
             catch (const std::exception& e) {
