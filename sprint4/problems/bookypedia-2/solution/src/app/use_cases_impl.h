@@ -171,23 +171,18 @@ namespace app {
         //}
         void AddTag(const std::string& book_id, const std::string& tag) override {
             try {
-                std::cerr << ">>> AddTag use case: book_id = " << book_id << ", tag = '" << tag << "'" << std::endl;
 
                 if (tag.empty()) {
-                    std::cerr << ">>> AddTag use case: WARNING - empty tag, skipping" << std::endl;
                     return;
                 }
 
                 if (!unit_of_work_) {
-                    std::cerr << ">>> AddTag use case: ERROR - unit_of_work_ is null!" << std::endl;
                     unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 }
 
                 unit_of_work_->Tags().Save(domain::Tag{ domain::BookId::FromString(book_id), tag });
-                std::cerr << ">>> AddTag use case: saved successfully" << std::endl;
             }
             catch (const std::exception& e) {
-                std::cerr << ">>> AddTag use case: EXCEPTION: " << e.what() << std::endl;
                 if (unit_of_work_) {
                     unit_of_work_->Rollback();
                 }

@@ -562,6 +562,8 @@ bool View::EditBook(std::istream& cmd_input) const {
 				std::vector<std::string> tags_vec(tags_set.begin(), tags_set.end());
 				std::sort(tags_vec.begin(), tags_vec.end());
 				auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
+
+
 				AddTag(book_id, tags_vec);
 				use_cases_.Commit();
 			}
@@ -586,7 +588,10 @@ bool View::EditBook(std::istream& cmd_input) const {
 
 	bool View::AddTag(const std::string& book_id, const std::vector<std::string>& tags) const {
 		try {
+			std::cerr << ">>> Sorted tags: ";
+	
 			for (const auto& tag : tags) {
+				std::cerr << "'" << tag << "' ";
 				use_cases_.AddTag(book_id, tag);
 			}
 			return true;
@@ -607,19 +612,17 @@ bool View::EditBook(std::istream& cmd_input) const {
 	//	return true;
 	//}
 	bool View::ShowBooks() const {
-		std::cerr << ">>> ShowBooks: start" << std::endl;
 		try {
 			auto books = GetBooks();
-			std::cerr << ">>> ShowBooks: got " << books.size() << " books" << std::endl;
 			PrintVector(output_, books);
 			output_.flush();
-			std::cerr << ">>> ShowBooks: finished" << std::endl;
 		}
 		catch (const std::exception& e) {
-			std::cerr << ">>> ShowBooks: exception: " << e.what() << std::endl;
+			std::cerr << "exception: " << e.what() << std::endl;
 		}
 		return true;
 	}
+
 	bool View::ShowAuthorBooks() const {
 		// TODO: handle error
 		try {
@@ -650,19 +653,6 @@ bool View::EditBook(std::istream& cmd_input) const {
 		}
 		return tags;
 	}
-
-	//std::unordered_set<std::string> ParseTags(const std::string& input) {
-	//	std::unordered_set<std::string> res;
-	//	std::string token;
-	//	std::istringstream iss(input);
-	//	while (std::getline(iss, token, ',')) {
-	//		boost::algorithm::trim_all(token);
-	//		if (!token.empty()) {
-	//			res.insert(token);
-	//		}
-	//	}
-	//	return res;
-	//}
 
 	std::optional<detail::AddBookParams> View::GetBookParams(std::istream& cmd_input) const {
 		detail::AddBookParams params;
