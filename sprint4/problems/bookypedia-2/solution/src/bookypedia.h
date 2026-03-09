@@ -18,8 +18,6 @@ public:
 
 private:
     postgres::Database db_;
-
-   /* app::UseCasesImpl use_cases_{db_.GetAuthors(), db_.GetBooks()};*/
     app::UseCasesImpl use_cases_;
 };
 
