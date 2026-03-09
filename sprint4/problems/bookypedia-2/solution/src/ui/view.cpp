@@ -491,11 +491,24 @@ bool View::EditBook(std::istream& cmd_input) const {
 		return true;
 	}
 
+	//bool View::ShowBooks() const {
+	//	PrintVector(output_, GetBooks());
+	//	return true;
+	//}
 	bool View::ShowBooks() const {
-		PrintVector(output_, GetBooks());
+		std::cerr << ">>> ShowBooks: start" << std::endl;
+		try {
+			auto books = GetBooks();
+			std::cerr << ">>> ShowBooks: got " << books.size() << " books" << std::endl;
+			PrintVector(output_, books);
+			output_.flush();
+			std::cerr << ">>> ShowBooks: finished" << std::endl;
+		}
+		catch (const std::exception& e) {
+			std::cerr << ">>> ShowBooks: exception: " << e.what() << std::endl;
+		}
 		return true;
 	}
-
 	bool View::ShowAuthorBooks() const {
 		// TODO: handle error
 		try {
@@ -509,18 +522,6 @@ bool View::EditBook(std::istream& cmd_input) const {
 		return true;
 	}
 
-	//std::unordered_set<std::string> View::ReadTags() const {
-	//	std::string token;
-	//	std::unordered_set<std::string> tags;
-
-	//	while (std::getline(input_, token, ',')) {
-	//		boost::algorithm::trim_all(token);
-	//		if (!token.empty()) {
-	//			tags.insert(token);
-	//		}
-	//	}
-	//	return tags;
-	//}
 	std::unordered_set<std::string> View::ReadTags() const {
 		std::string line;
 		std::getline(input_, line);
