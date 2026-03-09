@@ -38,9 +38,29 @@ namespace postgres {
 		}
 	}
 
+	//void AuthorRepositoryImpl::DeleteAuthor(const domain::AuthorId& author_id) {
+	//	try {
+	//		work_.exec_params("DELETE FROM books WHERE author_id = $1", author_id.ToString());
+	//		auto res = work_.exec_params("DELETE FROM authors WHERE id = $1 RETURNING id", author_id.ToString());
+	//		if (res.empty()) {
+	//			throw std::runtime_error("Author not found");
+	//		}
+	//	}
+	//	catch (const pqxx::sql_error& e) {
+	//		throw e;
+	//	}
+	//}
 	void AuthorRepositoryImpl::DeleteAuthor(const domain::AuthorId& author_id) {
 		try {
-			/*work_.exec_params("DELETE FROM books WHERE author_id = $1", author_id.ToString());*/
+			auto books = work_.exec_params("SELECT id FROM books WHERE author_id = $1", author_id.ToString());
+			for (const auto& row : books) {
+				std::string book_id = row[0].as<std::string>();
+				work_.exec_params("DELETE FROM book_tags WHERE book_id = $1", book_id);
+			}
+
+			work_.exec_params("DELETE FROM books WHERE author_id = $1", author_id.ToString());
+
+
 			auto res = work_.exec_params("DELETE FROM authors WHERE id = $1 RETURNING id", author_id.ToString());
 			if (res.empty()) {
 				throw std::runtime_error("Author not found");
@@ -50,7 +70,6 @@ namespace postgres {
 			throw e;
 		}
 	}
-
 	void AuthorRepositoryImpl::EditAuthor(const domain::Author& author) {
 		try {
 			auto res = work_.exec_params(
