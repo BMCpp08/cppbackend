@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
+#include <algorithm>
 
 #include "../app/use_cases.h"
 #include "../menu/menu.h"
@@ -86,6 +87,115 @@ namespace ui {
 	}
 
 
+//bool View::EditBook(std::istream& cmd_input) const {
+//	try {
+//		// 1. Получаем фильтр (название книги, если передано)
+//		std::string title;
+//		std::getline(cmd_input, title);
+//		boost::algorithm::trim(title);
+//
+//		// 2. Получаем список книг
+//		std::vector<detail::BookInfo> books;
+//		if (!title.empty()) {
+//			books = GetBooksByTitle(title);
+//		}
+//		else {
+//			books = GetBooks();
+//		}
+//
+//		// 3. Если книг нет
+//		if (books.empty()) {
+//			if (!title.empty()) {
+//				output_ << "Book not found" << std::endl;
+//			}
+//			return false;
+//		}
+//
+//		int selectedIndex = -1;
+//
+//		// 4. Определяем индекс книги
+//		if (!title.empty()) {
+//			if (books.size() == 1) {
+//				selectedIndex = 0;
+//			}
+//			else {
+//				selectedIndex = SelectBook(books);
+//				if (selectedIndex == -1) return false;
+//			}
+//		}
+//		else {
+//			selectedIndex = SelectBook(books);
+//			if (selectedIndex == -1) return false;
+//		}
+//
+//		// 5. Данные выбранной книги
+//		const auto& book = books[selectedIndex];
+//		std::string book_id = book.book_id;
+//		std::string currentTitle = book.title;
+//		int currentYear = book.publication_year;
+//
+//		// 6. Текущие теги
+//		auto currentTags = use_cases_.GetAllTags(book_id);
+//		std::string currentTagsStr = boost::algorithm::join(currentTags, ", ");
+//
+//		// 7. Ввод нового названия
+//		output_ << "Enter new title or empty line to use the current one (" << currentTitle << "): ";
+//		std::string new_title;
+//		std::getline(input_, new_title);
+//		boost::algorithm::trim(new_title);
+//		if (new_title.empty()) {
+//			new_title = currentTitle;
+//		}
+//
+//		// 8. Ввод нового года
+//		output_ << "Enter publication year or empty line to use the current one (" << currentYear << "): ";
+//		std::string new_year;
+//		std::getline(input_, new_year);
+//		boost::algorithm::trim(new_year);
+//		int newYear = currentYear;
+//		if (!new_year.empty()) {
+//			try {
+//				newYear = std::stoi(new_year);
+//			}
+//			catch (...) {
+//				throw std::runtime_error("Invalid new_year");
+//			}
+//		}
+//
+//		// 9. Ввод новых тегов
+//		output_ << "Enter tags (current tags: " << currentTagsStr << "): ";
+//		std::unordered_set<std::string> newTags;
+//		newTags = ReadTags();
+//
+//		//if (newTags.empty()) {
+//		//	
+//		//	return false;
+//		//}
+//
+//		// 10. Обновление книги в БД
+//		if (new_title != currentTitle || newYear != currentYear) {
+//			use_cases_.EditBook(domain::Book{
+//				domain::BookId::FromString(book_id),
+//				domain::AuthorId::FromString(book.author_id),
+//				new_title,
+//				newYear
+//				});
+//		}
+//
+//		use_cases_.DeleteAllTags(book_id);               
+//		for (const auto& tag : newTags) {
+//			use_cases_.AddTag(book_id, tag);            
+//		}
+//
+//		use_cases_.Commit();
+//		return true;
+//
+//	}
+//	catch (const std::exception&) {
+//		output_ << "Book not found" << std::endl;
+//		return false;
+//	}
+//}
 bool View::EditBook(std::istream& cmd_input) const {
 	try {
 		// 1. Получаем фильтр (название книги, если передано)
@@ -163,13 +273,10 @@ bool View::EditBook(std::istream& cmd_input) const {
 
 		// 9. Ввод новых тегов
 		output_ << "Enter tags (current tags: " << currentTagsStr << "): ";
-		std::unordered_set<std::string> newTags;
-		newTags = ReadTags();
-
-		//if (newTags.empty()) {
-		//	
-		//	return false;
-		//}
+		std::unordered_set<std::string> newTagsSet = ReadTags();
+		// Преобразуем в вектор и сортируем для детерминированного порядка вставки
+		std::vector<std::string> newTags(newTagsSet.begin(), newTagsSet.end());
+		std::sort(newTags.begin(), newTags.end());
 
 		// 10. Обновление книги в БД
 		if (new_title != currentTitle || newYear != currentYear) {
@@ -181,9 +288,10 @@ bool View::EditBook(std::istream& cmd_input) const {
 				});
 		}
 
-		use_cases_.DeleteAllTags(book_id);               
+		// 11. Обновление тегов: удаляем старые и добавляем новые (отсортированные)
+		use_cases_.DeleteAllTags(book_id);
 		for (const auto& tag : newTags) {
-			use_cases_.AddTag(book_id, tag);            
+			use_cases_.AddTag(book_id, tag);
 		}
 
 		use_cases_.Commit();
@@ -417,23 +525,6 @@ bool View::EditBook(std::istream& cmd_input) const {
 		return true;
 	}
 
-	bool View::AddNewAuthor(std::istream& cmd_input) const {
-		try {
-			std::string name;
-			std::getline(cmd_input, name);
-			boost::algorithm::trim(name);
-
-			if (name.empty()) {
-				throw std::logic_error("Name is empty"s);
-			}
-			use_cases_.AddAuthor(std::move(name));
-			
-		}
-		catch (const std::exception&) {
-			output_ << "Failed to add author"sv << std::endl << std::flush;;
-		}
-		return true;
-	}
 	bool View::AddAuthor(std::istream& cmd_input) const {
 		try {
 			std::string name;
@@ -462,9 +553,16 @@ bool View::EditBook(std::istream& cmd_input) const {
 					throw std::logic_error("Book title is empty"s);
 				}
 				output_ << "Enter tags (comma separated):";
-				auto tags = ReadTags();
+	/*			auto tags = ReadTags();
 				auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
 				AddTag(book_id, tags);
+				use_cases_.Commit();*/
+
+				auto tags_set = ReadTags();
+				std::vector<std::string> tags_vec(tags_set.begin(), tags_set.end());
+				std::sort(tags_vec.begin(), tags_vec.end());
+				auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
+				AddTag(book_id, tags_vec);
 				use_cases_.Commit();
 			}
 		}
@@ -484,6 +582,19 @@ bool View::EditBook(std::istream& cmd_input) const {
 			output_ << "Failed to add book"sv << std::endl;
 		}
 		return true;
+	}
+
+	bool View::AddTag(const std::string& book_id, const std::vector<std::string>& tags) const {
+		try {
+			for (const auto& tag : tags) {
+				use_cases_.AddTag(book_id, tag);
+			}
+			return true;
+		}
+		catch (const std::exception& e) {
+			output_ << "Failed to add tags"sv << std::endl;
+			return false;
+		}
 	}
 
 	bool View::ShowAuthors() const {

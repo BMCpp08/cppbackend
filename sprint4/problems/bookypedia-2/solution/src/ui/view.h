@@ -49,7 +49,6 @@ public:
 
 private:
     bool AddAuthor(std::istream& cmd_input) const;
-    bool AddNewAuthor(std::istream& cmd_input) const;
     bool AddBook(std::istream& cmd_input) const;
     bool ShowAuthors() const;
     bool ShowBooks() const;
@@ -70,6 +69,7 @@ private:
     int SelectBook(const std::vector<detail::BookInfo>& books) const;
     std::vector<detail::BookInfo> GetBooksByTitle(const std::string& title) const;
 
+    bool AddTag(const std::string& book_id, const std::vector<std::string>& tags) const;
     menu::Menu& menu_;
     app::UseCases& use_cases_;
     std::istream& input_;
