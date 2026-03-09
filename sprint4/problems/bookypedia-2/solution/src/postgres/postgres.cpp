@@ -23,7 +23,7 @@ namespace postgres {
 
 	const std::optional<domain::Author> AuthorRepositoryImpl::GetAuthor(const std::string& name) {
 		try {
-			auto res = read_.exec_params("SELECT id, name FROM authors WHERE name = $1", name);
+			auto res = work_.exec_params("SELECT id, name FROM authors WHERE name = $1", name);
 			if (res.empty()) {
 				return std::nullopt;
 			}
@@ -77,7 +77,7 @@ namespace postgres {
 	const std::vector<domain::Author> AuthorRepositoryImpl::GetAllAuthor() {
 		try {
 			std::vector<domain::Author> res;
-			auto rows = read_.query<std::string, std::optional<std::string>>("SELECT id, name FROM authors ORDER BY name;"_zv);
+			auto rows = work_.query<std::string, std::optional<std::string>>("SELECT id, name FROM authors ORDER BY name;"_zv);
 
 			for (auto& [id, name] : rows) {
 				res.emplace_back(domain::AuthorId::FromString(id), name.value_or(""));
@@ -107,7 +107,7 @@ namespace postgres {
 	const std::vector<domain::Book> BookRepositoryImpl::GetAllBooks() {
 		try {
 			std::vector<domain::Book> res;
-			auto rows = read_.query<std::string, std::string, std::optional<std::string>, std::optional<int>>(
+			auto rows = work_.query<std::string, std::string, std::optional<std::string>, std::optional<int>>(
 				"SELECT books.id, books.author_id, books.title, books.publication_year "
 				"FROM books "
 				"JOIN authors ON books.author_id = authors.id "
@@ -130,7 +130,7 @@ namespace postgres {
 		try {
 			std::vector<domain::Book>  res;
 
-			auto rows = read_.query<std::string, std::string, std::optional<std::string>, std::optional<int>>("SELECT id, author_id, title, publication_year FROM books WHERE author_id = $1 ORDER BY publication_year ASC, title ASC;"_zv, author_id.ToString());
+			auto rows = work_.query<std::string, std::string, std::optional<std::string>, std::optional<int>>("SELECT id, author_id, title, publication_year FROM books WHERE author_id = $1 ORDER BY publication_year ASC, title ASC;"_zv, author_id.ToString());
 			for (auto& [id, author_id_, title, publication_year] : rows) {
 				res.emplace_back(domain::BookId::FromString(id), domain::AuthorId::FromString(author_id_), title.value_or(""), publication_year.value_or(-9999));
 			}
@@ -146,7 +146,7 @@ namespace postgres {
 		try {
 			std::vector<domain::Book> res;
 
-			auto rows = read_.query<std::string, std::optional<std::string>, std::optional<int>, std::string>("SELECT books.id, books.title, books.publication_year, authors.id "
+			auto rows = work_.query<std::string, std::optional<std::string>, std::optional<int>, std::string>("SELECT books.id, books.title, books.publication_year, authors.id "
 																											"FROM books "
 																											"JOIN authors ON books.author_id = authors.id "
 																											"WHERE books.title = $1 "
@@ -199,7 +199,7 @@ namespace postgres {
 	const std::vector<std::string> TagRepositoryImpl::GetAllTags(domain::BookId book_id) {
 		try {
 			std::vector<std::string> tags;
-			auto rows = read_.query<std::optional<std::string>>(
+			auto rows = work_.query<std::optional<std::string>>(
 				"SELECT tag FROM book_tags WHERE book_id = $1 ORDER BY tag;"_zv,
 				book_id.ToString()
 			);

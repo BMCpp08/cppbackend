@@ -11,9 +11,8 @@ namespace postgres {
 	using namespace std::literals;
 	class AuthorRepositoryImpl : public domain::AuthorRepository {
 	public:
-		explicit AuthorRepositoryImpl(pqxx::work& work, pqxx::read_transaction& read)
-			: work_(work)
-			, read_(read) {
+		explicit AuthorRepositoryImpl(pqxx::work& work)
+			: work_(work) {
 		}
 
 		void Save(const domain::Author& author) override;
@@ -25,14 +24,12 @@ namespace postgres {
 		void EditAuthor(const domain::Author& author) override;
 	private:
 		pqxx::work& work_;
-		pqxx::read_transaction& read_;
 	};
 
 	class BookRepositoryImpl : public domain::BookRepository {
 	public:
-		explicit BookRepositoryImpl(pqxx::work& work, pqxx::read_transaction& read)
-			: work_(work)
-			, read_(read) {
+		explicit BookRepositoryImpl(pqxx::work& work)
+			: work_(work) {
 		}
 
 		void Save(const domain::Book& book) override;
@@ -43,15 +40,13 @@ namespace postgres {
 		void EditBookById(const domain::Book& book) override;
 	private:
 		pqxx::work& work_;
-		pqxx::read_transaction& read_;
 	};
 
 
 	class TagRepositoryImpl : public domain::TagRepository {
 	public:
-		explicit TagRepositoryImpl(pqxx::work& work, pqxx::read_transaction& read)
-			: work_(work)
-			, read_(read) {
+		explicit TagRepositoryImpl(pqxx::work& work)
+			: work_(work) {
 		}
 
 		void Save(const domain::Tag& book) override {
@@ -65,7 +60,7 @@ namespace postgres {
 		void DeleteAllTags(const domain::BookId& book_id) override;
 	private:
 		pqxx::work& work_;
-		pqxx::read_transaction& read_;
+		//pqxx::read_transaction& read_;
 	};
 
 
@@ -73,10 +68,9 @@ namespace postgres {
 	public:
 		explicit UnitOfWorkImpl(pqxx::connection& connection)
 			: work_(connection)
-			, read_(connection)
-			, authors_(work_, read_)
-			, books_(work_, read_)
-			, tags_(work_, read_){
+			, authors_(work_)
+			, books_(work_)
+			, tags_(work_){
 		}
 
 		void Commit() override {
@@ -199,8 +193,6 @@ namespace postgres {
 		BookRepositoryImpl books_;
 		TagRepositoryImpl tags_;
 		pqxx::work work_;
-		pqxx::read_transaction read_;
-
 	};
 
 
