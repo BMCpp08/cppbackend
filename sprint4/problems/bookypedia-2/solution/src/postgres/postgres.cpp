@@ -146,7 +146,6 @@ namespace postgres {
 
 	const std::vector<domain::Book> BookRepositoryImpl::GetAllBooks() {
 		try {
-			std::cerr << ">>> BookRepository::GetAllBooks: starting" << std::endl;
 			std::vector<domain::Book> res;
 
 			auto rows = work_.query<std::string, std::string, std::optional<std::string>, std::optional<int>>(
@@ -156,25 +155,17 @@ namespace postgres {
 				"ORDER BY books.title ASC, authors.name ASC, books.publication_year ASC;"_zv
 			);
 
-			// Подсчитываем количество, проходя по итератору
-			int row_count = 0;
 			for (auto& [id, author_id, title, publication_year] : rows) {
-				row_count++;
-				std::cerr << ">>> BookRepository::GetAllBooks: book id=" << id
-					<< ", author_id=" << author_id
-					<< ", title=" << title.value_or("") << std::endl;
+
 				res.emplace_back(domain::BookId::FromString(id),
 					domain::AuthorId::FromString(author_id),
 					title.value_or(""),
 					publication_year.value_or(-9999));
 			}
 
-			std::cerr << ">>> BookRepository::GetAllBooks: got " << row_count << " rows" << std::endl;
-			std::cerr << ">>> BookRepository::GetAllBooks: returning " << res.size() << " books" << std::endl;
 			return res;
 		}
 		catch (const pqxx::sql_error& e) {
-			std::cerr << ">>> BookRepository::GetAllBooks: EXCEPTION: " << e.what() << std::endl;
 			throw e;
 		}
 	}

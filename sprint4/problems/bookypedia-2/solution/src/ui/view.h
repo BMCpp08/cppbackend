@@ -3,7 +3,7 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include <unordered_set>
+//#include <unordered_set>
 
 namespace menu {
 class Menu;
@@ -54,7 +54,7 @@ private:
     bool ShowBooks() const;
     bool ShowAuthorBooks() const;
     bool DeleteAuthor(std::istream& cmd_input) const;
-    bool AddTag(const std::string& book_id, const std::unordered_set<std::string>& tags) const;
+    //bool AddTag(const std::string& book_id, const std::unordered_set<std::string>& tags) const;
     bool EditAuthor(std::istream& cmd_input) const;
     bool ShowBook(std::istream& cmd_input) const;
     bool DeleteBook(std::istream& cmd_input) const;
@@ -65,7 +65,8 @@ private:
     std::vector<detail::AuthorInfo> GetAuthors() const;
     std::vector<detail::BookInfo> GetBooks() const;
     std::vector<detail::BookInfo> GetAuthorBooks(const std::string& author_id) const;
-    std::unordered_set<std::string> ReadTags() const;
+    //std::unordered_set<std::string> ReadTags() const;
+    std::vector<std::string> ReadTags() const;
     int SelectBook(const std::vector<detail::BookInfo>& books) const;
     std::vector<detail::BookInfo> GetBooksByTitle(const std::string& title) const;
 

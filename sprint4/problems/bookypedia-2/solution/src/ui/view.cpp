@@ -273,7 +273,7 @@ bool View::EditBook(std::istream& cmd_input) const {
 
 		// 9. Ввод новых тегов
 		output_ << "Enter tags (current tags: " << currentTagsStr << "): ";
-		std::unordered_set<std::string> newTagsSet = ReadTags();
+		auto newTagsSet = ReadTags();
 		// Преобразуем в вектор и сортируем для детерминированного порядка вставки
 		std::vector<std::string> newTags(newTagsSet.begin(), newTagsSet.end());
 		std::sort(newTags.begin(), newTags.end());
@@ -559,12 +559,12 @@ bool View::EditBook(std::istream& cmd_input) const {
 				use_cases_.Commit();*/
 
 				auto tags_set = ReadTags();
-				std::vector<std::string> tags_vec(tags_set.begin(), tags_set.end());
-				std::sort(tags_vec.begin(), tags_vec.end());
+				std::vector<std::string> tags(tags_set.begin(), tags_set.end());
+				std::sort(tags.begin(), tags.end());
 				auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
 
 
-				AddTag(book_id, tags_vec);
+				AddTag(book_id, tags);
 				use_cases_.Commit();
 			}
 		}
@@ -574,17 +574,17 @@ bool View::EditBook(std::istream& cmd_input) const {
 		return true;
 	}
 
-	bool View::AddTag(const std::string& book_id, const std::unordered_set<std::string>& tags) const {
-		try {
-			for (auto tag : tags) {
-				use_cases_.AddTag(book_id, tag);
-			}
-		}
-		catch (const std::exception&) {
-			output_ << "Failed to add book"sv << std::endl;
-		}
-		return true;
-	}
+	//bool View::AddTag(const std::string& book_id, const std::unordered_set<std::string>& tags) const {
+	//	try {
+	//		for (auto tag : tags) {
+	//			use_cases_.AddTag(book_id, tag);
+	//		}
+	//	}
+	//	catch (const std::exception&) {
+	//		output_ << "Failed to add book"sv << std::endl;
+	//	}
+	//	return true;
+	//}
 
 	bool View::AddTag(const std::string& book_id, const std::vector<std::string>& tags) const {
 		try {
@@ -636,21 +636,25 @@ bool View::EditBook(std::istream& cmd_input) const {
 		return true;
 	}
 
-	std::unordered_set<std::string> View::ReadTags() const {
+	std::vector<std::string> View::ReadTags() const {
 		std::string line;
 		std::getline(input_, line);
 		boost::algorithm::trim(line);
-		std::unordered_set<std::string> tags;
-		if (line.empty()) return tags;
+		std::vector<std::string>  tags;
+
+		if (line.empty()) 
+			return tags;
 
 		std::vector<std::string> parts;
 		boost::split(parts, line, boost::is_any_of(","));
 		for (auto& token : parts) {
 			boost::algorithm::trim_all(token);
 			if (!token.empty()) {
-				tags.insert(token);
+				tags.emplace_back(token);
 			}
 		}
+
+		std::sort(tags.begin(), tags.end());
 		return tags;
 	}
 
