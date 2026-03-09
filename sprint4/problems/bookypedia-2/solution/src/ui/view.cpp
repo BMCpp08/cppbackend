@@ -613,10 +613,32 @@ bool View::EditBook(std::istream& cmd_input) const {
 		return true;
 	}
 
+	//bool View::AddBook(std::istream& cmd_input) const {
+	//	try {
+	//		if (auto params = GetBookParams(cmd_input)) {
+
+	//			if (!params.has_value()) {
+	//				throw std::logic_error("!!!"s);
+	//			}
+	//			if (params->title.empty()) {
+	//				throw std::logic_error("Book title is empty"s);
+	//			}
+	//			output_ << "Enter tags (comma separated):";
+	//			auto tags = ReadTags();
+	//			auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
+	//			AddTag(book_id, tags);
+	//			use_cases_.Commit();
+	//		}
+	//	}
+	//	catch (const std::exception&) {
+	//		output_ << "Failed to add book"sv << std::endl;
+	//	}
+	//	return true;
+	//}
 	bool View::AddBook(std::istream& cmd_input) const {
 		try {
+			std::cerr << ">>> AddBook view: starting" << std::endl;
 			if (auto params = GetBookParams(cmd_input)) {
-
 				if (!params.has_value()) {
 					throw std::logic_error("!!!"s);
 				}
@@ -625,17 +647,23 @@ bool View::EditBook(std::istream& cmd_input) const {
 				}
 				output_ << "Enter tags (comma separated):";
 				auto tags = ReadTags();
+				std::cerr << ">>> AddBook view: tags count = " << tags.size() << std::endl;
+				std::cerr << ">>> AddBook view: calling AddBook use case" << std::endl;
 				auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
+				std::cerr << ">>> AddBook view: book_id = " << book_id << std::endl;
+				std::cerr << ">>> AddBook view: calling AddTag" << std::endl;
 				AddTag(book_id, tags);
+				std::cerr << ">>> AddBook view: calling Commit" << std::endl;
 				use_cases_.Commit();
+				std::cerr << ">>> AddBook view: Commit successful" << std::endl;
 			}
 		}
-		catch (const std::exception&) {
+		catch (const std::exception& e) {
+			std::cerr << ">>> AddBook view: exception: " << e.what() << std::endl;
 			output_ << "Failed to add book"sv << std::endl;
 		}
 		return true;
 	}
-
 	bool View::AddTag(const std::string& book_id, const std::unordered_set<std::string>& tags) const {
 		try {
 			for (auto tag : tags) {
