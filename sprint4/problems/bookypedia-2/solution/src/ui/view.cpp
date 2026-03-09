@@ -657,9 +657,11 @@ bool View::EditBook(std::istream& cmd_input) const {
 			output_ << "Enter tags (comma separated): ";
 			auto tags = ReadTags();
 			std::cerr << ">>> AddBook view: read " << tags.size() << " tags" << std::endl;
-			for (size_t i = 0; i < tags.size(); ++i) {
-				std::cerr << ">>> AddBook view: tag[" << i << "] = '" << tags[i] << "'" << std::endl;
+			std::cerr << ">>> AddBook view: tags = ";
+			for (const auto& tag : tags) {
+				std::cerr << "'" << tag << "' ";
 			}
+			std::cerr << std::endl;
 
 			std::cerr << ">>> AddBook view: calling use_cases_.AddBook" << std::endl;
 			auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
