@@ -217,7 +217,7 @@ namespace ui {
 				if (!title.empty()) {
 					output_ << "Book not found" << std::endl;
 				}
-				return false;
+				return true;
 			}
 
 			int selectedIndex = -1;
@@ -229,12 +229,12 @@ namespace ui {
 				}
 				else {
 					selectedIndex = SelectBook(books);
-					if (selectedIndex == -1) return false;
+					if (selectedIndex == -1) return true;
 				}
 			}
 			else {
 				selectedIndex = SelectBook(books);
-				if (selectedIndex == -1) return false;
+				if (selectedIndex == -1) return true;
 			}
 
 			// 5. Данные выбранной книги
@@ -300,7 +300,7 @@ namespace ui {
 		}
 		catch (const std::exception&) {
 			output_ << "Book not found" << std::endl;
-			return false;
+			return true;
 		}
 	}
 	int View::SelectBook(const std::vector<detail::BookInfo>& books) const {
@@ -378,14 +378,14 @@ namespace ui {
 				if (delete_by_title) {
 					output_ << "Failed to delete book"sv << std::endl;
 				}
-				return false;
+				return true;
 			}
 
 			if (delete_by_title) {
 				if (books.size() > 1) {
 					idx = SelectBook(books);
 					if (idx == -1) {
-						return false;
+						return true;
 					}
 				}
 			}
@@ -416,12 +416,12 @@ namespace ui {
 			}
 
 			if (books.empty()) {
-				return false;
+				return true;
 			}
 
 			if (find_by_title && books.size() > 1) {
 				idx = SelectBook(books);
-				if (idx == -1) return false;
+				if (idx == -1) return true;
 			}
 
 			auto tags = use_cases_.GetAllTags(books[idx].book_id);
@@ -591,7 +591,7 @@ namespace ui {
 			auto params_opt = GetBookParams(cmd_input);
 			if (!params_opt) {
 				output_ << "Failed to add book"sv << std::endl;
-				return false;
+				return true;
 			}
 			const auto& params = *params_opt;
 
@@ -609,7 +609,7 @@ namespace ui {
 			auto tags_set = ReadTags();
 			std::vector<std::string> tags(tags_set.begin(), tags_set.end());
 			std::sort(tags.begin(), tags.end());
-			auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
+			auto book_id = use_cases_.AddBook(params.author_id, params.title, params.publication_year);
 
 
 			AddTag(book_id, tags);
@@ -618,7 +618,6 @@ namespace ui {
 		}
 		catch (const std::exception&) {
 			output_ << "Failed to add book"sv << std::endl;
-			return false;
 		}
 		return true;
 	}
@@ -643,12 +642,11 @@ namespace ui {
 				std::cerr << "'" << tag << "' ";
 				use_cases_.AddTag(book_id, tag);
 			}
-			return true;
 		}
 		catch (const std::exception& e) {
 			output_ << "Failed to add tags"sv << std::endl;
-			return false;
 		}
+		return true;
 	}
 
 	bool View::ShowAuthors() const {
