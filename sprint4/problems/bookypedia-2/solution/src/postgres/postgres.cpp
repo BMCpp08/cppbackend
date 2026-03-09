@@ -228,7 +228,7 @@ namespace postgres {
 
 	Database::Database(pqxx::connection connection)
 		: connection_{ std::move(connection) } 
-		, unit_of_work_impl_(std::make_shared<UnitOfWorkFactoryImpl>(connection)){
+		, unit_of_work_impl_(std::make_shared<UnitOfWorkFactoryImpl>(connection_)){
 		pqxx::work work{ connection_ };
 
 		//Таблица авторов
