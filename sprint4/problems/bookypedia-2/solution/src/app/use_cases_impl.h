@@ -21,7 +21,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -34,7 +34,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -45,7 +45,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-               /* unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -56,7 +56,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -67,7 +67,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-               /* unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -78,7 +78,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -86,11 +86,11 @@ namespace app {
         void Commit() override {
             try {
                 unit_of_work_->Commit();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -101,7 +101,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -112,7 +112,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -123,7 +123,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -134,7 +134,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -145,7 +145,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -156,7 +156,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -167,7 +167,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
@@ -178,7 +178,7 @@ namespace app {
             }
             catch (...) {
                 unit_of_work_->Rollback();
-                /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
+                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
