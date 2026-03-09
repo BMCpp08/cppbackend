@@ -74,14 +74,7 @@ namespace postgres {
 		}
 
 		void Commit() override {
-			
-			try {
-				work_.commit();
-			}
-			catch (...) {
-				Rollback();
-				throw std::logic_error("Error Commit"s);
-			}
+			work_.commit();
 		}
 
 		void Rollback() override {
@@ -101,92 +94,45 @@ namespace postgres {
 		}
 
 		void SaveAuthor(const domain::Author& author) {
-			try {
-				authors_.Save(author);
-			}
-			catch (...) {
-				Rollback();
-				throw std::logic_error("Error SaveAuthor"s);
-			}
+			authors_.Save(author);
 		}
 
 		void SaveBook(const domain::Book& book) {
-			try {
-				books_.Save(book);
-			}
-			catch (...) {
-				Rollback();
-				throw std::logic_error("Error SaveBook"s);
-			}
+			books_.Save(book);
 		}
 
 		void SaveTag(const domain::Tag& tag) {
-			try {
-				tags_.Save(tag);
-			}
-			catch (...) {
-				Rollback();
-				throw std::logic_error("Error SaveTag"s);
-			}
+			tags_.Save(tag);
 		}
 
 		void DeleteAuthor(const domain::AuthorId& author_id) {
-			try {
-				authors_.DeleteAuthor(author_id);
-			}
-			catch (...) {
-				Rollback();
-				throw std::logic_error("Error DeleteAuthor"s);
-			}
+			authors_.DeleteAuthor(author_id);			
 		} 
 		void EditBook(const domain::Book& book) {
-			try {
-				books_.EditBookById(book);
-			}
-			catch (...) {
-				Rollback();
-				throw std::logic_error("Error EditBook"s);
-			}
+			books_.EditBookById(book);
 		}
 		
 		void DeleteBook(const domain::BookId& book_id) {
-			try {
-				books_.DeleteBook(book_id);
-			}
-			catch (...) {
-				Rollback();
-				throw std::logic_error("Error DeleteAuthor"s);
-			}
+			books_.DeleteBook(book_id);
 		}
 
 		void EditAuthor(const domain::Author& author) {
-			try {
-				authors_.EditAuthor(author);
-			}
-			catch (...) {
-				Rollback();
-				throw std::logic_error("Error EditAuthor"s);
-			}
+			authors_.EditAuthor(author);
 		}
 
 		const std::vector<std::string> GetAllTags(domain::BookId book_id) {
-			try {
-				return tags_.GetAllTags(book_id);
-			}
-			catch (...) {
-				Rollback();
-				throw std::logic_error("Error EditAuthor"s);
-			}
+			return tags_.GetAllTags(book_id);
 		}
-		~UnitOfWorkImpl() = default;
-		/*~UnitOfWorkImpl() {
+
+		//~UnitOfWorkImpl() = default;
+		~UnitOfWorkImpl() {
 			try {
 				work_.abort();
 			}
 			catch (...) {
 
 			}
-		}*/
+		}
 
 	private:
 		AuthorRepositoryImpl authors_;
