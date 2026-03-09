@@ -566,7 +566,7 @@ bool View::EditBook(std::istream& cmd_input) const {
 
 				AddTag(book_id, tags);
 				use_cases_.Commit();
-			} auto params = GetBookParams(cmd_input);
+			}
 		}
 		catch (const std::exception&) {
 			output_ << "Failed to add book"sv << std::endl;
