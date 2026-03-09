@@ -9,29 +9,28 @@ namespace postgres {
 	using pqxx::operator"" _zv;
 
 	void AuthorRepositoryImpl::Save(const domain::Author& author) {
-		try {
+
 			work_.exec_params(R"(
 								INSERT INTO authors (id, name) VALUES ($1, $2)
 								ON CONFLICT (id) DO UPDATE SET name=$2;
 								)"_zv,
 			author.GetId().ToString(), author.GetName());
-		}
-		catch (const pqxx::sql_error& e) {
-			throw e;
-		}
+		
 	}
 
+	//Найти автора по имени
 	const std::optional<domain::Author> AuthorRepositoryImpl::GetAuthor(const std::string& name) {
 		try {
-			auto res = work_.exec_params("SELECT id, name FROM authors WHERE name = $1", name);
-			if (res.empty()) {
+			std::optional result = work_.query01< std::string, std::string>(
+				"SELECT id, name FROM authors WHERE name = $1;"_zv, name);
+
+			if (result) {
+				auto [id, name] = *result;
+				return domain::Author(domain::AuthorId::FromString(id), name);
+			}
+			else {
 				return std::nullopt;
 			}
-
-			const auto& row = res[0];
-			std::string id = row[0].as<std::string>();
-			std::string author_name = row[1].as<std::string>();
-			return domain::Author(domain::AuthorId::FromString(id), author_name);
 		}
 		catch (const pqxx::sql_error& e) {
 			throw e;

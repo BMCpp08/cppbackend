@@ -543,13 +543,13 @@ bool View::EditBook(std::istream& cmd_input) const {
 		boost::algorithm::trim(params.title);
 
 		output_ << "Enter author name or empty line to select from list:" << std::endl;
-		std::string str;
-		if (!std::getline(input_, str)) {
+		std::string author_name;
+		if (!std::getline(input_, author_name)) {
 			return std::nullopt;
 		}
-		boost::algorithm::trim(str);
+		boost::algorithm::trim(author_name);
 
-		if (str.empty()) {
+		if (author_name.empty()) {
 			auto author_id = SelectAuthor();
 			if (not author_id.has_value())
 				return std::nullopt;
@@ -559,29 +559,23 @@ bool View::EditBook(std::istream& cmd_input) const {
 			}
 		}
 		else {
-			auto author = use_cases_.GetAuthor(str);
+			auto author = use_cases_.GetAuthor(author_name);
 			if (author.has_value()) {
 				params.author_id = author->GetId().ToString();
 				return params;
 			}
 			else {
-				output_ << "No author found. Do you want to add " << str << " (y/n)? ";
+				output_ << "No author found. Do you want to add " << author_name << " (y/n)? ";
 				char answer;
 				input_ >> answer;
 
 				if (answer == 'y' || answer == 'Y') {
 
-					std::istringstream iss(str);
-					if (AddNewAuthor(iss)) {
-
-						auto author = use_cases_.GetAuthor(str);
-						if (author.has_value()) {
-							params.author_id = author->GetId().ToString();
-							return params;
-						}
-						else {
-							return std::nullopt;
-						}
+					/*std::istringstream iss(author_name);*/
+					auto author_id = use_cases_.AddAuthor(std::move(author_name));
+					if (!author_id.empty()) {
+						params.author_id = author->GetId().ToString();
+						return params;
 					}
 					else {
 						return std::nullopt;

@@ -16,9 +16,11 @@ namespace app {
             unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
         }
 
-        void AddAuthor(const std::string& name) override {
+        std::string AddAuthor(const std::string& name) override {
             try {
-                unit_of_work_->Authors().Save({ domain::AuthorId::New(), name });
+                auto id = domain::AuthorId::New();
+                unit_of_work_->Authors().Save({ id, name });
+                return id.ToString();
             }
             catch (...) {
                 unit_of_work_->Rollback();

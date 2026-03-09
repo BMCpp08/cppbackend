@@ -11,7 +11,7 @@ namespace app {
 
 class UseCases {
 public:
-    virtual void AddAuthor(const std::string& name) = 0;
+    virtual std::string AddAuthor(const std::string& name) = 0;
     virtual const std::vector<domain::Author> GetAllAuthor() = 0;
     virtual const std::optional<domain::Author> GetAuthor(const std::string& name) = 0;
 
