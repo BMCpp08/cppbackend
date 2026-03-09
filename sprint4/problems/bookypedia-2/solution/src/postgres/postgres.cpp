@@ -310,8 +310,8 @@ namespace postgres {
 				PRIMARY KEY (book_id, tag)
 			);
 		)"_zv);
-		work.exec(R"(CREATE INDEX idx_book_tags_tag ON book_tags(tag);)"_zv);
-
+		/*work.exec(R"(CREATE INDEX idx_book_tags_tag ON book_tags(tag);)"_zv);*/
+		work.exec(R"(CREATE INDEX IF NOT EXISTS idx_book_tags_tag ON book_tags(tag);)"_zv);
 		work.commit();
 	}
 
