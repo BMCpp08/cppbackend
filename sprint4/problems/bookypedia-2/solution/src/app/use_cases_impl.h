@@ -39,24 +39,32 @@ namespace app {
                 throw;
             }
         }*/
-        std::string AddBook(const std::string& author_id, const std::string& title, const int publication_year) override {
+        std::string AddBook(const std::string& author_id, const std::string& title, int publication_year) override {
             try {
                 std::cerr << ">>> AddBook use case: starting" << std::endl;
+                std::cerr << ">>> AddBook use case: author_id = " << author_id << std::endl;
+                std::cerr << ">>> AddBook use case: title = " << title << std::endl;
+                std::cerr << ">>> AddBook use case: year = " << publication_year << std::endl;
+
                 auto id = domain::BookId::New();
                 std::cerr << ">>> AddBook use case: new id = " << id.ToString() << std::endl;
+
+                std::cerr << ">>> AddBook use case: checking if unit_of_work_ is valid" << std::endl;
+                if (!unit_of_work_) {
+                    std::cerr << ">>> AddBook use case: ERROR - unit_of_work_ is null!" << std::endl;
+                    unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
+                }
+
                 unit_of_work_->Books().Save({ id, domain::AuthorId::FromString(author_id), title, publication_year });
                 std::cerr << ">>> AddBook use case: saved successfully" << std::endl;
+
                 return id.ToString();
             }
             catch (const std::exception& e) {
-                std::cerr << ">>> AddBook use case: exception: " << e.what() << std::endl;
-                unit_of_work_->Rollback();
-                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
-                throw;
-            }
-            catch (...) {
-                std::cerr << ">>> AddBook use case: unknown exception" << std::endl;
-                unit_of_work_->Rollback();
+                std::cerr << ">>> AddBook use case: EXCEPTION: " << e.what() << std::endl;
+                if (unit_of_work_) {
+                    unit_of_work_->Rollback();
+                }
                 unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
@@ -119,24 +127,36 @@ namespace app {
         void Commit() override {
             try {
                 std::cerr << ">>> Commit: starting" << std::endl;
+
+                if (!unit_of_work_) {
+                    std::cerr << ">>> Commit: ERROR - unit_of_work_ is null, creating new one" << std::endl;
+                    unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
+                    return;
+                }
+
+                std::cerr << ">>> Commit: calling unit_of_work_->Commit()" << std::endl;
                 unit_of_work_->Commit();
                 std::cerr << ">>> Commit: successful" << std::endl;
+
+                std::cerr << ">>> Commit: creating new UnitOfWork" << std::endl;
                 unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 std::cerr << ">>> Commit: new UnitOfWork created" << std::endl;
             }
             catch (const std::exception& e) {
-                std::cerr << ">>> Commit: exception: " << e.what() << std::endl;
-                unit_of_work_->Rollback();
-                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
-                throw;
-            }
-            catch (...) {
-                std::cerr << ">>> Commit: unknown exception" << std::endl;
-                unit_of_work_->Rollback();
+                std::cerr << ">>> Commit: EXCEPTION: " << e.what() << std::endl;
+                try {
+                    if (unit_of_work_) {
+                        unit_of_work_->Rollback();
+                    }
+                }
+                catch (...) {
+                    std::cerr << ">>> Commit: Rollback also failed" << std::endl;
+                }
                 unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
+
         //void AddTag(const std::string& book_id, const std::string& tag) override {
         //    try {
         //        unit_of_work_->Tags().Save(domain::Tag{ domain::BookId::FromString(book_id), tag });
@@ -149,23 +169,31 @@ namespace app {
         //}
         void AddTag(const std::string& book_id, const std::string& tag) override {
             try {
-                std::cerr << ">>> AddTag use case: book_id = " << book_id << ", tag = " << tag << std::endl;
+                std::cerr << ">>> AddTag use case: book_id = " << book_id << ", tag = '" << tag << "'" << std::endl;
+
+                if (tag.empty()) {
+                    std::cerr << ">>> AddTag use case: WARNING - empty tag, skipping" << std::endl;
+                    return;
+                }
+
+                if (!unit_of_work_) {
+                    std::cerr << ">>> AddTag use case: ERROR - unit_of_work_ is null!" << std::endl;
+                    unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
+                }
+
                 unit_of_work_->Tags().Save(domain::Tag{ domain::BookId::FromString(book_id), tag });
                 std::cerr << ">>> AddTag use case: saved successfully" << std::endl;
             }
             catch (const std::exception& e) {
-                std::cerr << ">>> AddTag use case: exception: " << e.what() << std::endl;
-                unit_of_work_->Rollback();
-                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
-                throw;
-            }
-            catch (...) {
-                std::cerr << ">>> AddTag use case: unknown exception" << std::endl;
-                unit_of_work_->Rollback();
+                std::cerr << ">>> AddTag use case: EXCEPTION: " << e.what() << std::endl;
+                if (unit_of_work_) {
+                    unit_of_work_->Rollback();
+                }
                 unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
         }
+
         void DeleteAuthor(const std::string& author_id) override {
             try {
                 unit_of_work_->Authors().DeleteAuthor(domain::AuthorId::FromString(author_id));

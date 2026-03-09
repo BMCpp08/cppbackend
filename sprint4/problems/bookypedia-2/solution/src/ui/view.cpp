@@ -637,33 +637,54 @@ bool View::EditBook(std::istream& cmd_input) const {
 	//}
 	bool View::AddBook(std::istream& cmd_input) const {
 		try {
-			std::cerr << ">>> AddBook view: starting" << std::endl;
-			if (auto params = GetBookParams(cmd_input)) {
-				if (!params.has_value()) {
-					throw std::logic_error("!!!"s);
-				}
-				if (params->title.empty()) {
-					throw std::logic_error("Book title is empty"s);
-				}
-				output_ << "Enter tags (comma separated):";
-				auto tags = ReadTags();
-				std::cerr << ">>> AddBook view: tags count = " << tags.size() << std::endl;
-				std::cerr << ">>> AddBook view: calling AddBook use case" << std::endl;
-				auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
-				std::cerr << ">>> AddBook view: book_id = " << book_id << std::endl;
-				std::cerr << ">>> AddBook view: calling AddTag" << std::endl;
-				AddTag(book_id, tags);
-				std::cerr << ">>> AddBook view: calling Commit" << std::endl;
-				use_cases_.Commit();
-				std::cerr << ">>> AddBook view: Commit successful" << std::endl;
+			std::cerr << "\n>>> AddBook view: ===== STARTING =====" << std::endl;
+
+			auto params = GetBookParams(cmd_input);
+			if (!params) {
+				std::cerr << ">>> AddBook view: GetBookParams returned nullopt" << std::endl;
+				return true;
 			}
+
+			if (params->title.empty()) {
+				std::cerr << ">>> AddBook view: ERROR - empty title" << std::endl;
+				throw std::logic_error("Book title is empty");
+			}
+
+			std::cerr << ">>> AddBook view: author_id = " << params->author_id << std::endl;
+			std::cerr << ">>> AddBook view: title = " << params->title << std::endl;
+			std::cerr << ">>> AddBook view: year = " << params->publication_year << std::endl;
+
+			output_ << "Enter tags (comma separated): ";
+			auto tags = ReadTags();
+			std::cerr << ">>> AddBook view: read " << tags.size() << " tags" << std::endl;
+			for (size_t i = 0; i < tags.size(); ++i) {
+				std::cerr << ">>> AddBook view: tag[" << i << "] = '" << tags[i] << "'" << std::endl;
+			}
+
+			std::cerr << ">>> AddBook view: calling use_cases_.AddBook" << std::endl;
+			auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
+			std::cerr << ">>> AddBook view: AddBook returned book_id = " << book_id << std::endl;
+
+			std::cerr << ">>> AddBook view: calling AddTag for each tag" << std::endl;
+			for (const auto& tag : tags) {
+				use_cases_.AddTag(book_id, tag);
+			}
+			std::cerr << ">>> AddBook view: all tags added" << std::endl;
+
+			std::cerr << ">>> AddBook view: calling use_cases_.Commit()" << std::endl;
+			use_cases_.Commit();
+			std::cerr << ">>> AddBook view: Commit successful" << std::endl;
+
+			std::cerr << ">>> AddBook view: ===== COMPLETED SUCCESSFULLY =====\n" << std::endl;
 		}
 		catch (const std::exception& e) {
-			std::cerr << ">>> AddBook view: exception: " << e.what() << std::endl;
-			output_ << "Failed to add book"sv << std::endl;
+			std::cerr << ">>> AddBook view: EXCEPTION: " << e.what() << std::endl;
+			output_ << "Failed to add book" << std::endl;
+			std::cerr << ">>> AddBook view: ===== FAILED =====\n" << std::endl;
 		}
 		return true;
 	}
+
 	bool View::AddTag(const std::string& book_id, const std::unordered_set<std::string>& tags) const {
 		try {
 			for (auto tag : tags) {
