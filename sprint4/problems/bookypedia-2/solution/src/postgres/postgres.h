@@ -6,7 +6,7 @@
 #include "../domain/book.h"
 #include "../domain/tag.h"
 #include "../app/unit_of_work_factory.h"
-
+#include <atomic>
 namespace postgres {
 	using namespace std::literals;
 	class AuthorRepositoryImpl : public domain::AuthorRepository {
