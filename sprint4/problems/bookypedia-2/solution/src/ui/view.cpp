@@ -574,7 +574,8 @@ bool View::EditBook(std::istream& cmd_input) const {
 					/*std::istringstream iss(author_name);*/
 					auto author_id = use_cases_.AddAuthor(std::move(author_name));
 					if (!author_id.empty()) {
-						params.author_id = author->GetId().ToString();
+						
+						params.author_id = author_id;
 						return params;
 					}
 					else {
