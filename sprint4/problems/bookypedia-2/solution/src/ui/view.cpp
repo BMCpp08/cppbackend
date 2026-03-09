@@ -5,7 +5,7 @@
 #include <cassert>
 #include <iostream>
 #include <sstream>
-
+#include <boost/algorithm/string.hpp>
 
 #include "../app/use_cases.h"
 #include "../menu/menu.h"
@@ -509,11 +509,28 @@ bool View::EditBook(std::istream& cmd_input) const {
 		return true;
 	}
 
-	std::unordered_set<std::string> View::ReadTags() const {
-		std::string token;
-		std::unordered_set<std::string> tags;
+	//std::unordered_set<std::string> View::ReadTags() const {
+	//	std::string token;
+	//	std::unordered_set<std::string> tags;
 
-		while (std::getline(input_, token, ',')) {
+	//	while (std::getline(input_, token, ',')) {
+	//		boost::algorithm::trim_all(token);
+	//		if (!token.empty()) {
+	//			tags.insert(token);
+	//		}
+	//	}
+	//	return tags;
+	//}
+	std::unordered_set<std::string> View::ReadTags() const {
+		std::string line;
+		std::getline(input_, line);
+		boost::algorithm::trim(line);
+		std::unordered_set<std::string> tags;
+		if (line.empty()) return tags;
+
+		std::vector<std::string> parts;
+		boost::split(parts, line, boost::is_any_of(","));
+		for (auto& token : parts) {
 			boost::algorithm::trim_all(token);
 			if (!token.empty()) {
 				tags.insert(token);
@@ -570,8 +587,8 @@ bool View::EditBook(std::istream& cmd_input) const {
 				input_ >> answer;
 
 				if (answer == 'y' || answer == 'Y') {
-
-					/*std::istringstream iss(author_name);*/
+					input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				
 					auto author_id = use_cases_.AddAuthor(std::move(author_name));
 					if (!author_id.empty()) {
 						
