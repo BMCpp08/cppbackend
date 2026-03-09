@@ -655,6 +655,8 @@ bool View::EditBook(std::istream& cmd_input) const {
 		}
 
 		std::sort(tags.begin(), tags.end());
+		auto last = std::unique(tags.begin(), tags.end());
+		tags.erase(last, tags.end());
 		return tags;
 	}
 
