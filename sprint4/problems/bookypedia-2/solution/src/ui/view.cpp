@@ -595,6 +595,23 @@ bool View::EditBook(std::istream& cmd_input) const {
 		return true;
 	}
 
+	bool View::AddNewAuthor(std::istream& cmd_input) const {
+		try {
+			std::string name;
+			std::getline(cmd_input, name);
+			boost::algorithm::trim(name);
+
+			if (name.empty()) {
+				throw std::logic_error("Name is empty"s);
+			}
+			use_cases_.AddAuthor(std::move(name));
+			
+		}
+		catch (const std::exception&) {
+			output_ << "Failed to add author"sv << std::endl << std::flush;;
+		}
+		return true;
+	}
 	bool View::AddAuthor(std::istream& cmd_input) const {
 		try {
 			std::string name;
@@ -612,7 +629,6 @@ bool View::EditBook(std::istream& cmd_input) const {
 		}
 		return true;
 	}
-
 	//bool View::AddBook(std::istream& cmd_input) const {
 	//	try {
 	//		if (auto params = GetBookParams(cmd_input)) {
@@ -785,7 +801,7 @@ bool View::EditBook(std::istream& cmd_input) const {
 				if (answer == 'y' || answer == 'Y') {
 
 					std::istringstream iss(str);
-					if (AddAuthor(iss)) {
+					if (AddNewAuthor(iss)) {
 
 						auto author = use_cases_.GetAuthor(str);
 						if (author.has_value()) {

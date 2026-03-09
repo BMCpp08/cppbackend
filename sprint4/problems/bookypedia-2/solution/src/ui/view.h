@@ -49,6 +49,7 @@ public:
 
 private:
     bool AddAuthor(std::istream& cmd_input) const;
+    bool AddNewAuthor(std::istream& cmd_input) const;
     bool AddBook(std::istream& cmd_input) const;
     bool ShowAuthors() const;
     bool ShowBooks() const;
