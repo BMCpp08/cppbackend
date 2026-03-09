@@ -608,7 +608,7 @@ bool View::EditBook(std::istream& cmd_input) const {
 			use_cases_.Commit();
 		}
 		catch (const std::exception&) {
-			output_ << "Failed to add author"sv << std::endl;
+			output_ << "Failed to add author"sv << std::endl << std::flush;;
 		}
 		return true;
 	}

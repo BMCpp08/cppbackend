@@ -184,15 +184,15 @@ namespace postgres {
 				throw std::logic_error("Error EditAuthor"s);
 			}
 		}
-
-		~UnitOfWorkImpl() {
+		~UnitOfWorkImpl() = default;
+		/*~UnitOfWorkImpl() {
 			try {
 				work_.abort();
 			}
 			catch (...) {
 
 			}
-		}
+		}*/
 
 	private:
 		AuthorRepositoryImpl authors_;

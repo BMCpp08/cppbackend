@@ -53,8 +53,13 @@ namespace postgres {
 
 	void AuthorRepositoryImpl::EditAuthor(const domain::Author& author) {
 		try {
-			work_.exec_params("UPDATE authors SET name = $1 WHERE id = $2 RETURNING id",
-				author.GetName(), author.GetId().ToString());
+			auto res = work_.exec_params(
+				"UPDATE authors SET name = $1 WHERE id = $2 RETURNING id",
+				author.GetName(), author.GetId().ToString()
+			);
+			if (res.empty()) {
+				throw std::runtime_error("Author not found");
+			}
 		}
 		catch (const pqxx::sql_error& e) {
 			throw e;
