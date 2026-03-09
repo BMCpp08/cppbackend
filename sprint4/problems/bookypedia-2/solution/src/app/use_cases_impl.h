@@ -20,6 +20,7 @@ namespace app {
                 unit_of_work_->Authors().Save({ domain::AuthorId::New(), name });
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -32,6 +33,7 @@ namespace app {
                 return id.ToString();
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -42,6 +44,7 @@ namespace app {
                 return unit_of_work_->Authors().GetAllAuthor();
             }
             catch (...) {
+                unit_of_work_->Rollback();
                /* unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -52,6 +55,7 @@ namespace app {
                 return unit_of_work_->Books().GetAllBooks();
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -62,6 +66,7 @@ namespace app {
                 return unit_of_work_->Books().GetAuthorBooks(domain::AuthorId::FromString(author_id));
             }
             catch (...) {
+                unit_of_work_->Rollback();
                /* unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -72,6 +77,7 @@ namespace app {
                 return unit_of_work_->Authors().GetAuthor(name);
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -83,6 +89,7 @@ namespace app {
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -93,6 +100,7 @@ namespace app {
                 unit_of_work_->Tags().Save(domain::Tag{ domain::BookId::FromString(book_id), tag });
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -103,6 +111,7 @@ namespace app {
                 unit_of_work_->Authors().DeleteAuthor(domain::AuthorId::FromString(author_id));
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -113,6 +122,7 @@ namespace app {
                 unit_of_work_->Authors().EditAuthor(domain::Author{ domain::AuthorId::FromString(author_id), name });
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -123,6 +133,7 @@ namespace app {
                 return unit_of_work_->Tags().GetAllTags(domain::BookId::FromString(book_id));
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -133,6 +144,7 @@ namespace app {
                 return unit_of_work_->Books().GetBooksByTitle(title);
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -143,6 +155,7 @@ namespace app {
                 unit_of_work_->Books().DeleteBook(book_id);
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -153,6 +166,7 @@ namespace app {
                 unit_of_work_->Books().EditBookById(book);
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
@@ -163,6 +177,7 @@ namespace app {
                 unit_of_work_->Tags().DeleteAllTags(domain::BookId::FromString(book_id));
             }
             catch (...) {
+                unit_of_work_->Rollback();
                 /*unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();*/
                 throw;
             }
