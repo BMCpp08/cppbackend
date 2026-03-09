@@ -66,20 +66,44 @@ namespace postgres {
 
 	class UnitOfWorkImpl : public app::UnitOfWork {
 	public:
-		explicit UnitOfWorkImpl(pqxx::connection& connection)
+		/*explicit UnitOfWorkImpl(pqxx::connection& connection)
 			: work_(connection)
 			, authors_(work_)
 			, books_(work_)
 			, tags_(work_){
+		}*/
+		explicit UnitOfWorkImpl(pqxx::connection& connection)
+			: id_(++next_id_)
+			, work_(connection)
+			, authors_(work_)
+			, books_(work_)
+			, tags_(work_)
+		{
+			std::cerr << ">>> UnitOfWorkImpl CREATED with id=" << id_ << std::endl;
+		}
+
+		~UnitOfWorkImpl() {
+			std::cerr << ">>> UnitOfWorkImpl DESTROYED with id=" << id_ << std::endl;
 		}
 
 		void Commit() override {
+			std::cerr << ">>> UnitOfWorkImpl::Commit id=" << id_ << " STARTING" << std::endl;
 			work_.commit();
+			std::cerr << ">>> UnitOfWorkImpl::Commit id=" << id_ << " COMPLETED" << std::endl;
 		}
 
 		void Rollback() override {
+			std::cerr << ">>> UnitOfWorkImpl::Rollback id=" << id_ << std::endl;
 			work_.abort();
 		}
+
+		//void Commit() override {
+		//	work_.commit();
+		//}
+
+		//void Rollback() override {
+		//	work_.abort();
+		//}
 		
 		domain::AuthorRepository& Authors() override {
 			return authors_;
@@ -125,20 +149,22 @@ namespace postgres {
 		}
 
 		//~UnitOfWorkImpl() = default;
-		~UnitOfWorkImpl() {
-			try {
-				work_.abort();
-			}
-			catch (...) {
+		//~UnitOfWorkImpl() {
+		//	try {
+		//		work_.abort();
+		//	}
+		//	catch (...) {
 
-			}
-		}
+		//	}
+		//}
 
 	private:
 		AuthorRepositoryImpl authors_;
 		BookRepositoryImpl books_;
 		TagRepositoryImpl tags_;
 		pqxx::work work_;
+		int id_;
+		static inline std::atomic<int> next_id_{0};
 	};
 
 
