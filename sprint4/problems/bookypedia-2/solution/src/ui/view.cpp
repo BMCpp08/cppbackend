@@ -566,10 +566,11 @@ bool View::EditBook(std::istream& cmd_input) const {
 
 				AddTag(book_id, tags);
 				use_cases_.Commit();
-			}
+			} auto params = GetBookParams(cmd_input);
 		}
 		catch (const std::exception&) {
 			output_ << "Failed to add book"sv << std::endl;
+			return false;
 		}
 		return true;
 	}
@@ -703,16 +704,14 @@ bool View::EditBook(std::istream& cmd_input) const {
 						params.author_id = author_id;
 						return params;
 					}
-					else {
-						return std::nullopt;
-					}
+					return std::nullopt;
 				}
 				else {
+					input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 					return std::nullopt;
 				}
 			}
 		}
-
 	}
 
 	std::optional<std::string> View::SelectAuthor() const {
