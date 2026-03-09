@@ -174,10 +174,13 @@ namespace postgres {
 
 	void BookRepositoryImpl::EditBookById(const domain::Book& book) {
 		try {
-			work_.exec_params(
+			auto res = work_.exec_params(
 				"UPDATE books SET title = $1, publication_year = $2 WHERE id = $3 RETURNING id",
 				book.GetTitle(), book.GetPublicationYear(), book.GetId().ToString()
 			);
+			if (res.empty()) {
+				throw std::runtime_error("Book not found");
+			} 
 		}
 		catch (const pqxx::sql_error& e) {
 			throw e;

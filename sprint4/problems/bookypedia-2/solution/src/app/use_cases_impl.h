@@ -41,8 +41,9 @@ public:
     }
 
 
-    void Commit() {
+    void Commit() override {
         unit_of_work_->Commit();
+        unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
     }
 
     void AddTag(const std::string& book_id, const std::string& tag) override {

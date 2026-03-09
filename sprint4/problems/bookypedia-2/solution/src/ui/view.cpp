@@ -341,19 +341,15 @@ bool View::EditBook(std::istream& cmd_input) const {
 
 		// 9. Ввод новых тегов
 		output_ << "Enter tags (current tags: " << currentTagsStr << "): ";
-		//std::string tagsLine;
-		//std::getline(input_, tagsLine);
-		//boost::algorithm::trim(tagsLine);
 		std::unordered_set<std::string> newTags;
 		newTags = ReadTags();
 
-		if (newTags.empty()) {
-			
-			return false;
-		}
+		//if (newTags.empty()) {
+		//	
+		//	return false;
+		//}
 
 		// 10. Обновление книги в БД
-		// Обновляем основные поля книги
 		if (new_title != currentTitle || newYear != currentYear) {
 			use_cases_.EditBook(domain::Book{
 				domain::BookId::FromString(book_id),
@@ -564,7 +560,7 @@ bool View::EditBook(std::istream& cmd_input) const {
 			}
 		}
 		catch (const std::exception&) {
-			output_ << "Failed to delete author"sv << std::endl;
+			output_ << "Failed to edit author"sv << std::endl;
 		}
 		return true;
 	}
@@ -609,6 +605,7 @@ bool View::EditBook(std::istream& cmd_input) const {
 				throw std::logic_error("Name is empty"s);
 			}
 			use_cases_.AddAuthor(std::move(name));
+			use_cases_.Commit();
 		}
 		catch (const std::exception&) {
 			output_ << "Failed to add author"sv << std::endl;
@@ -732,7 +729,8 @@ bool View::EditBook(std::istream& cmd_input) const {
 			else {
 				output_ << "No author found. Do you want to add " << str << " (y/n)? ";
 				char answer;
-				std::cin >> answer;
+				input_ >> answer;
+
 				if (answer == 'y' || answer == 'Y') {
 
 					std::istringstream iss(str);
