@@ -265,21 +265,6 @@ namespace ui {
 
 			if (delete_by_title) {
 				books = GetBooksByTitle(titile);
-			}
-			else {
-				books = GetBooks();
-				idx = SelectBook(books);
-			}
-
-			// Если книг нет, выходим без сообщения (кроме случая, когда название указано и не найдено)
-			if (books.empty()) {
-				if (delete_by_title) {
-					/*output_ << "Book not found" << std::endl;*/
-				}
-				return true;
-			}
-
-			if (delete_by_title) {
 				if (books.size() > 1) {
 					idx = SelectBook(books);
 					if (idx == -1) {
@@ -287,6 +272,19 @@ namespace ui {
 					}
 				}
 			}
+			else {
+				books = GetBooks();
+				idx = SelectBook(books);
+				if (idx == -1) {
+					return true;
+				}
+			}
+
+			// Если книг нет, выходим без сообщения (кроме случая, когда название указано и не найдено)
+			if (books.empty()) {
+				return true;
+			}
+
 			use_cases_.DeleteAllTags(books[idx].book_id);
 			use_cases_.DeleteBook(domain::BookId::FromString(books[idx].book_id));
 			use_cases_.Commit();
