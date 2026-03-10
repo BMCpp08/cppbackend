@@ -57,10 +57,7 @@ namespace app {
                 return id.ToString();
             }
             catch (const std::exception& e) {
-            
-
-                    unit_of_work_->Rollback();
-                
+                unit_of_work_->Rollback();
                 unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }

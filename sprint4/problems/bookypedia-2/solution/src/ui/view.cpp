@@ -491,7 +491,7 @@ namespace ui {
 			auto params = GetBookParams(cmd_input);
 			if (!params) {
 				ReadTags();
-				output_ << "Failed to add book"sv << std::endl;
+				/*output_ << "Failed to add book"sv << std::endl;*/
 				return true;
 			}
 		
