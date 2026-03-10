@@ -481,7 +481,8 @@ namespace ui {
 			use_cases_.Commit();
 		}
 		catch (const std::exception&) {
-			output_ << "Failed to add author"sv << std::endl << std::flush;;
+			output_ << "Failed to add author"sv << std::endl << std::flush;
+			use_cases_.Rollback();
 		}
 		return true;
 	}
