@@ -147,15 +147,15 @@ namespace postgres {
 	const std::vector<domain::Book> BookRepositoryImpl::GetAllBooks() {
 		try {
 			std::vector<domain::Book> res;
-			auto rows = work_.query<std::string, std::string, std::optional<std::string>, std::optional<int>>(
-				"SELECT id, author_id, title, publication_year FROM books ORDER BY title ASC, publication_year DESC;"_zv);
+			/*auto rows = work_.query<std::string, std::string, std::optional<std::string>, std::optional<int>>(
+				"SELECT id, author_id, title, publication_year FROM books ORDER BY title ASC, publication_year DESC;"_zv);*/
 
-			//auto rows = work_.query<std::string, std::string, std::optional<std::string>, std::optional<int>>(
-			//	"SELECT books.id, books.author_id, books.title, books.publication_year "
-			//	"FROM books "
-			//	"JOIN authors ON books.author_id = authors.id "
-			//	"ORDER BY books.title ASC, authors.name ASC, books.publication_year ASC;"_zv
-			//);
+			auto rows = work_.query<std::string, std::string, std::optional<std::string>, std::optional<int>>(
+				"SELECT books.id, books.author_id, books.title, books.publication_year "
+				"FROM books "
+				"JOIN authors ON books.author_id = authors.id "
+				"ORDER BY books.title ASC, authors.name ASC, books.publication_year ASC;"_zv
+			);
 
 			for (auto& [id, author_id, title, publication_year] : rows) {
 
@@ -195,7 +195,7 @@ namespace postgres {
 																											"FROM books "
 																											"JOIN authors ON books.author_id = authors.id "
 																											"WHERE books.title = $1 "
-																											"ORDER BY books.title, authors.name, books.publication_year",
+																											"ORDER BY books.title ASC, authors.name ASC, books.publication_year ASC",
 																											title);
 			for (auto& [id, title, publication_year, author_id] : rows) {
 				res.emplace_back(domain::BookId::FromString(id), domain::AuthorId::FromString(author_id), title.value_or(""), publication_year.value_or(-9999));
