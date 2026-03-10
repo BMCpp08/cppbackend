@@ -244,13 +244,13 @@ namespace ui {
 					books.emplace_back(book.GetTitle(), book.GetPublicationYear(), it_author->name, it_author->id, book.GetId().ToString());
 				}
 				else {
-					throw std::runtime_error("Invalid author");
+					/*throw std::runtime_error("Invalid author");*/
 				}
 			}
 
 		}
 		catch (const std::exception&) {
-			output_ << "Invalid author"sv << std::endl;
+			/*output_ << "Invalid author"sv << std::endl;*/
 		}
 		return books;
 	}
@@ -774,40 +774,29 @@ namespace ui {
 
 
 	std::vector<detail::BookInfo> View::GetBooks() const {
-		std::cerr << ">>> View::GetBooks: starting" << std::endl;
 		std::vector<detail::BookInfo> books;
 		try {
 			auto authors = GetAuthors();
-			std::cerr << ">>> View::GetBooks: got " << authors.size() << " authors" << std::endl;
-
 			auto all_books = use_cases_.GetAllBook();
-			std::cerr << ">>> View::GetBooks: got " << all_books.size() << " books from use_cases" << std::endl;
 
 			for (const auto& book : all_books) {
-				std::cerr << ">>> View::GetBooks: processing book " << book.GetTitle()
-					<< " with author_id " << book.GetAuthorId().ToString() << std::endl;
 
 				auto it_author = std::find_if(authors.begin(), authors.end(), [&](const detail::AuthorInfo& author) {
 					return author.id == book.GetAuthorId().ToString();
 					});
 
 				if (it_author != authors.end()) {
-					std::cerr << ">>> View::GetBooks: author found: " << it_author->name << std::endl;
 					books.emplace_back(book.GetTitle(), book.GetPublicationYear(),
 						it_author->name, it_author->id, book.GetId().ToString());
 				}
 				else {
-					std::cerr << ">>> View::GetBooks: ERROR - author not found for book "
-						<< book.GetTitle() << " with author_id "
-						<< book.GetAuthorId().ToString() << std::endl;
-					throw std::runtime_error("Invalid author");
+					/*throw std::runtime_error("Invalid author");*/
 				}
 			}
-			std::cerr << ">>> View::GetBooks: returning " << books.size() << " books" << std::endl;
 		}
 		catch (const std::exception& e) {
-			std::cerr << ">>> View::GetBooks: exception: " << e.what() << std::endl;
-			output_ << "Invalid author"sv << std::endl;
+			/*std::cerr << ">>> View::GetBooks: exception: " << e.what() << std::endl;
+			output_ << "Invalid author"sv << std::endl;*/
 		}
 		return books;
 	}

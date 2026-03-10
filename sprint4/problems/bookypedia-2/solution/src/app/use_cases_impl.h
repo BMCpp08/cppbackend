@@ -198,7 +198,7 @@ namespace app {
                 unit_of_work_->Books().DeleteBook(book_id);
             }
             catch (...) {
-                Rollback();
+                /*Rollback();*/
                 throw;
             }
         }
