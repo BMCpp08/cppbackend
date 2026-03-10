@@ -292,6 +292,7 @@ namespace ui {
 		}
 		catch (const std::exception&) {
 			output_ << "Failed to delete book"sv << std::endl;
+			use_cases_.Rollback();
 		}
 		return true;
 	}
