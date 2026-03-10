@@ -43,30 +43,24 @@ namespace app {
         }*/
         std::string AddBook(const std::string& author_id, const std::string& title, int publication_year) override {
             try {
-                std::cerr << ">>> AddBook use case: starting" << std::endl;
-                std::cerr << ">>> AddBook use case: author_id = " << author_id << std::endl;
-                std::cerr << ">>> AddBook use case: title = " << title << std::endl;
-                std::cerr << ">>> AddBook use case: year = " << publication_year << std::endl;
 
                 auto id = domain::BookId::New();
-                std::cerr << ">>> AddBook use case: new id = " << id.ToString() << std::endl;
 
-                std::cerr << ">>> AddBook use case: checking if unit_of_work_ is valid" << std::endl;
-                if (!unit_of_work_) {
-                    std::cerr << ">>> AddBook use case: ERROR - unit_of_work_ is null!" << std::endl;
+            
+           /*     if (!unit_of_work_) {
                     unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
-                }
+                }*/
 
                 unit_of_work_->Books().Save({ id, domain::AuthorId::FromString(author_id), title, publication_year });
-                std::cerr << ">>> AddBook use case: saved successfully" << std::endl;
+
 
                 return id.ToString();
             }
             catch (const std::exception& e) {
-                std::cerr << ">>> AddBook use case: EXCEPTION: " << e.what() << std::endl;
-                if (unit_of_work_) {
+            
+
                     unit_of_work_->Rollback();
-                }
+                
                 unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;
             }
