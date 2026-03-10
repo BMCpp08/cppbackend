@@ -485,38 +485,103 @@ namespace ui {
 		}
 		return true;
 	}
+	//bool View::AddBook(std::istream& cmd_input) const {
+	//	try {
+	//		auto params = GetBookParams(cmd_input);
+
+	//		if (!params) {
+	//			input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	//			throw std::logic_error("Failed to add book"s);
+	//		}
+	//	
+	//		if (params->title.empty()) {
+	//			input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	//			throw std::logic_error("Book title is empty"s);
+	//		}
+
+	//		output_ << "Enter tags (comma separated):";
+	//		auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
+	//		auto tags_set = ReadTags();
+
+	//		if (!tags_set.empty()) {
+	//			AddTag(book_id, tags_set);
+	//		}
+	//		use_cases_.Commit();
+	//	}
+	//	catch (const std::exception&) {
+	//		use_cases_.Rollback();
+	//		output_ << "Failed to add book"sv << std::endl;
+	//	}
+	//	return true;
+	//}
 	bool View::AddBook(std::istream& cmd_input) const {
 		try {
-			auto params = GetBookParams(cmd_input);
+			detail::AddBookParams params;
+			cmd_input >> params.publication_year;
+			std::getline(cmd_input, params.title);
+			boost::algorithm::trim(params.title);
 
-			if (!params) {
-				input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-				use_cases_.Rollback();
-				output_ << "Failed to add book" << std::endl;
+			output_ << "Enter author name or empty line to select from list:" << std::endl;
+			std::string author_name;
+			if (!std::getline(input_, author_name)) {
 				return true;
 			}
-		
-			if (params->title.empty()) {
-				throw std::logic_error("Book title is empty"s);
-			}
-			output_ << "Enter tags (comma separated):";
 
-			auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
+			boost::algorithm::trim(author_name);
+
+			if (author_name.empty()) {
+				auto author_id = SelectAuthor();
+
+				if (!author_id) {
+					return true;
+				} else {
+					params.author_id = author_id.value();
+				}
+			}
+			else {
+				auto author = use_cases_.GetAuthor(author_name);
+				if (author.has_value()) {
+					params.author_id = author->GetId().ToString();
+				}
+				else {
+					output_ << "No author found. Do you want to add " << author_name << " (y/n)? ";
+
+					char answer;
+					input_ >> answer;
+					input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+					if (answer == 'y' || answer == 'Y') {
+						auto author_id = use_cases_.AddAuthor(std::move(author_name));
+						if (!author_id.empty()) {
+							params.author_id = author_id;
+						}
+						else {
+							use_cases_.Rollback();
+							return true;
+						}
+					}
+					else {
+						output_ << "Failed to add book"sv << std::endl;
+						return true;
+					}
+				}
+			}
+
+			output_ << "Enter tags (comma separated):";
+			auto book_id = use_cases_.AddBook(params.author_id, params.title, params.publication_year);
 			auto tags_set = ReadTags();
 
 			if (!tags_set.empty()) {
 				AddTag(book_id, tags_set);
 			}
-		
 			use_cases_.Commit();
-
 		}
 		catch (const std::exception&) {
+			use_cases_.Rollback();
 			output_ << "Failed to add book"sv << std::endl;
 		}
 		return true;
 	}
-
 	bool View::AddTag(const std::string& book_id, const std::vector<std::string>& tags) const {
 		try {
 
@@ -525,6 +590,7 @@ namespace ui {
 			}
 		}
 		catch (const std::exception& e) {
+			use_cases_.Rollback();
 			output_ << "Failed to add tags"sv << std::endl;
 		}
 		return true;
@@ -625,8 +691,6 @@ namespace ui {
 				input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
 				if (answer == 'y' || answer == 'Y') {
-					
-
 					auto author_id = use_cases_.AddAuthor(std::move(author_name));
 					if (!author_id.empty()) {
 
@@ -636,6 +700,7 @@ namespace ui {
 					return std::nullopt;
 				}
 				else {
+					output_ << "Failed to add book"sv << std::endl;
 					return std::nullopt;
 				}
 			}

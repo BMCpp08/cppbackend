@@ -23,7 +23,7 @@ namespace app {
                 return id.ToString();
             }
             catch (...) {
-                Rollback();
+                /*Rollback();*/
                 throw;
             }
         }
@@ -36,7 +36,7 @@ namespace app {
                 return id.ToString();
             }
             catch (...) {
-                Rollback();
+                /*Rollback();*/
                 throw;
             }
         }
@@ -148,7 +148,7 @@ namespace app {
                 unit_of_work_->Tags().Save(domain::Tag{ domain::BookId::FromString(book_id), tag });
             }
             catch (const std::exception& e) {
-                Rollback();
+                /*Rollback();*/
                 throw;
             }
         }
