@@ -85,15 +85,18 @@ namespace ui {
 			"EditBook"s, "name"s, "Edit Book"s, std::bind(&View::EditBook, this, ph::_1)
 		);
 	}
-
+	std::string ReadInput(std::istream& cmd_input) {
+		std::string str;
+		std::getline(cmd_input, str);
+		boost::algorithm::trim(str);
+		return str;
+	}
 
 	bool View::EditBook(std::istream& cmd_input) const {
 		try {
-			// 1. Получаем фильтр (название книги, если передано)
-			std::string title;
-			std::getline(cmd_input, title);
-			boost::algorithm::trim(title);
-
+			
+			std::string title = ReadInput(cmd_input);
+			
 			// 2. Получаем список книг
 			std::vector<detail::BookInfo> books;
 			if (!title.empty()) {
@@ -138,7 +141,7 @@ namespace ui {
 			// 5. Данные выбранной книги
 			const auto& book = books[selectedIndex];
 			std::string book_id = book.book_id;
-			std::string currentTitle = book.title;
+			std::string current_title = book.title;
 			int currentYear = book.publication_year;
 
 			// 6. Текущие теги
@@ -146,12 +149,10 @@ namespace ui {
 			std::string currentTagsStr = boost::algorithm::join(currentTags, ", ");
 
 			// 7. Ввод нового названия
-			output_ << "Enter new title or empty line to use the current one (" << currentTitle << "): ";
-			std::string new_title;
-			std::getline(input_, new_title);
-			boost::algorithm::trim(new_title);
+			output_ << "Enter new title or empty line to use the current one (" << current_title << "): ";
+			std::string new_title = ReadInput(input_);
 			if (new_title.empty()) {
-				new_title = currentTitle;
+				new_title = current_title;
 			}
 
 			// 8. Ввод нового года
@@ -177,7 +178,7 @@ namespace ui {
 			std::sort(newTags.begin(), newTags.end());
 
 			// 10. Обновление книги в БД
-			if (new_title != currentTitle || newYear != currentYear) {
+			if (new_title != current_title || newYear != currentYear) {
 				use_cases_.EditBook(domain::Book{
 					domain::BookId::FromString(book_id),
 					domain::AuthorId::FromString(book.author_id),
@@ -255,10 +256,8 @@ namespace ui {
 
 	bool View::DeleteBook(std::istream& cmd_input) const {
 		try {
-			std::string titile;
-			std::getline(cmd_input, titile);
-			boost::algorithm::trim(titile);
-
+			std::string titile = ReadInput(cmd_input);
+	
 			std::vector<detail::BookInfo> books;
 			bool delete_by_title = !titile.empty();
 			int idx = 0;
@@ -515,24 +514,10 @@ namespace ui {
 		return true;
 	}
 
-	//bool View::AddTag(const std::string& book_id, const std::unordered_set<std::string>& tags) const {
-	//	try {
-	//		for (auto tag : tags) {
-	//			use_cases_.AddTag(book_id, tag);
-	//		}
-	//	}
-	//	catch (const std::exception&) {
-	//		output_ << "Failed to add book"sv << std::endl;
-	//	}
-	//	return true;
-	//}
-
 	bool View::AddTag(const std::string& book_id, const std::vector<std::string>& tags) const {
 		try {
-			std::cerr << ">>> Sorted tags: ";
 
 			for (const auto& tag : tags) {
-				std::cerr << "'" << tag << "' ";
 				use_cases_.AddTag(book_id, tag);
 			}
 		}
@@ -555,7 +540,7 @@ namespace ui {
 		try {
 			auto books = GetBooks();
 			PrintVector(output_, books);
-			output_.flush();
+			/*output_.flush();*/
 		}
 		catch (const std::exception& e) {
 			std::cerr << "exception: " << e.what() << std::endl;
