@@ -29,34 +29,14 @@ namespace app {
             }
         }
 
-     /*   std::string AddBook(const std::string& author_id, const std::string& title, const int publication_year) override {
+        std::string AddBook(const std::string& author_id, const std::string& title, int publication_year) override {
             try {
+
                 auto id = domain::BookId::New();
                 unit_of_work_->Books().Save({ id, domain::AuthorId::FromString(author_id), title, publication_year });
                 return id.ToString();
             }
             catch (...) {
-                unit_of_work_->Rollback();
-                unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
-                throw;
-            }
-        }*/
-        std::string AddBook(const std::string& author_id, const std::string& title, int publication_year) override {
-            try {
-
-                auto id = domain::BookId::New();
-
-            
-           /*     if (!unit_of_work_) {
-                    unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
-                }*/
-
-                unit_of_work_->Books().Save({ id, domain::AuthorId::FromString(author_id), title, publication_year });
-
-
-                return id.ToString();
-            }
-            catch (const std::exception& e) {
                 unit_of_work_->Rollback();
                 unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                 throw;

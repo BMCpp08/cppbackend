@@ -303,7 +303,7 @@ namespace postgres {
 				tag varchar(30) NOT NULL,
 				CONSTRAINT constraint_books
 				FOREIGN KEY(book_id)
-				REFERENCES books(id)
+				REFERENCES books(id) ON DELETE CASCADE
 			);
 		)"_zv);
 			

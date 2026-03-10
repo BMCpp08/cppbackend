@@ -60,18 +60,11 @@ namespace postgres {
 		void DeleteAllTags(const domain::BookId& book_id) override;
 	private:
 		pqxx::work& work_;
-		//pqxx::read_transaction& read_;
 	};
 
 
 	class UnitOfWorkImpl : public app::UnitOfWork {
 	public:
-		/*explicit UnitOfWorkImpl(pqxx::connection& connection)
-			: work_(connection)
-			, authors_(work_)
-			, books_(work_)
-			, tags_(work_){
-		}*/
 		explicit UnitOfWorkImpl(pqxx::connection& connection)
 			: id_(++next_id_)
 			, work_(connection)

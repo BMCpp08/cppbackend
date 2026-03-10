@@ -499,13 +499,13 @@ namespace ui {
 			}
 			output_ << "Enter tags (comma separated):";
 
-			auto tags_set = ReadTags();
-			std::vector<std::string> tags(tags_set.begin(), tags_set.end());
-			std::sort(tags.begin(), tags.end());
 			auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
+			auto tags_set = ReadTags();
 
-
-			AddTag(book_id, tags);
+			if (!tags_set.empty()) {
+				AddTag(book_id, tags_set);
+			}
+		
 			use_cases_.Commit();
 
 		}
