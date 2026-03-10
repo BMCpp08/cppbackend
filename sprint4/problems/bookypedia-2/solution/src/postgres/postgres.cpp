@@ -195,7 +195,7 @@ namespace postgres {
 																											"FROM books "
 																											"JOIN authors ON books.author_id = authors.id "
 																											"WHERE books.title = $1 "
-																											"ORDER BY books.title ASC, authors.name ASC, books.publication_year ASC",
+																											"ORDER BY books.title, authors.name, books.publication_year",
 																											title);
 			for (auto& [id, title, publication_year, author_id] : rows) {
 				res.emplace_back(domain::BookId::FromString(id), domain::AuthorId::FromString(author_id), title.value_or(""), publication_year.value_or(-9999));
