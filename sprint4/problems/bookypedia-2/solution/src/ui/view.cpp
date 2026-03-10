@@ -490,7 +490,7 @@ namespace ui {
 			auto params = GetBookParams(cmd_input);
 			if (!params) {
 				ReadTags();
-				/*output_ << "Failed to add book"sv << std::endl;*/
+				use_cases_.Commit(); //???
 				return true;
 			}
 		
@@ -533,10 +533,6 @@ namespace ui {
 		return true;
 	}
 
-	//bool View::ShowBooks() const {
-	//	PrintVector(output_, GetBooks());
-	//	return true;
-	//}
 	bool View::ShowBooks() const {
 		try {
 			auto books = GetBooks();
@@ -569,6 +565,7 @@ namespace ui {
 		std::string line;
 		std::getline(input_, line);
 		boost::algorithm::trim(line);
+
 		std::vector<std::string>  tags;
 
 		if (line.empty())
@@ -622,9 +619,10 @@ namespace ui {
 				output_ << "No author found. Do you want to add " << author_name << " (y/n)? ";
 				char answer;
 				input_ >> answer;
+				input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
 				if (answer == 'y' || answer == 'Y') {
-					input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+					
 
 					auto author_id = use_cases_.AddAuthor(std::move(author_name));
 					if (!author_id.empty()) {
@@ -635,7 +633,6 @@ namespace ui {
 					return std::nullopt;
 				}
 				else {
-					input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 					return std::nullopt;
 				}
 			}
