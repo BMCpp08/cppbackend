@@ -492,7 +492,7 @@ namespace ui {
 			if (!params) {
 				cmd_input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 				use_cases_.Rollback();
-				//ReadTags();*******************************
+				output_ << "Failed to add book" << std::endl;
 				return true;
 			}
 		
