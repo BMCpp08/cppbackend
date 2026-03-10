@@ -274,7 +274,6 @@ namespace ui {
 			if (books.empty()) {
 				if (delete_by_title) {
 					output_ << "Book not found" << std::endl;
-					/*output_ << "Failed to delete book"sv << std::endl;*/
 				}
 				return true;
 			}
@@ -287,14 +286,16 @@ namespace ui {
 					}
 				}
 			}
+			use_cases_.DeleteAllTags(books[idx].book_id);
 			use_cases_.DeleteBook(domain::BookId::FromString(books[idx].book_id));
 			use_cases_.Commit();
 		}
 		catch (const std::exception&) {
-			output_ << "Book not found"sv << std::endl;
+			output_ << "Failed to delete book"sv << std::endl;
 		}
 		return true;
 	}
+
 	bool View::ShowBook(std::istream& cmd_input) const {
 		try {
 			std::string title;
