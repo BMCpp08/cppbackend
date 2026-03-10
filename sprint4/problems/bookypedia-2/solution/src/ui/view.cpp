@@ -58,34 +58,19 @@ namespace ui {
 		, use_cases_{ use_cases }
 		, input_{ input }
 		, output_{ output } {
-		menu_.AddAction(  //
-			"AddAuthor"s, "name"s, "Adds author"s, std::bind(&View::AddAuthor, this, ph::_1)
-			// либо
-			// [this](auto& cmd_input) { return AddAuthor(cmd_input); }
-		);
-		menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s,
-			std::bind(&View::AddBook, this, ph::_1));
+		menu_.AddAction("AddAuthor"s, "name"s, "Adds author"s, std::bind(&View::AddAuthor, this, ph::_1));
+		menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s, std::bind(&View::AddBook, this, ph::_1));
 		menu_.AddAction("ShowAuthors"s, {}, "Show authors"s, std::bind(&View::ShowAuthors, this));
 		menu_.AddAction("ShowBooks"s, {}, "Show books"s, std::bind(&View::ShowBooks, this));
-		menu_.AddAction("ShowAuthorBooks"s, {}, "Show author books"s,
-			std::bind(&View::ShowAuthorBooks, this));
-		menu_.AddAction(
-			"DeleteAuthor"s, "name"s, "Delete author"s, std::bind(&View::DeleteAuthor, this, ph::_1)
-		);
-		menu_.AddAction(
-			"EditAuthor"s, "name"s, "Edit Author"s, std::bind(&View::EditAuthor, this, ph::_1)
-		);
-		menu_.AddAction(
-			"ShowBook"s, "name"s, "Show Book"s, std::bind(&View::ShowBook, this, ph::_1)
-		);
-		menu_.AddAction(
-			"DeleteBook"s, "name"s, "Delete Book"s, std::bind(&View::DeleteBook, this, ph::_1)
-		);
-		menu_.AddAction(
-			"EditBook"s, "name"s, "Edit Book"s, std::bind(&View::EditBook, this, ph::_1)
-		);
+		menu_.AddAction("ShowAuthorBooks"s, {}, "Show author books"s, std::bind(&View::ShowAuthorBooks, this));
+		menu_.AddAction("DeleteAuthor"s, "name"s, "Delete author"s, std::bind(&View::DeleteAuthor, this, ph::_1));
+		menu_.AddAction("EditAuthor"s, "name"s, "Edit Author"s, std::bind(&View::EditAuthor, this, ph::_1));
+		menu_.AddAction("ShowBook"s, "name"s, "Show Book"s, std::bind(&View::ShowBook, this, ph::_1));
+		menu_.AddAction("DeleteBook"s, "name"s, "Delete Book"s, std::bind(&View::DeleteBook, this, ph::_1));
+		menu_.AddAction("EditBook"s, "name"s, "Edit Book"s, std::bind(&View::EditBook, this, ph::_1));
 	}
-	std::string ReadInput(std::istream& cmd_input) {
+
+	static std::string ReadInput(std::istream& cmd_input) {
 		std::string str;
 		std::getline(cmd_input, str);
 		boost::algorithm::trim(str);
@@ -94,10 +79,7 @@ namespace ui {
 
 	bool View::EditBook(std::istream& cmd_input) const {
 		try {
-			
 			std::string title = ReadInput(cmd_input);
-			
-			// 2. Получаем список книг
 			std::vector<detail::BookInfo> books;
 			if (!title.empty()) {
 				books = GetBooksByTitle(title);
@@ -106,7 +88,6 @@ namespace ui {
 				books = GetBooks();
 			}
 
-			// 3. Если книг нет
 			if (books.empty()) {
 				if (!title.empty()) {
 					output_ << "Book not found" << std::endl;
@@ -114,53 +95,47 @@ namespace ui {
 				return true;
 			}
 
-			int selectedIndex = -1;
-
-			// 4. Определяем индекс книги
+			int sel_idx = -1;
 			if (!title.empty()) {
 				if (books.size() == 1) {
-					selectedIndex = 0;
+					sel_idx = 0;
 				}
 				else {
-					selectedIndex = SelectBook(books);
-					if (selectedIndex == -1) {
-						output_ << "Book not found" << std::endl; 
+					sel_idx = SelectBook(books);
+					if (sel_idx == -1) {
+						output_ << "Book not found" << std::endl;
 						return true;
 					}
 				}
 			}
 			else {
-				selectedIndex = SelectBook(books);
-				if (selectedIndex == -1) {
+				sel_idx = SelectBook(books);
+				if (sel_idx == -1) {
 					output_ << "Book not found" << std::endl;
 					return true;
 				}
 			}
-			
 
-			// 5. Данные выбранной книги
-			const auto& book = books[selectedIndex];
+			const auto& book = books[sel_idx];
 			std::string book_id = book.book_id;
 			std::string current_title = book.title;
-			int currentYear = book.publication_year;
+			int cur_year = book.publication_year;
 
-			// 6. Текущие теги
-			auto currentTags = use_cases_.GetAllTags(book_id);
-			std::string currentTagsStr = boost::algorithm::join(currentTags, ", ");
+			auto current_tags = use_cases_.GetAllTags(book_id);
+			std::string cur_tags = boost::algorithm::join(current_tags, ", ");
 
-			// 7. Ввод нового названия
 			output_ << "Enter new title or empty line to use the current one (" << current_title << "): ";
 			std::string new_title = ReadInput(input_);
 			if (new_title.empty()) {
 				new_title = current_title;
 			}
 
-			// 8. Ввод нового года
-			output_ << "Enter publication year or empty line to use the current one (" << currentYear << "): ";
+
+			output_ << "Enter publication year or empty line to use the current one (" << cur_year << "): ";
 			std::string new_year;
 			std::getline(input_, new_year);
 			boost::algorithm::trim(new_year);
-			int newYear = currentYear;
+			int newYear = cur_year;
 			if (!new_year.empty()) {
 				try {
 					newYear = std::stoi(new_year);
@@ -170,15 +145,10 @@ namespace ui {
 				}
 			}
 
-			// 9. Ввод новых тегов
-			output_ << "Enter tags (current tags: " << currentTagsStr << "): ";
-			auto newTagsSet = ReadTags();
-			// Преобразуем в вектор и сортируем для детерминированного порядка вставки
-			std::vector<std::string> newTags(newTagsSet.begin(), newTagsSet.end());
-			std::sort(newTags.begin(), newTags.end());
+			output_ << "Enter tags (current tags: " << cur_tags << "): ";
+			auto new_tags = ReadTags();
 
-			// 10. Обновление книги в БД
-			if (new_title != current_title || newYear != currentYear) {
+			if (new_title != current_title || newYear != cur_year) {
 				use_cases_.EditBook(domain::Book{
 					domain::BookId::FromString(book_id),
 					domain::AuthorId::FromString(book.author_id),
@@ -187,22 +157,19 @@ namespace ui {
 					});
 			}
 
-			// 11. Обновление тегов: удаляем старые и добавляем новые (отсортированные)
 			use_cases_.DeleteAllTags(book_id);
-			for (const auto& tag : newTags) {
+			for (const auto& tag : new_tags) {
 				use_cases_.AddTag(book_id, tag);
 			}
-
 			use_cases_.Commit();
-			return true;
-
 		}
 		catch (const std::exception&) {
 			output_ << "Book not found" << std::endl;
 			use_cases_.Rollback();
-			return true;
 		}
+		return true;
 	}
+
 	int View::SelectBook(const std::vector<detail::BookInfo>& books) const {
 		PrintVector(output_, books);
 		output_ << "Enter the book # or empty line to cancel: ";
@@ -233,24 +200,15 @@ namespace ui {
 	std::vector<detail::BookInfo> View::GetBooksByTitle(const std::string& title) const {
 		std::vector<detail::BookInfo> books;
 
-		try {
-			auto authors = GetAuthors();
-			auto books_by_title = use_cases_.GetBooksByTitle(title);
-			for (const auto& book : books_by_title) {
-				auto it_author = std::find_if(authors.begin(), authors.end(), [&](const detail::AuthorInfo& author) {
-					return author.id == book.GetAuthorId().ToString();
-					});
-				if (it_author != authors.end()) {
-					books.emplace_back(book.GetTitle(), book.GetPublicationYear(), it_author->name, it_author->id, book.GetId().ToString());
-				}
-				else {
-					/*throw std::runtime_error("Invalid author");*/
-				}
+		auto authors = GetAuthors();
+		auto books_by_title = use_cases_.GetBooksByTitle(title);
+		for (const auto& book : books_by_title) {
+			auto it_author = std::find_if(authors.begin(), authors.end(), [&](const detail::AuthorInfo& author) {
+				return author.id == book.GetAuthorId().ToString();
+				});
+			if (it_author != authors.end()) {
+				books.emplace_back(book.GetTitle(), book.GetPublicationYear(), it_author->name, it_author->id, book.GetId().ToString());
 			}
-
-		}
-		catch (const std::exception&) {
-			/*output_ << "Invalid author"sv << std::endl;*/
 		}
 		return books;
 	}
@@ -258,7 +216,7 @@ namespace ui {
 	bool View::DeleteBook(std::istream& cmd_input) const {
 		try {
 			std::string titile = ReadInput(cmd_input);
-	
+
 			std::vector<detail::BookInfo> books;
 			bool delete_by_title = !titile.empty();
 			int idx = 0;
@@ -280,7 +238,6 @@ namespace ui {
 				}
 			}
 
-			// Если книг нет, выходим без сообщения (кроме случая, когда название указано и не найдено)
 			if (books.empty()) {
 				return true;
 			}
@@ -335,59 +292,8 @@ namespace ui {
 			output_ << ""sv << std::endl;
 			std::cerr << "ShowBook exception: " << e.what() << std::endl;
 		}
-		catch (...) {
-			output_ << ""sv << std::endl;
-			std::cerr << "ShowBook unknown exception" << std::endl;
-		}
 		return true;
 	}
-	/*bool View::ShowBook(std::istream& cmd_input) const {
-		try {
-			std::string titile;
-			std::getline(cmd_input, titile);
-			boost::algorithm::trim(titile);
-
-			std::vector<detail::BookInfo> books;
-
-			int idx = 0;
-			bool find_by_title = !titile.empty();
-
-			if (find_by_title) {
-				books = GetBooksByTitle(titile);
-			}
-			else {
-				books = GetBooks();
-				idx = SelectBook(books);
-			}
-
-			if (books.empty()) {
-				return false;
-			}
-
-			if (find_by_title) {
-				if (books.size() > 1) {
-					idx = SelectBook(books);
-					if (idx == -1) {
-						return false;
-					}
-				}
-
-			}
-
-			auto tags = use_cases_.GetAllTags(books[idx].book_id);
-			detail::TagInfo tag_info_;
-			tag_info_.tags = tags;
-			tag_info_.author = books[idx].author;
-			tag_info_.publication_year = books[idx].publication_year;
-			tag_info_.title = books[idx].title;
-			output_ << tag_info_;
-
-		}
-		catch (const std::exception&) {
-			output_ << ""sv << std::endl;
-		}
-		return true;
-	}*/
 
 	bool View::EditAuthor(std::istream& cmd_input) const {
 		try {
@@ -486,35 +392,7 @@ namespace ui {
 		}
 		return true;
 	}
-	//bool View::AddBook(std::istream& cmd_input) const {
-	//	try {
-	//		auto params = GetBookParams(cmd_input);
 
-	//		if (!params) {
-	//			input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	//			throw std::logic_error("Failed to add book"s);
-	//		}
-	//	
-	//		if (params->title.empty()) {
-	//			input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	//			throw std::logic_error("Book title is empty"s);
-	//		}
-
-	//		output_ << "Enter tags (comma separated):";
-	//		auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
-	//		auto tags_set = ReadTags();
-
-	//		if (!tags_set.empty()) {
-	//			AddTag(book_id, tags_set);
-	//		}
-	//		use_cases_.Commit();
-	//	}
-	//	catch (const std::exception&) {
-	//		use_cases_.Rollback();
-	//		output_ << "Failed to add book"sv << std::endl;
-	//	}
-	//	return true;
-	//}
 	bool View::AddBook(std::istream& cmd_input) const {
 		try {
 			detail::AddBookParams params;
@@ -535,7 +413,8 @@ namespace ui {
 
 				if (!author_id) {
 					return true;
-				} else {
+				}
+				else {
 					params.author_id = author_id.value();
 				}
 			}
@@ -583,9 +462,9 @@ namespace ui {
 		}
 		return true;
 	}
+
 	bool View::AddTag(const std::string& book_id, const std::vector<std::string>& tags) const {
 		try {
-
 			for (const auto& tag : tags) {
 				use_cases_.AddTag(book_id, tag);
 			}
@@ -606,16 +485,12 @@ namespace ui {
 		try {
 			auto books = GetBooks();
 			PrintVector(output_, books);
-			/*output_.flush();*/
 		}
 		catch (const std::exception& e) {
 			std::cerr << "exception: " << e.what() << std::endl;
 		}
 		return true;
 	}
-
-
-
 
 	bool View::ShowAuthorBooks() const {
 		// TODO: handle error
@@ -631,17 +506,14 @@ namespace ui {
 	}
 
 	std::vector<std::string> View::ReadTags() const {
-		std::string line;
-		std::getline(input_, line);
-		boost::algorithm::trim(line);
+		std::string str = ReadInput(input_);
+		std::vector<std::string> tags;
 
-		std::vector<std::string>  tags;
-
-		if (line.empty())
+		if (str.empty()) {
 			return tags;
-
+		}
 		std::vector<std::string> parts;
-		boost::split(parts, line, boost::is_any_of(","));
+		boost::split(parts, str, boost::is_any_of(","));
 		for (auto& token : parts) {
 			boost::algorithm::trim_all(token);
 			if (!token.empty()) {
@@ -686,7 +558,7 @@ namespace ui {
 			}
 			else {
 				output_ << "No author found. Do you want to add " << author_name << " (y/n)? ";
-				
+
 				char answer;
 				input_ >> answer;
 				input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -744,33 +616,6 @@ namespace ui {
 		return dst_autors;
 	}
 
-	//std::vector<detail::BookInfo> View::GetBooks() const {
-	//	std::vector<detail::BookInfo> books;
-	//	try {
-	//		
-	//		auto authors = GetAuthors();
-	//		auto all_books = use_cases_.GetAllBook();
-
-	//		for (const auto& book : all_books) {
-	//			auto it_author = std::find_if(authors.begin(), authors.end(), [&](const detail::AuthorInfo& author) {
-	//				return author.id == book.GetAuthorId().ToString();
-	//				});
-	//			if (it_author != authors.end()) {
-	//				books.emplace_back(book.GetTitle(), book.GetPublicationYear(), it_author->name, it_author->id, book.GetId().ToString());
-	//			}
-	//			else {
-	//				throw std::runtime_error("Invalid author");
-	//			}
-	//		}
-
-	//	}
-	//	catch (const std::exception&) {
-	//		output_ << "Invalid author"sv << std::endl;
-	//	}
-	//	return books;
-	//}
-
-
 	std::vector<detail::BookInfo> View::GetBooks() const {
 		std::vector<detail::BookInfo> books;
 		try {
@@ -787,9 +632,6 @@ namespace ui {
 					books.emplace_back(book.GetTitle(), book.GetPublicationYear(),
 						it_author->name, it_author->id, book.GetId().ToString());
 				}
-				else {
-					/*throw std::runtime_error("Invalid author");*/
-				}
 			}
 		}
 		catch (const std::exception& e) {
@@ -805,8 +647,6 @@ namespace ui {
 		for (const auto& book : use_cases_.GetAuthorBooks(author_id)) {
 			books.emplace_back(book.GetTitle(), book.GetPublicationYear());
 		}
-
 		return books;
 	}
-
 }  // namespace ui

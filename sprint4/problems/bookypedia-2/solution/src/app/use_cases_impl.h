@@ -23,20 +23,17 @@ namespace app {
                 return id.ToString();
             }
             catch (...) {
-                /*Rollback();*/
                 throw;
             }
         }
 
         std::string AddBook(const std::string& author_id, const std::string& title, int publication_year) override {
             try {
-
                 auto id = domain::BookId::New();
                 unit_of_work_->Books().Save({ id, domain::AuthorId::FromString(author_id), title, publication_year });
                 return id.ToString();
             }
             catch (...) {
-                /*Rollback();*/
                 throw;
             }
         }
@@ -80,18 +77,6 @@ namespace app {
             }
         }
 
-        //void Commit() override {
-        //    try {
-        //        unit_of_work_->Commit();
-        //        unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
-        //    }
-        //    catch (...) {
-        //        unit_of_work_->Rollback();
-        //        unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
-        //        throw;
-        //    }
-        //}
-
         void Rollback() override {
             if (unit_of_work_) {
                 unit_of_work_->Rollback();
@@ -101,44 +86,19 @@ namespace app {
 
         void Commit() override {
             try {
-                std::cerr << ">>> Commit: starting" << std::endl;
-
                 if (!unit_of_work_) {
-                    std::cerr << ">>> Commit: ERROR - unit_of_work_ is null, creating new one" << std::endl;
                     unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
                     return;
                 }
-
-                std::cerr << ">>> Commit: calling unit_of_work_->Commit()" << std::endl;
                 unit_of_work_->Commit();
-                std::cerr << ">>> Commit: successful" << std::endl;
-
-                std::cerr << ">>> Commit: creating new UnitOfWork" << std::endl;
                 unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
-                std::cerr << ">>> Commit: new UnitOfWork created" << std::endl;
             }
             catch (const std::exception& e) {
-                std::cerr << ">>> Commit: EXCEPTION: " << e.what() << std::endl;
-                try {
-                    Rollback();
-                }
-                catch (...) {
-                    std::cerr << ">>> Commit: Rollback also failed" << std::endl;
-                }
+                Rollback();
                 throw;
             }
         }
 
-        //void AddTag(const std::string& book_id, const std::string& tag) override {
-        //    try {
-        //        unit_of_work_->Tags().Save(domain::Tag{ domain::BookId::FromString(book_id), tag });
-        //    }
-        //    catch (...) {
-        //        unit_of_work_->Rollback();
-        //        unit_of_work_ = unit_of_work_factory_->CreateUnitOfWork();
-        //        throw;
-        //    }
-        //}
         void AddTag(const std::string& book_id, const std::string& tag) override {
             try {
 
@@ -148,7 +108,6 @@ namespace app {
                 unit_of_work_->Tags().Save(domain::Tag{ domain::BookId::FromString(book_id), tag });
             }
             catch (const std::exception& e) {
-                /*Rollback();*/
                 throw;
             }
         }
@@ -198,7 +157,6 @@ namespace app {
                 unit_of_work_->Books().DeleteBook(book_id);
             }
             catch (...) {
-                /*Rollback();*/
                 throw;
             }
         }
@@ -218,7 +176,6 @@ namespace app {
                 unit_of_work_->Tags().DeleteAllTags(domain::BookId::FromString(book_id));
             }
             catch (...) {
-               /* Rollback();*/
                 throw;
             }
         }
