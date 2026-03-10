@@ -86,10 +86,10 @@ namespace postgres {
 
 	void BookRepositoryImpl::Save(const domain::Book& book) {
 		work_.exec_params(R"(
-						INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4)
-						ON CONFLICT (id) DO UPDATE SET author_id=$2, title=$3, publication_year=$4;
+						INSERT INTO books (id, title, author_id, publication_year) VALUES ($1, $2, $3, $4)
+						ON CONFLICT (id) DO UPDATE SET title=$2, author_id=$3, publication_year=$4;
 						)"_zv,
-						book.GetId().ToString(), book.GetAuthorId().ToString(), book.GetTitle(), book.GetPublicationYear());
+						book.GetId().ToString(), book.GetTitle(), book.GetAuthorId().ToString(), book.GetPublicationYear());
 	}
 
 	const std::vector<domain::Author> AuthorRepositoryImpl::GetAllAuthor() {
@@ -287,23 +287,28 @@ namespace postgres {
 		//Таблица книг
 		work.exec(R"(
 			CREATE TABLE IF NOT EXISTS books (
-			id UUID CONSTRAINT book_id_constraint PRIMARY KEY,
-			author_id uuid references authors(id)  NOT NULL,
+			id UUID PRIMARY KEY,
 			title varchar(100) NOT NULL,
-			publication_year integer NOT NULL
+			publication_year integer NOT NULL,
+			author_id UUID,
+			CONSTRAINT constraint_author_id
+			FOREIGN KEY(author_id)
+			REFERENCES authors(id)
 		);
 		)"_zv);
 
-
 		work.exec(R"(
 			CREATE TABLE IF NOT EXISTS book_tags (
-				book_id uuid REFERENCES books(id) ON DELETE CASCADE,
+				book_id UUID,
 				tag varchar(30) NOT NULL,
-				PRIMARY KEY (book_id, tag)
+				CONSTRAINT constraint_books
+				FOREIGN KEY(book_id)
+				REFERENCES books(id)
 			);
 		)"_zv);
+			
 		/*work.exec(R"(CREATE INDEX idx_book_tags_tag ON book_tags(tag);)"_zv);*/
-		work.exec(R"(CREATE INDEX IF NOT EXISTS idx_book_tags_tag ON book_tags(tag);)"_zv);
+		/*work.exec(R"(CREATE INDEX IF NOT EXISTS idx_book_tags_tag ON book_tags(tag);)"_zv);*/
 		work.commit();
 	}
 
