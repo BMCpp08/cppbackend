@@ -273,7 +273,7 @@ namespace ui {
 			// Если книг нет, выходим без сообщения (кроме случая, когда название указано и не найдено)
 			if (books.empty()) {
 				if (delete_by_title) {
-					output_ << "Book not found" << std::endl;
+					/*output_ << "Book not found" << std::endl;*/
 				}
 				return true;
 			}
