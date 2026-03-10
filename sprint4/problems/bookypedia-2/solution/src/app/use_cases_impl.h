@@ -97,6 +97,11 @@ namespace app {
         //        throw;
         //    }
         //}
+
+        void Rollback() override {
+            unit_of_work_->Rollback();
+        }
+
         void Commit() override {
             try {
                 std::cerr << ">>> Commit: starting" << std::endl;

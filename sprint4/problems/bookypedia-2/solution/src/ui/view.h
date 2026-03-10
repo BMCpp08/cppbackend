@@ -54,7 +54,7 @@ private:
     bool ShowBooks() const;
     bool ShowAuthorBooks() const;
     bool DeleteAuthor(std::istream& cmd_input) const;
-    //bool AddTag(const std::string& book_id, const std::unordered_set<std::string>& tags) const;
+
     bool EditAuthor(std::istream& cmd_input) const;
     bool ShowBook(std::istream& cmd_input) const;
     bool DeleteBook(std::istream& cmd_input) const;
@@ -65,12 +65,13 @@ private:
     std::vector<detail::AuthorInfo> GetAuthors() const;
     std::vector<detail::BookInfo> GetBooks() const;
     std::vector<detail::BookInfo> GetAuthorBooks(const std::string& author_id) const;
-    //std::unordered_set<std::string> ReadTags() const;
+
     std::vector<std::string> ReadTags() const;
     int SelectBook(const std::vector<detail::BookInfo>& books) const;
     std::vector<detail::BookInfo> GetBooksByTitle(const std::string& title) const;
 
     bool AddTag(const std::string& book_id, const std::vector<std::string>& tags) const;
+
     menu::Menu& menu_;
     app::UseCases& use_cases_;
     std::istream& input_;

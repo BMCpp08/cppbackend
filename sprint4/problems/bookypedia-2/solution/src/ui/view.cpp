@@ -463,6 +463,7 @@ namespace ui {
 			use_cases_.Commit();
 		}
 		catch (const std::exception&) {
+			use_cases_.Rollback();
 			output_ << "Failed to delete author"sv << std::endl;
 		}
 		return true;
@@ -481,6 +482,7 @@ namespace ui {
 			use_cases_.Commit();
 		}
 		catch (const std::exception&) {
+			use_cases_.Rollback();
 			output_ << "Failed to add author"sv << std::endl << std::flush;;
 		}
 		return true;
@@ -488,9 +490,11 @@ namespace ui {
 	bool View::AddBook(std::istream& cmd_input) const {
 		try {
 			auto params = GetBookParams(cmd_input);
+
 			if (!params) {
-				ReadTags();
-				use_cases_.Commit(); //???
+				cmd_input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				use_cases_.Rollback();
+				//ReadTags();*******************************
 				return true;
 			}
 		
@@ -510,6 +514,7 @@ namespace ui {
 
 		}
 		catch (const std::exception&) {
+			use_cases_.Rollback();
 			output_ << "Failed to add book"sv << std::endl;
 		}
 		return true;
@@ -602,7 +607,7 @@ namespace ui {
 
 		if (author_name.empty()) {
 			auto author_id = SelectAuthor();
-			if (not author_id.has_value())
+			if (!author_id)
 				return std::nullopt;
 			else {
 				params.author_id = author_id.value();
@@ -617,6 +622,7 @@ namespace ui {
 			}
 			else {
 				output_ << "No author found. Do you want to add " << author_name << " (y/n)? ";
+				
 				char answer;
 				input_ >> answer;
 				input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');

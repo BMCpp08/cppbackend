@@ -21,6 +21,7 @@ public:
 
     virtual void AddTag(const std::string& book_id, const std::string& tag) = 0;
     virtual void Commit() = 0;
+    virtual void Rollback() = 0;
     virtual void DeleteAuthor(const std::string& author_id) = 0;
     virtual void EditAuthor(const std::string& author_id, const std::string& name) = 0;
 
