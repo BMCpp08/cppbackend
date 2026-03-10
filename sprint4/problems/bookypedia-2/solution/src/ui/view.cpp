@@ -284,7 +284,6 @@ namespace ui {
 				if (books.size() > 1) {
 					idx = SelectBook(books);
 					if (idx == -1) {
-						output_ << "Book not found" << std::endl;
 						return true;
 					}
 				}
@@ -293,7 +292,7 @@ namespace ui {
 			use_cases_.Commit();
 		}
 		catch (const std::exception&) {
-			output_ << "Failed to delete book"sv << std::endl;
+			output_ << "Book not found"sv << std::endl;
 		}
 		return true;
 	}
