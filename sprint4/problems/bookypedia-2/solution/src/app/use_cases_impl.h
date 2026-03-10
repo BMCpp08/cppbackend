@@ -218,7 +218,7 @@ namespace app {
                 unit_of_work_->Tags().DeleteAllTags(domain::BookId::FromString(book_id));
             }
             catch (...) {
-                Rollback();
+               /* Rollback();*/
                 throw;
             }
         }

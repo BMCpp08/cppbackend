@@ -199,6 +199,7 @@ namespace ui {
 		}
 		catch (const std::exception&) {
 			output_ << "Book not found" << std::endl;
+			use_cases_.Rollback();
 			return true;
 		}
 	}
