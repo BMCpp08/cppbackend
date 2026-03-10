@@ -86,7 +86,6 @@ namespace postgres {
 		}
 
 		void Rollback() override {
-			std::cerr << ">>> UnitOfWorkImpl::Rollback id=" << id_ << std::endl;
 			work_.abort();
 		}
 
@@ -109,47 +108,6 @@ namespace postgres {
 		domain::TagRepository& Tags() override {
 			return tags_;
 		}
-
-		//void SaveAuthor(const domain::Author& author) {
-		//	authors_.Save(author);
-		//}
-
-		//void SaveBook(const domain::Book& book) {
-		//	books_.Save(book);
-		//}
-
-		//void SaveTag(const domain::Tag& tag) {
-		//	tags_.Save(tag);
-		//}
-
-		//void DeleteAuthor(const domain::AuthorId& author_id) {
-		//	authors_.DeleteAuthor(author_id);			
-		//} 
-		//void EditBook(const domain::Book& book) {
-		//	books_.EditBookById(book);
-		//}
-		//
-		//void DeleteBook(const domain::BookId& book_id) {
-		//	books_.DeleteBook(book_id);
-		//}
-
-		//void EditAuthor(const domain::Author& author) {
-		//	authors_.EditAuthor(author);
-		//}
-
-		//const std::vector<std::string> GetAllTags(domain::BookId book_id) {
-		//	return tags_.GetAllTags(book_id);
-		//}
-
-		//~UnitOfWorkImpl() = default;
-		//~UnitOfWorkImpl() {
-		//	try {
-		//		work_.abort();
-		//	}
-		//	catch (...) {
-
-		//	}
-		//}
 
 	private:
 		AuthorRepositoryImpl authors_;

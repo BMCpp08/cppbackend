@@ -463,7 +463,6 @@ namespace ui {
 			use_cases_.Commit();
 		}
 		catch (const std::exception&) {
-			use_cases_.Rollback();
 			output_ << "Failed to delete author"sv << std::endl;
 		}
 		return true;
@@ -482,7 +481,6 @@ namespace ui {
 			use_cases_.Commit();
 		}
 		catch (const std::exception&) {
-			use_cases_.Rollback();
 			output_ << "Failed to add author"sv << std::endl << std::flush;;
 		}
 		return true;
@@ -514,7 +512,6 @@ namespace ui {
 
 		}
 		catch (const std::exception&) {
-			use_cases_.Rollback();
 			output_ << "Failed to add book"sv << std::endl;
 		}
 		return true;
