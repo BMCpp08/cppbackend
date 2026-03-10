@@ -274,7 +274,8 @@ namespace ui {
 			// Если книг нет, выходим без сообщения (кроме случая, когда название указано и не найдено)
 			if (books.empty()) {
 				if (delete_by_title) {
-					output_ << "Failed to delete book"sv << std::endl;
+					output_ << "Book not found" << std::endl;
+					/*output_ << "Failed to delete book"sv << std::endl;*/
 				}
 				return true;
 			}
@@ -283,6 +284,7 @@ namespace ui {
 				if (books.size() > 1) {
 					idx = SelectBook(books);
 					if (idx == -1) {
+						output_ << "Book not found" << std::endl;
 						return true;
 					}
 				}
@@ -486,28 +488,22 @@ namespace ui {
 	}
 	bool View::AddBook(std::istream& cmd_input) const {
 		try {
-			auto params_opt = GetBookParams(cmd_input);
-			if (!params_opt) {
+			auto params = GetBookParams(cmd_input);
+			if (!params) {
+				ReadTags();
 				output_ << "Failed to add book"sv << std::endl;
 				return true;
 			}
-			const auto& params = *params_opt;
-
-
-
-			if (params.title.empty()) {
+		
+			if (params->title.empty()) {
 				throw std::logic_error("Book title is empty"s);
 			}
 			output_ << "Enter tags (comma separated):";
-			/*			auto tags = ReadTags();
-						auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
-						AddTag(book_id, tags);
-						use_cases_.Commit();*/
 
 			auto tags_set = ReadTags();
 			std::vector<std::string> tags(tags_set.begin(), tags_set.end());
 			std::sort(tags.begin(), tags.end());
-			auto book_id = use_cases_.AddBook(params.author_id, params.title, params.publication_year);
+			auto book_id = use_cases_.AddBook(params->author_id, params->title, params->publication_year);
 
 
 			AddTag(book_id, tags);
