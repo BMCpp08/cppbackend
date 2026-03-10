@@ -490,7 +490,7 @@ namespace ui {
 			auto params = GetBookParams(cmd_input);
 
 			if (!params) {
-				cmd_input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				input_.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 				use_cases_.Rollback();
 				output_ << "Failed to add book" << std::endl;
 				return true;
