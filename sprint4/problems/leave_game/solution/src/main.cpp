@@ -11,7 +11,6 @@
 #include "ticker.h"
 #include "infrastructure.h"
 
-
 using namespace std::literals;
 using namespace logger;
 using namespace ticker;
@@ -99,8 +98,6 @@ constexpr const char DB_URL_GAME[]{ "GAME_DB_URL" };
 
 int main(int argc, const char* argv[]) {
 	InitBoostLogFilter();
-
-
 	try {
 
 		if (auto args = ParseCommandLine(argc, argv)) {
@@ -129,14 +126,11 @@ int main(int argc, const char* argv[]) {
 
 				});
 
-
 			//Создание уровня Application
 			std::shared_ptr<app::Players> players = std::make_shared<app::Players>();
 			std::shared_ptr<app::PlayerTokens> player_tokens = std::make_shared<app::PlayerTokens>();
-			app::JoinGameUseCase join_game_use_case(game, player_tokens, players, (args->is_random_positions.has_value()) ? *(args->is_random_positions) : false);
-
-
-			
+			app::JoinGameUseCase join_game_use_case(game, player_tokens, players, 
+				(args->is_random_positions.has_value()) ? *(args->is_random_positions) : false);
 
 			app::Application application(game, join_game_use_case, player_tokens, GetConfigFromEnv());
 			http_handler::ApiHandler api_handler(application);
@@ -151,7 +145,6 @@ int main(int argc, const char* argv[]) {
 			if (args->save_state_period_ms.has_value() && serializing_listener) {
 				application.SetApplicationListener(serializing_listener);
 			}
-
 
 			// Настраиваем вызов метода Application::Tick
 			std::shared_ptr<Ticker> ticker;

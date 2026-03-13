@@ -61,7 +61,7 @@ add_executable(game_server
     src/model_serialization.h
     src/infrastructure.h
     src/postgres/postgres.cpp
-	src/postgres/postgres.h
+    src/postgres/postgres.h
     src/app/app.h
     src/app/app.cpp
     src/app/unit_of_work_factory.h
