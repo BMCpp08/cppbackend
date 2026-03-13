@@ -184,5 +184,4 @@ namespace app {
         std::shared_ptr<UnitOfWorkFactory> unit_of_work_factory_;
         std::shared_ptr<app::UnitOfWork> unit_of_work_;
     };
-
 }  // namespace app
