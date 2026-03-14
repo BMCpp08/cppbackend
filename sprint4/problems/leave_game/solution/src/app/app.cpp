@@ -535,8 +535,11 @@ namespace app {
 							return repo.Save(retiree);
 							});
 
-
-						/*join_game_use_case_.RemovePlayerByToken();*/
+						auto players = GetListPlayersUseCase();
+						const app::Player* player = players->FindByDogIdAndMapId(dog->GetName(), map->GetId());
+						if (player) {
+							join_game_use_case_.RemovePlayerByToken(player->GetToken());
+						}
 						join_game_use_case_.RemovePlayer(dog->GetName(), map->GetId());
 						session->RemovePlayer(dog->GetId());
 						

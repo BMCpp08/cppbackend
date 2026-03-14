@@ -103,7 +103,7 @@ int main(int argc, const char* argv[]) {
 	try {
 		auto db = std::make_shared<postgres::Database>(GetConfigFromEnv().db_url);
 		try {
-			db->PreparePollConnections(GetConfigFromEnv().db_url, 100);
+			db->PreparePollConnections(GetConfigFromEnv().db_url, 400);
 			std::cerr << "Database ready" << std::endl;
 		}
 		catch (const std::exception& e) {
