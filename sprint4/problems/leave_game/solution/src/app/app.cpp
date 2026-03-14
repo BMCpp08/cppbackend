@@ -387,9 +387,11 @@ namespace app {
 			if (player) {
 				auto speed = player->GetGameSession()->GetMap()->GetSpeed();
 
-				if (dir == "" && player->GetSpeed() != geom::Vec2D{ 0.,0. }) {
-					player->SetSpeed(geom::Vec2D{ 0,0 });
-					player->ResetStopTime();
+				if (dir.empty()){
+					if (player->GetSpeed() != geom::Vec2D{ 0.,0. }) {
+						player->SetSpeed(geom::Vec2D{ 0,0 });
+						player->ResetStopTime();
+					}
 				}
 				else if (dir == "L") {
 					player->SetSpeed(geom::Vec2D{ -speed,0 });
