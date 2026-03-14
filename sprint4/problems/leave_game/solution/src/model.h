@@ -514,7 +514,7 @@ namespace model {
 			return dogs_;
 		}
 
-		void RemovePlayer(Dog::Id dog_id) {
+		void RemoveDog(Dog::Id dog_id) {
 			if (auto it = dogs_.find(*dog_id); it != dogs_.end()) {
 				dogs_.erase(it);
 			}

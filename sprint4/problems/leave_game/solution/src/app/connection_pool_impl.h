@@ -26,7 +26,9 @@ namespace app {
 			auto result = work_.exec_prepared(app::tag_get_records, count, start_idx);
 
 			for (const auto& row : result) {
-				retirees.emplace_back(app::RetireeId::FromString(row["id"].as<std::string>()), row["name"].is_null() ? "" : row["name"].as<std::string>(),
+				retirees.emplace_back(
+					app::RetireeId::FromString(row["id"].as<std::string>()), 
+					row["name"].is_null() ? "" : row["name"].as<std::string>(),
 					row["score"].as<double>(0.0),
 					row["play_time"].as<double>(0)
 				);
@@ -52,11 +54,11 @@ public:
 		RetireeRepositoryImpl repo(tx);
 		try {
 			auto result = func(repo);
-			tx.commit();
+			/*tx.commit();*/
 			return result;
 		}
 		catch (...) {
-			tx.abort();
+			/*tx.abort();*/
 			throw;
 		}
 	}

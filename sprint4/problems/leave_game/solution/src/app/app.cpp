@@ -545,10 +545,11 @@ namespace app {
 						auto players = GetListPlayersUseCase();
 						const app::Player* player = players->FindByDogIdAndMapId(dog->GetName(), map->GetId());
 						if (player) {
-							join_game_use_case_.RemovePlayerByToken(player->GetToken());
+							auto token = player->GetToken();
+							join_game_use_case_.RemovePlayerByToken(token);
 						}
 						join_game_use_case_.RemovePlayer(dog->GetName(), map->GetId());
-						session->RemovePlayer(dog->GetId());
+						session->RemoveDog(dog->GetId());
 						
 					}
 
@@ -566,17 +567,18 @@ namespace app {
 	/********************************************************************/
 	std::string Application::GetGameRecords(const std::string& base_body) {
 		try {
+			std::cout << "GetGameRecords st1" << std::endl;
 			auto json_obj = json::parse(base_body).as_object();
 			int start_idx = 0;
 			int max_items = 0;
-
+			std::cout << "GetGameRecords st2" << std::endl;
 			if (auto it = json_obj.if_contains("start"); it) {
 				start_idx = it->as_uint64();
 			}
 			else {
 				throw GameError(ErrorReason::FAILED_PARSE_JSON);
 			}
-			
+			std::cout << "GetGameRecords st3" << std::endl;
 			if (auto it = json_obj.if_contains("maxItems"); it) {
 				max_items = it->as_uint64();
 				if (max_items > def_max_items) {
@@ -586,7 +588,8 @@ namespace app {
 			else {
 				throw GameError(ErrorReason::FAILED_PARSE_JSON);
 			}
-			std::cout << "GetGameRecords st"<< std::endl;
+			std::cout << "GetGameRecords st4" << std::endl;
+
 			auto retirees = connection_pool_->GetRetirees([&](auto& repo) {
 				return repo.GetRetirees(start_idx, max_items);
 				});
