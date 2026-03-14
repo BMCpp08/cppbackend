@@ -29,12 +29,12 @@ void ConnectionPoolImpl::PrepareAllConnections(const std::string& db_url, const 
             "INSERT INTO retired_players (id, player_name, score, play_time) VALUES ($1, $2, $3, $4)"_zv);
 
         // Получение списка рекордов с пагинацией
+  
         conn->prepare(tag_get_records,
             "SELECT id, player_name AS name, score, play_time "
             "FROM retired_players "
             "ORDER BY score DESC, play_time ASC, player_name ASC "
             "LIMIT $1 OFFSET $2"_zv);
-
        /* conn->prepare(tag_get_records,
             "SELECT player_name AS id, name, score, play_time_ms / 1000.0 AS playTime "
             "FROM retired_players ORDER BY score DESC, play_time_ms, player_name LIMIT $1 OFFSET $2"_zv);*/

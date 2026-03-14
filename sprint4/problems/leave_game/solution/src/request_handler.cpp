@@ -360,11 +360,8 @@ namespace http_handler {
 				}
 			}
 			catch (...) {
-			/*	resp = MakeStringResponse(http::status::bad_request, 
-					invalid_tick_req, 
-					req.version(), 
-					req.keep_alive(), 
-					ContentType::APP_JSON);*/
+				resp = MakeStringResponse(http::status::bad_request, "Invalid parameter: maxItems cannot be greater than 100", req.version(),
+					req.keep_alive(), ContentType::APP_JSON);
 			}
 		}
 		else {

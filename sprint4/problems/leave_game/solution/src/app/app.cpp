@@ -586,7 +586,7 @@ namespace app {
 			else {
 				throw GameError(ErrorReason::FAILED_PARSE_JSON);
 			}
-			
+			std::cout << "GetGameRecords st"<< std::endl;
 			auto retirees = connection_pool_->GetRetirees([&](auto& repo) {
 				return repo.GetRetirees(start_idx, max_items);
 				});

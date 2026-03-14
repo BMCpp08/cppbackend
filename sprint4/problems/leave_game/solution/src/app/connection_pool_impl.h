@@ -28,7 +28,7 @@ namespace app {
 			for (const auto& row : result) {
 				retirees.emplace_back(app::RetireeId::FromString(row["id"].as<std::string>()), row["name"].is_null() ? "" : row["name"].as<std::string>(),
 					row["score"].as<double>(0.0),
-					row["play_time_ms"].as<int64_t>(0)
+					row["play_time"].as<double>(0)
 				);
 			}
 			return retirees;
