@@ -110,7 +110,7 @@ namespace app {
 
 		std::shared_ptr<model::Dog> GetDogName() const;
 
-		const geom::Vec2D& GetSpeed() const noexcept;
+		const geom::Vec2D GetSpeed() const noexcept;
 
 		void SetSpeed(geom::Vec2D speed);
 

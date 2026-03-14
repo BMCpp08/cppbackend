@@ -82,7 +82,7 @@ namespace app {
 		return dog_;
 	}
 
-	const geom::Vec2D& Player::GetSpeed() const noexcept {
+	const geom::Vec2D Player::GetSpeed() const noexcept {
 		return dog_->GetSpeed();
 	}
 
@@ -382,32 +382,36 @@ namespace app {
 			auto token = TryExtractToken(authorization_body);
 			auto player = FindPlayerByToken(token);
 			auto json_obj = json::parse(base_body).as_object();
-			auto dir = json_obj.at(key_move).as_string().c_str();
-			auto speed = player->GetGameSession()->GetMap()->GetSpeed();
+			std::string dir = std::string(json_obj.at(key_move).as_string());
 
-			if (std::strcmp(dir, "") == 0 && player->GetSpeed() != geom::Vec2D{ 0.,0. }) {
-				player->SetSpeed(geom::Vec2D{ 0,0 });
-				player->ResetStopTime();
+			if (player) {
+				auto speed = player->GetGameSession()->GetMap()->GetSpeed();
+
+				if (dir == "" && player->GetSpeed() != geom::Vec2D{ 0.,0. }) {
+					player->SetSpeed(geom::Vec2D{ 0,0 });
+					player->ResetStopTime();
+				}
+				else if (dir == "L") {
+					player->SetSpeed(geom::Vec2D{ -speed,0 });
+					player->SetDir(model::Direction::DIR_WEST);
+				}
+				else if (dir == "R") {
+					player->SetSpeed(geom::Vec2D{ speed, 0 });
+					player->SetDir(model::Direction::DIR_EAST);
+				}
+				else if (dir == "U") {
+					player->SetSpeed(geom::Vec2D{ 0,-speed });
+					player->SetDir(model::Direction::DIR_NORTH);
+				}
+				else if (dir == "D") {
+					player->SetSpeed(geom::Vec2D{ 0,speed });
+					player->SetDir(model::Direction::DIR_SOUTH);
+				}
+				else {
+					throw GameError(ActionGameErrorReason::FAILED_PARSE_ACTION);
+				}
 			}
-			else if (std::strcmp(dir, "L") == 0) {
-				player->SetSpeed(geom::Vec2D{ -speed,0 });
-				player->SetDir(model::Direction::DIR_WEST);
-			}
-			else if (std::strcmp(dir, "R") == 0) {
-				player->SetSpeed(geom::Vec2D{ speed, 0 });
-				player->SetDir(model::Direction::DIR_EAST);
-			}
-			else if (std::strcmp(dir, "U") == 0) {
-				player->SetSpeed(geom::Vec2D{ 0,-speed });
-				player->SetDir(model::Direction::DIR_NORTH);
-			}
-			else if (std::strcmp(dir, "D") == 0) {
-				player->SetSpeed(geom::Vec2D{ 0,speed });
-				player->SetDir(model::Direction::DIR_SOUTH);
-			}
-			else {
-				throw GameError(ActionGameErrorReason::FAILED_PARSE_ACTION);
-			}
+			
 			return json::serialize(json::object());
 		}
 		catch (app::GameError<app::AuthorizationGameErrorReason> err) {
