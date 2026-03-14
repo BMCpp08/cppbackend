@@ -64,7 +64,6 @@ add_executable(game_server
     src/postgres/postgres.h
     src/app/app.h
     src/app/app.cpp
-    src/app/use_cases.h
     src/app/connection_pool_impl.cpp
     src/app/connection_pool_impl.h
     src/app/connection_pool.h

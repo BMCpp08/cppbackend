@@ -225,16 +225,9 @@ namespace app {
 
 		std::shared_ptr<Players> GetListPlayersUseCase() const noexcept;
 
-		void RemovePlayer(const std::string& name, model::Map::Id map_id) {
-			players_->RemovePlayer(name, map_id);
-		}
+		void RemovePlayer(const std::string& name, model::Map::Id map_id);
 
-		void RemovePlayerByToken(Token token) {
-			if (player_tokens_) {
-				player_tokens_->RemoveyPlayerByToken(std::move(token));
-			}
-		}
-
+		void RemovePlayerByToken(Token token);
 	private:
 		std::shared_ptr<model::Game> game_;
 		std::shared_ptr<PlayerTokens> player_tokens_;
@@ -253,8 +246,6 @@ namespace app {
 		Token FindTokenByPlayer(const Player* player) const;
 
 		const std::shared_ptr<Player> FindPlayerByToken(const Token& token) const;
-
-		
 	private:
 		std::shared_ptr<PlayerTokens> player_tokens_;
 	};
@@ -319,7 +310,6 @@ namespace app {
 		JoinGameUseCase& join_game_use_case_;
 		std::shared_ptr<ApplicationListener> listener_;
 		std::shared_ptr<ConnectionPoolImpl> connection_pool_;
-
 	};
 
 	class GathererProvider : public collision_detector::ItemGathererProvider {

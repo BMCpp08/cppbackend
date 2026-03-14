@@ -41,7 +41,6 @@ namespace app {
 class ConnectionPoolImpl {
 public:
     ConnectionPoolImpl() = default;
-    /*explicit ConnectionPoolImpl();*/
 
     void PrepareAllConnections(const std::string& db_url, const int size);
     ConnectionPool& GetPool();
@@ -53,11 +52,9 @@ public:
 		RetireeRepositoryImpl repo(tx);
 		try {
 			auto result = func(repo);
-			/*tx.commit();*/
 			return result;
 		}
 		catch (...) {
-			/*tx.abort();*/
 			throw;
 		}
 	}

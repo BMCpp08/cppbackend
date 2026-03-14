@@ -17,7 +17,7 @@ namespace app {
 	const double ms_per_second = 1000.;
 	const int def_max_items = 100;
 
-	std::map<std::string, std::string> ParseQuery(std::string_view query) {
+	static std::map<std::string, std::string> ParseQuery(std::string_view query) {
 		std::map<std::string, std::string> result;
 		size_t pos = 0;
 
@@ -25,6 +25,7 @@ namespace app {
 			size_t amp = query.find('&', pos);
 			std::string_view param = query.substr(pos, amp - pos);
 			size_t eq = param.find('=');
+
 			if (eq != std::string_view::npos) {
 				std::string key(param.substr(0, eq));
 				std::string value(param.substr(eq + 1));
@@ -200,6 +201,16 @@ namespace app {
 
 	std::shared_ptr<Players> JoinGameUseCase::GetListPlayersUseCase() const noexcept {
 		return players_;
+	}
+
+	void JoinGameUseCase::RemovePlayer(const std::string& name, model::Map::Id map_id) {
+		players_->RemovePlayer(name, map_id);
+	}
+
+	void JoinGameUseCase::RemovePlayerByToken(Token token) {
+		if (player_tokens_) {
+			player_tokens_->RemoveyPlayerByToken(std::move(token));
+		}
 	}
 
 	Token Authorization::TryExtractToken(std::string_view authorization_body) {
@@ -528,7 +539,6 @@ namespace app {
 						}
 
 						dog_->SetPlayTime(time);
-
 						if (dog_->GetSpeed() == geom::Vec2D{ 0., 0. }) {
 							dog_->SetStopTime(time);
 
@@ -538,7 +548,6 @@ namespace app {
 						}
 
 						auto end_pos = dog_->GetPosition();
-
 						if (distance != 0.) {
 							gatherers.emplace_back(start_pos, end_pos, gatherer_width / 2.);
 							temp_list_dogs.push_back(dog_);
@@ -572,7 +581,6 @@ namespace app {
 								});
 						}
 
-
 						auto players = GetListPlayersUseCase();
 						const app::Player* player = players->FindByDogIdAndMapId(dog->GetName(), map->GetId());
 						if (player) {
@@ -581,9 +589,7 @@ namespace app {
 						}
 						join_game_use_case_.RemovePlayer(dog->GetName(), map->GetId());
 						session->RemoveDog(dog->GetId());
-
 					}
-
 				}
 			}
 		}
@@ -595,7 +601,7 @@ namespace app {
 	const std::shared_ptr<model::Game> Application::GetGame() {
 		return game_;
 	}
-	/********************************************************************/
+
 	std::string Application::GetGameRecords(const std::string_view base_body) {
 		try {
 			int start = 0;
@@ -608,16 +614,20 @@ namespace app {
 				if (auto it = params.find("start"); it != params.end()) {
 					try {
 						start = std::stoi(it->second);
-						if (start < 0) start = 0;
+						if (start < 0) { 
+							start = 0; 
+						}
 					}
-					catch (...) { 
+					catch (const std::logic_error& exc) {
+						throw exc;
 					}
 				}
 				if (auto it = params.find("maxItems"); it != params.end()) {
 					try {
 						max_items = std::stoi(it->second);
 					}
-					catch (...) { 
+					catch (const std::logic_error& exc) {
+						throw exc;
 					}
 				}
 			}
