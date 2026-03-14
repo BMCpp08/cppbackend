@@ -29,7 +29,5 @@ namespace postgres {
 			std::cerr << "Database constructor: error" << std::endl;
 		}
 		//Таблица игры
-		
-		pool_.PrepareAllConnections(db_url, 100);
 	}
 }  // namespace postgres

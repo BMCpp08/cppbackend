@@ -252,11 +252,11 @@ namespace app {
 		Application(std::shared_ptr<model::Game> game, 
 			JoinGameUseCase& join_game_use_case, 
 			std::shared_ptr<PlayerTokens> player_tokens, 
-			const AppConfig& config)
+			std::shared_ptr<postgres::Database> db)
 			: Authorization(player_tokens)
 			, game_(game)
 			, join_game_use_case_(join_game_use_case)
-			, db_{config.db_url } {
+			, db_{ db } {
 
 			if (!game_) {
 				throw std::invalid_argument("Invalid ptr game_ = nullptr"s);
@@ -307,8 +307,8 @@ namespace app {
 		std::shared_ptr<ApplicationListener> listener_;
 
 		//
-		postgres::Database db_;
-	
+		/*postgres::Database db_;*/
+		std::shared_ptr<postgres::Database> db_;
 		/*app::UseCases& use_cases_;*/
 	};
 

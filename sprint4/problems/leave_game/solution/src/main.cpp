@@ -99,7 +99,7 @@ constexpr const char DB_URL_GAME[]{ "GAME_DB_URL" };
 
 int main(int argc, const char* argv[]) {
 	InitBoostLogFilter();
-	std::cerr << "G+++++++++++++++++++++ " << std::endl;
+
 	try {
 		auto db = std::make_shared<postgres::Database>(GetConfigFromEnv().db_url);
 		if (auto args = ParseCommandLine(argc, argv)) {
@@ -134,7 +134,7 @@ int main(int argc, const char* argv[]) {
 			app::JoinGameUseCase join_game_use_case(game, player_tokens, players, 
 				(args->is_random_positions.has_value()) ? *(args->is_random_positions) : false);
 
-			app::Application application(game, join_game_use_case, player_tokens, GetConfigFromEnv());
+			app::Application application(game, join_game_use_case, player_tokens, db);
 			http_handler::ApiHandler api_handler(application);
 
 			if (args->state_file.has_value()) {
