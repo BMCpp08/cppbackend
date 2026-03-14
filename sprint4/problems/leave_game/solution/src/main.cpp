@@ -102,6 +102,8 @@ int main(int argc, const char* argv[]) {
 
 	try {
 		auto db = std::make_shared<postgres::Database>(GetConfigFromEnv().db_url);
+		db->PreparePollConnections(GetConfigFromEnv().db_url, 100);
+
 		if (auto args = ParseCommandLine(argc, argv)) {
 			// 1. Загружаем карту из файла и построить модель игры
 			std::shared_ptr<model::Game> game = std::make_shared<model::Game>(json_loader::LoadGame(args->cfg_file));

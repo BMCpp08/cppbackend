@@ -66,6 +66,10 @@ namespace postgres {
 				throw;
 			}
 		}
+
+		void PreparePollConnections(const std::string& db_url, const int size) {
+			pool_.PrepareAllConnections(db_url, size);
+		}
 	private:
 		app::ConnectionPoolImpl pool_;
 	};

@@ -21,9 +21,6 @@ namespace postgres {
 			ON retired_players(score DESC, play_time_ms, player_name);)"_zv);
 
 			work.commit();
-			std::cerr << "Tables created successfully" << std::endl;
-
-			std::cerr << "Database constructor: end" << std::endl;
 		}
 		catch (...) {
 			std::cerr << "Database constructor: error" << std::endl;
