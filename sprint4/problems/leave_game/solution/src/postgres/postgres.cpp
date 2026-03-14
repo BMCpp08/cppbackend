@@ -1,6 +1,6 @@
 ﻿#include "postgres.h"
 #include <iostream>
-
+#include <pqxx/pqxx>
 namespace postgres {
 	using namespace std::literals;
 	using pqxx::operator"" _zv;
@@ -25,6 +25,5 @@ namespace postgres {
 		catch (...) {
 			std::cerr << "Database constructor: error" << std::endl;
 		}
-		//Таблица игры
 	}
 }  // namespace postgres

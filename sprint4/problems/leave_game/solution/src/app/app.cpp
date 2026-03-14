@@ -622,13 +622,9 @@ namespace app {
 				}
 			}
 
-
-
 			if (max_items > def_max_items) {
 				throw GameError(RecordsErrorReason::INVALIDE_MAX_ITEM);
 			}
-
-
 
 			auto retirees = connection_pool_->GetRetirees([&](auto& repo) {
 				return repo.GetRetirees(start, max_items);
@@ -652,7 +648,6 @@ namespace app {
 		catch (...) {
 			throw;
 		}
-
 	}
 
 	double Application::GoToSouth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {

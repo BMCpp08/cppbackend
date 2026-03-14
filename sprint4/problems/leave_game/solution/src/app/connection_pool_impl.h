@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include "connection_pool.h"
-#include <vector>
 #include "../app/retiree.h"
 
 namespace app {

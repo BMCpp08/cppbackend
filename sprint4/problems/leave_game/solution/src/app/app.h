@@ -14,7 +14,7 @@
 #include "../ticker.h"
 #include "../collision_detector.h"
 #include "../postgres/postgres.h"
-
+#include "../app/connection_pool_impl.h"
 namespace app {
 	struct AppConfig {
 		std::string db_url;
@@ -318,10 +318,6 @@ namespace app {
 		std::shared_ptr<model::Game> game_;
 		JoinGameUseCase& join_game_use_case_;
 		std::shared_ptr<ApplicationListener> listener_;
-
-		//
-		/*postgres::Database db_;*/
-		/*std::shared_ptr<postgres::Database> db_;*/
 		std::shared_ptr<ConnectionPoolImpl> connection_pool_;
 
 	};

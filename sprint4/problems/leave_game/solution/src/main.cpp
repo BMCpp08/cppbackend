@@ -93,7 +93,6 @@ struct Args {
 	}
 	return args;
 }
-constexpr const char DB_URL_GAME[]{ "GAME_DB_URL" };
 
 int main(int argc, const char* argv[]) {
 	InitBoostLogFilter();
