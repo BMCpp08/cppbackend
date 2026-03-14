@@ -558,7 +558,7 @@ namespace app {
 
 					//Проверяем кого отправить на пенсию
 					for (const auto& dog : retirees) {
-						app::Retiree retiree{ app::RetireeId::New(), dog->GetName(), dog->GetScore(), dog->GetPlayTime() };
+						app::Retiree retiree{ app::RetireeId::New(), dog->GetName(), dog->GetScore(), dog->GetPlayTime()/1000. };
 
 						if (connection_pool_) {
 							connection_pool_->SaveRetirees([&retiree](auto& repo) {
