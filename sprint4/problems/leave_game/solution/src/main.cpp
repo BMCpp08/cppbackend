@@ -102,14 +102,8 @@ int main(int argc, const char* argv[]) {
 
 	try {
 		auto db = std::make_shared<postgres::Database>(GetConfigFromEnv().db_url);
-		try {
-			db->PreparePollConnections(GetConfigFromEnv().db_url, 400);
-			std::cerr << "Database ready" << std::endl;
-		}
-		catch (const std::exception& e) {
-			std::cerr << "Failed to initialize database: " << e.what() << std::endl;
-			return 1;
-		}
+		auto  connection_pool_ = std::make_shared <app::ConnectionPoolImpl>();
+		connection_pool_->PrepareAllConnections(GetConfigFromEnv().db_url, 10);
 		
 
 		if (auto args = ParseCommandLine(argc, argv)) {
@@ -144,7 +138,7 @@ int main(int argc, const char* argv[]) {
 			app::JoinGameUseCase join_game_use_case(game, player_tokens, players, 
 				(args->is_random_positions.has_value()) ? *(args->is_random_positions) : false);
 
-			app::Application application(game, join_game_use_case, player_tokens, db);
+			app::Application application(game, join_game_use_case, player_tokens, connection_pool_);
 			http_handler::ApiHandler api_handler(application);
 
 			if (args->state_file.has_value()) {

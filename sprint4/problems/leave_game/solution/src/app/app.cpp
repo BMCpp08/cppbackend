@@ -531,7 +531,7 @@ namespace app {
 						double play_time = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - dog->GetStartTime()).count();
 						app::Retiree retiree{ app::RetireeId::New(), dog->GetName(), dog->GetScore(), play_time};
 
-						db_->SaveRetirees([&retiree](auto& repo) {
+						connection_pool_->SaveRetirees([&retiree](auto& repo) {
 							return repo.Save(retiree);
 							});
 
@@ -580,7 +580,7 @@ namespace app {
 				throw GameError(ErrorReason::FAILED_PARSE_JSON);
 			}
 			
-			auto retirees = db_->GetRetirees([&](auto& repo) {
+			auto retirees = connection_pool_->GetRetirees([&](auto& repo) {
 				return repo.GetRetirees(start_idx, max_items);
 				});
 

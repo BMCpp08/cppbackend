@@ -265,11 +265,11 @@ namespace app {
 		Application(std::shared_ptr<model::Game> game, 
 			JoinGameUseCase& join_game_use_case, 
 			std::shared_ptr<PlayerTokens> player_tokens, 
-			std::shared_ptr<postgres::Database> db)
+			std::shared_ptr<ConnectionPoolImpl> connection_pool)
 			: Authorization(player_tokens)
 			, game_(game)
 			, join_game_use_case_(join_game_use_case)
-			, db_{ db } {
+			, connection_pool_{ connection_pool } {
 
 			if (!game_) {
 				throw std::invalid_argument("Invalid ptr game_ = nullptr"s);
@@ -321,8 +321,9 @@ namespace app {
 
 		//
 		/*postgres::Database db_;*/
-		std::shared_ptr<postgres::Database> db_;
-		/*app::UseCases& use_cases_;*/
+		/*std::shared_ptr<postgres::Database> db_;*/
+		std::shared_ptr<ConnectionPoolImpl> connection_pool_;
+
 	};
 
 	class GathererProvider : public collision_detector::ItemGathererProvider {
