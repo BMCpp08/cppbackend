@@ -57,7 +57,6 @@ struct Args {
 
 [[nodiscard]] std::optional<Args> ParseCommandLine(int argc, const char* const argv[]) {
 	namespace po = boost::program_options;
-
 	po::options_description desc{ "All options"s };
 	Args args;
 	desc.add_options()
@@ -100,6 +99,7 @@ constexpr const char DB_URL_GAME[]{ "GAME_DB_URL" };
 
 int main(int argc, const char* argv[]) {
 	InitBoostLogFilter();
+	std::cerr << "G+++++++++++++++++++++ " << std::endl;
 	try {
 		auto db = std::make_shared<postgres::Database>(GetConfigFromEnv().db_url);
 		if (auto args = ParseCommandLine(argc, argv)) {
