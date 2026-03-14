@@ -32,13 +32,14 @@ namespace {
 	}
 
 	app::AppConfig GetConfigFromEnv() {
-		
 		app::AppConfig config;
-		if (const auto* url = std::getenv(DB_URL_GAME)) {
-			config.db_url = url;
+		const char* env_url = std::getenv("GAME_DB_URL");
+		if (env_url) {
+			config.db_url = env_url;
 		}
 		else {
-			throw std::runtime_error(DB_URL_GAME + " environment variable not found"s);
+			// fallback для локальной разработки (или можно выбросить исключение)
+			config.db_url = "postgres://postgres:Mys3Cr3t@localhost:5432/postgres";
 		}
 		return config;
 	}
