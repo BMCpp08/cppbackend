@@ -36,10 +36,11 @@ namespace {
 		const char* env_url = std::getenv("GAME_DB_URL");
 		if (env_url) {
 			config.db_url = env_url;
+			std::cerr << "GetConfigFromEnv: using GAME_DB_URL = " << config.db_url << std::endl;
 		}
 		else {
-			// fallback для локальной разработки (или можно выбросить исключение)
-			config.db_url = "postgres://postgres:Mys3Cr3t@localhost:30432/postgres";
+			config.db_url = "postgres://postgres:Mys3Cr3t@localhost:5432/postgres";
+			std::cerr << "GetConfigFromEnv: GAME_DB_URL not set, using default = " << config.db_url << std::endl;
 		}
 		return config;
 	}
