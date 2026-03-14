@@ -535,8 +535,11 @@ namespace app {
 							return repo.Save(retiree);
 							});
 
+
+						/*join_game_use_case_.RemovePlayerByToken();*/
 						join_game_use_case_.RemovePlayer(dog->GetName(), map->GetId());
 						session->RemovePlayer(dog->GetId());
+						
 					}
 
 				}

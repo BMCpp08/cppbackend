@@ -183,6 +183,11 @@ namespace app {
 			token_to_player_[token] = std::make_shared<Player>(player);
 		}
 
+		void RemoveyPlayerByToken(Token token) {
+			if (auto it = token_to_player_.find(token); it != token_to_player_.end()) {
+				token_to_player_.erase(it);
+			}
+		}
 	private:
 		std::unordered_map<Token, std::shared_ptr<Player>, TokenHash> token_to_player_;
 	};
@@ -223,6 +228,13 @@ namespace app {
 		void RemovePlayer(const std::string& name, model::Map::Id map_id) {
 			players_->RemovePlayer(name, map_id);
 		}
+
+		void RemovePlayerByToken(Token token) {
+			if (player_tokens_) {
+				player_tokens_->RemoveyPlayerByToken(std::move(token));
+			}
+		}
+
 	private:
 		std::shared_ptr<model::Game> game_;
 		std::shared_ptr<PlayerTokens> player_tokens_;
@@ -242,6 +254,7 @@ namespace app {
 
 		const std::shared_ptr<Player> FindPlayerByToken(const Token& token) const;
 
+		
 	private:
 		std::shared_ptr<PlayerTokens> player_tokens_;
 	};
