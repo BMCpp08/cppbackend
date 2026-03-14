@@ -97,8 +97,8 @@ namespace app {
 		return nullptr;
 	}
 
-	void Player::SetStopTimestamp(model::TimePoint new_timestamp) {
-		dog_->SetStopTimestamp(new_timestamp);
+	void Player::ResetStopTime() {
+		dog_->ResetStopTime();
 	}
 
 	std::shared_ptr<Player> PlayerTokens::FindPlayerByToken(Token token) {
@@ -362,7 +362,7 @@ namespace app {
 
 			if (std::strcmp(dir, "") == 0 && player->GetSpeed() != geom::Vec2D{ 0.,0. }) {
 				player->SetSpeed(geom::Vec2D{ 0,0 });
-				player->SetStopTimestamp(std::chrono::steady_clock::now());
+				player->ResetStopTime();
 			}
 			else if (std::strcmp(dir, "L") == 0) {
 				player->SetSpeed(geom::Vec2D{ -speed,0 });
@@ -423,6 +423,7 @@ namespace app {
 			auto loot_generator = game_->GetLootGenerator();
 
 			for (auto map : maps) {
+	
 				if (auto* session = game_->FindGameSessions(map->GetId()); session) {
 					auto dogs = session->GetDogs();
 
@@ -456,7 +457,7 @@ namespace app {
 
 					std::vector<collision_detector::Gatherer> gatherers;
 					std::vector<std::shared_ptr<model::Dog>> temp_list_dogs;
-					auto retirement_time = std::chrono::duration<double, std::milli>(map->GetDogRetirementTime() * 1000.0);
+					auto retirement_time = map->GetDogRetirementTime() * 1000.0;
 					std::vector<std::shared_ptr<model::Dog>> retirees;
 
 					for (const auto& dog : dogs) {
@@ -495,8 +496,12 @@ namespace app {
 							break;
 						}
 
+						dog_->SetPlayTime(time);
+						
 						if (dog_->GetSpeed() == geom::Vec2D{ 0., 0. }) {
-							if ((std::chrono::steady_clock::now() - dog_->GetStopTimestamp()) >= retirement_time) {
+							dog_->SetStopTime(time);
+
+							if (dog_->GetStopTime() >= retirement_time) {
 								retirees.emplace_back(dog_);
 							}
 						}
@@ -528,8 +533,7 @@ namespace app {
 
 					//Проверяем кого отправить на пенсию
 					for (const auto& dog : retirees) {
-						double play_time = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - dog->GetStartTime()).count();
-						app::Retiree retiree{ app::RetireeId::New(), dog->GetName(), dog->GetScore(), play_time};
+						app::Retiree retiree{ app::RetireeId::New(), dog->GetName(), dog->GetScore(), dog->GetPlayTime()};
 
 						connection_pool_->SaveRetirees([&retiree](auto& repo) {
 							return repo.Save(retiree);
@@ -640,7 +644,7 @@ namespace app {
 		}
 		else {
 			dog->SetSpeed(geom::Vec2D{ 0, 0 });
-			dog->SetStopTimestamp(std::chrono::steady_clock::now());
+			dog->ResetStopTime();
 			dog->SetPosition(geom::Point2D(dog->GetPosition().x, max_pos + w_road));
 			res = max_pos + w_road;
 		}
@@ -683,7 +687,7 @@ namespace app {
 		}
 		else {
 			dog->SetSpeed(geom::Vec2D{ 0, 0 });
-			dog->SetStopTimestamp(std::chrono::steady_clock::now());
+			dog->ResetStopTime();
 			dog->SetPosition(geom::Point2D(dog->GetPosition().x, min_pos - w_road));
 			res = min_pos - w_road;
 		}
@@ -727,7 +731,7 @@ namespace app {
 		}
 		else {
 			dog->SetSpeed(geom::Vec2D{ 0, 0 });
-			dog->SetStopTimestamp(std::chrono::steady_clock::now());
+			dog->ResetStopTime();
 			dog->SetPosition(geom::Point2D(min_pos - w_road, dog->GetPosition().y));
 			res = min_pos - w_road;
 		}
@@ -771,7 +775,7 @@ namespace app {
 		}
 		else {
 			dog->SetSpeed(geom::Vec2D{ 0, 0 });
-			dog->SetStopTimestamp(std::chrono::steady_clock::now());
+			dog->ResetStopTime();
 			dog->SetPosition(geom::Point2D(max_pos + w_road, dog->GetPosition().y));
 			res = max_pos + w_road;
 		}

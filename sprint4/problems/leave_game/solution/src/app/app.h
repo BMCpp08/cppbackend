@@ -122,7 +122,7 @@ namespace app {
 
 		Token GetToken() const noexcept;
 
-		void SetStopTimestamp(model::TimePoint new_timestamp);
+		void ResetStopTime();
 	private:
 		model::GameSession* game_session_;
 		std::shared_ptr<model::Dog> dog_;

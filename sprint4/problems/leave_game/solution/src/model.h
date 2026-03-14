@@ -422,17 +422,28 @@ namespace model {
 			return Road::Id{ road_id_ };
 		}
 
-		void SetStopTimestamp(TimePoint new_timestamp) {
-			stop_timestamp_ = new_timestamp;
+		void SetStopTime(double time) {
+			stop_time_ += time;
 		}
 
-		TimePoint GetStopTimestamp() const noexcept {
-			return stop_timestamp_;
+		void SetPlayTime(double time) {
+			play_time_ += time;
 		}
 
-		TimePoint GetStartTime() const noexcept {
-			return start_time_;
+		void ResetStopTime() {
+			stop_time_ = 0.;
 		}
+
+		double GetStopTime() const noexcept {
+			return stop_time_;
+		}
+
+		double GetPlayTime() const noexcept {
+			return play_time_;
+		}
+		//TimePoint GetStartTime() const noexcept {
+		//	return start_time_;
+		//}
 	private:
 		geom::Point2D pos_;
 		std::string name_;
@@ -444,8 +455,8 @@ namespace model {
 		Loots bag_;
 		Score score_;
 		int road_id_;
-		TimePoint start_time_ = std::chrono::steady_clock::now();
-		TimePoint stop_timestamp_ = std::chrono::steady_clock::now();
+		double play_time_ = 0;
+		double stop_time_ = 0;
 	};
 
 	class GameSession {
