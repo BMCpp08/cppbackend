@@ -5,8 +5,7 @@ namespace postgres {
 	using namespace std::literals;
 	using pqxx::operator"" _zv;
 
-	Database::Database(const std::string& db_url)
-		: pool_(db_url, 100){
+	Database::Database(const std::string& db_url) {
 		pqxx::connection conn(db_url);
 		pqxx::work work{ conn };
 
@@ -23,5 +22,7 @@ namespace postgres {
 			ON retired_players(score DESC, play_time_ms, player_name);)"_zv);
 
 		work.commit();
+
+		pool_.PrepareAllConnections(db_url, 100);
 	}
 }  // namespace postgres

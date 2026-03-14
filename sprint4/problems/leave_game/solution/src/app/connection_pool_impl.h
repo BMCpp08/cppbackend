@@ -11,11 +11,12 @@ namespace app {
 
 class ConnectionPoolImpl {
 public:
-    explicit ConnectionPoolImpl(const std::string& db_url, const int size);
-
+    ConnectionPoolImpl() = default;
+    /*explicit ConnectionPoolImpl();*/
+    void PrepareAllConnections(const std::string& db_url, const int size);
     ConnectionPool& GetPool();
 
 private:
-    ConnectionPool pool_;
+    std::unique_ptr<ConnectionPool> pool_;
 };
 }  // namespace app
