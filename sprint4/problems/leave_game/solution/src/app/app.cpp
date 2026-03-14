@@ -590,7 +590,7 @@ namespace app {
 			auto retirees = connection_pool_->GetRetirees([&](auto& repo) {
 				return repo.GetRetirees(start_idx, max_items);
 				});
-
+			std::cout << "GetGameRecords =" << retirees.size() <<std::endl;
 			json::array result;
 			for (const auto& retiree : retirees) {
 				
