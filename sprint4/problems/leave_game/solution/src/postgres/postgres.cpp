@@ -14,12 +14,12 @@ namespace postgres {
 					id UUID CONSTRAINT id_constraint PRIMARY KEY,
 					player_name TEXT NOT NULL,
 					score DOUBLE PRECISION NOT NULL,
-					play_time_ms BIGINT NOT NULL
+					play_time BIGINT NOT NULL
 			);
 			)"_zv);
 			work.exec(R"(CREATE INDEX IF NOT EXISTS idx_retired_players
-			ON retired_players(score DESC, play_time_ms, player_name);)"_zv);
-
+				ON retired_players(score DESC, play_time ASC, player_name ASC);)"_zv);
+			
 			work.commit();
 		}
 		catch (...) {

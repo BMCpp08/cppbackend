@@ -535,9 +535,12 @@ namespace app {
 					for (const auto& dog : retirees) {
 						app::Retiree retiree{ app::RetireeId::New(), dog->GetName(), dog->GetScore(), dog->GetPlayTime()};
 
-						connection_pool_->SaveRetirees([&retiree](auto& repo) {
-							return repo.Save(retiree);
-							});
+						if (connection_pool_) {
+							connection_pool_->SaveRetirees([&retiree](auto& repo) {
+								return repo.Save(retiree);
+								});
+						}
+						
 
 						auto players = GetListPlayersUseCase();
 						const app::Player* player = players->FindByDogIdAndMapId(dog->GetName(), map->GetId());
