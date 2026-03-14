@@ -17,6 +17,31 @@ namespace app {
 	const double ms_per_second = 1000.;
 	const int def_max_items = 100;
 
+	std::map<std::string, std::string> ParseQuery(std::string_view query) {
+		std::map<std::string, std::string> result;
+		size_t pos = 0;
+
+		while (pos < query.size()) {
+			size_t amp = query.find('&', pos);
+			std::string_view param = query.substr(pos, amp - pos);
+			size_t eq = param.find('=');
+			if (eq != std::string_view::npos) {
+				std::string key(param.substr(0, eq));
+				std::string value(param.substr(eq + 1));
+				result[std::move(key)] = std::move(value);
+			}
+			else {
+				result[std::string(param)] = "";
+			}
+			if (amp == std::string_view::npos) {
+				break;
+			}
+
+			pos = amp + 1;
+		}
+		return result;
+	}
+
 	static model::Loot CreateLoot(std::mt19937& gen, const model::ConstPtrRoad& road, int type, model::Map::LootsDescription& loots_desc) {
 		model::Loot new_loot;
 		new_loot.type = std::move(type);
@@ -423,7 +448,7 @@ namespace app {
 			auto loot_generator = game_->GetLootGenerator();
 
 			for (auto map : maps) {
-	
+
 				if (auto* session = game_->FindGameSessions(map->GetId()); session) {
 					auto dogs = session->GetDogs();
 
@@ -497,7 +522,7 @@ namespace app {
 						}
 
 						dog_->SetPlayTime(time);
-						
+
 						if (dog_->GetSpeed() == geom::Vec2D{ 0., 0. }) {
 							dog_->SetStopTime(time);
 
@@ -507,7 +532,7 @@ namespace app {
 						}
 
 						auto end_pos = dog_->GetPosition();
-						
+
 						if (distance != 0.) {
 							gatherers.emplace_back(start_pos, end_pos, gatherer_width / 2.);
 							temp_list_dogs.push_back(dog_);
@@ -533,14 +558,14 @@ namespace app {
 
 					//Проверяем кого отправить на пенсию
 					for (const auto& dog : retirees) {
-						app::Retiree retiree{ app::RetireeId::New(), dog->GetName(), dog->GetScore(), dog->GetPlayTime()};
+						app::Retiree retiree{ app::RetireeId::New(), dog->GetName(), dog->GetScore(), dog->GetPlayTime() };
 
 						if (connection_pool_) {
 							connection_pool_->SaveRetirees([&retiree](auto& repo) {
 								return repo.Save(retiree);
 								});
 						}
-						
+
 
 						auto players = GetListPlayersUseCase();
 						const app::Player* player = players->FindByDogIdAndMapId(dog->GetName(), map->GetId());
@@ -550,7 +575,7 @@ namespace app {
 						}
 						join_game_use_case_.RemovePlayer(dog->GetName(), map->GetId());
 						session->RemoveDog(dog->GetId());
-						
+
 					}
 
 				}
@@ -565,41 +590,50 @@ namespace app {
 		return game_;
 	}
 	/********************************************************************/
-	std::string Application::GetGameRecords(const std::string& base_body) {
+	std::string Application::GetGameRecords(const std::string_view base_body) {
 		try {
-			std::cout << "GetGameRecords st1" << std::endl;
-			auto json_obj = json::parse(base_body).as_object();
-			int start_idx = 0;
-			int max_items = 0;
-			std::cout << "GetGameRecords st2" << std::endl;
-			if (auto it = json_obj.if_contains("start"); it) {
-				start_idx = it->as_uint64();
-			}
-			else {
-				throw GameError(ErrorReason::FAILED_PARSE_JSON);
-			}
-			std::cout << "GetGameRecords st3" << std::endl;
-			if (auto it = json_obj.if_contains("maxItems"); it) {
-				max_items = it->as_uint64();
-				if (max_items > def_max_items) {
-					throw GameError(RecordsErrorReason::INVALIDE_MAX_ITEM);
+			int start = 0;
+			int max_items = 100;
+			std::string target(base_body);
+			auto pos = target.find('?');
+			if (pos != std::string::npos) {
+				std::string_view query(target.data() + pos + 1, target.size() - pos - 1);
+				auto params = ParseQuery(query);
+				if (auto it = params.find("start"); it != params.end()) {
+					try {
+						start = std::stoi(it->second);
+						if (start < 0) start = 0;
+					}
+					catch (...) { 
+					}
+				}
+				if (auto it = params.find("maxItems"); it != params.end()) {
+					try {
+						max_items = std::stoi(it->second);
+					}
+					catch (...) { 
+					}
 				}
 			}
-			else {
-				throw GameError(ErrorReason::FAILED_PARSE_JSON);
+
+
+
+			if (max_items > def_max_items) {
+				throw GameError(RecordsErrorReason::INVALIDE_MAX_ITEM);
 			}
-			std::cout << "GetGameRecords st4" << std::endl;
+
+
 
 			auto retirees = connection_pool_->GetRetirees([&](auto& repo) {
-				return repo.GetRetirees(start_idx, max_items);
+				return repo.GetRetirees(start, max_items);
 				});
-			std::cout << "GetGameRecords =" << retirees.size() <<std::endl;
+
 			json::array result;
 			for (const auto& retiree : retirees) {
-				
+
 				result.emplace_back(json::object({ {"name",retiree.GetName()},
 												{"score" , retiree.GetScore()},
-												{"playTime" , retiree.GetPlayTime()}}));
+												{"playTime" , retiree.GetPlayTime()} }));
 			}
 			return json::serialize(result);
 		}
@@ -612,7 +646,7 @@ namespace app {
 		catch (...) {
 			throw;
 		}
-		
+
 	}
 
 	double Application::GoToSouth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road) {

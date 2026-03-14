@@ -16,7 +16,6 @@ namespace http_handler {
 		return response;
 	}
 
-
 	std::string GetContentType(const StringRequest& req) {
 		auto content_type_it = req.base().find(boost::beast::http::field::content_type);
 		std::string content_type = "null"s;
@@ -347,7 +346,7 @@ namespace http_handler {
 				}
 				else {
 					resp = MakeStringResponse(http::status::ok,
-						app_.GetGameRecords(req.body()),
+						app_.GetGameRecords(req.target()),
 						req.version(),
 						req.keep_alive(),
 						ContentType::APP_JSON);

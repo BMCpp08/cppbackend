@@ -305,7 +305,7 @@ namespace app {
 
 		const std::shared_ptr<model::Game> GetGame();
 
-		std::string GetGameRecords(const std::string& base_body);
+		std::string GetGameRecords(const std::string_view base_body);
 	private:
 		double GoToSouth(model::Map::Roadmap& roadmap, const std::shared_ptr<model::Dog>& dog, double new_pos, double w_road);
 
