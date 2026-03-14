@@ -39,7 +39,7 @@ namespace {
 		}
 		else {
 			// fallback для локальной разработки (или можно выбросить исключение)
-			config.db_url = "postgres://postgres:Mys3Cr3t@localhost:5432/postgres";
+			config.db_url = "postgres://postgres:Mys3Cr3t@localhost:30432/postgres";
 		}
 		return config;
 	}
