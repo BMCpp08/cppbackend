@@ -18,7 +18,7 @@ namespace app {
 		}
 
 		void Save(const app::Retiree& retiree) override {
-			work_.exec_prepared(app::tag_ins_retired, retiree.GetName(), retiree.GetScore(), retiree.GetPlayTime());
+			work_.exec_prepared(app::tag_ins_retired, retiree.GetId().ToString(), retiree.GetName(), retiree.GetScore(), retiree.GetPlayTime());
 		}
 
 		const std::vector<app::Retiree> GetRetirees(const int start_idx, const int count) override {
