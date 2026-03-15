@@ -45,7 +45,7 @@ namespace infrastructure {
 
 				auto players = app_.GetListPlayersUseCase();
 				std::vector<serialization::MapRepr> maps_repr;
-				for (auto map : maps) {
+				for (const auto& map : maps) {
 					std::vector<serialization::DogRepr> dogs_repr;
 					std::vector<serialization::LootRepr> loots_repr;
 					std::vector<serialization::PlayerRepr> players_repr;
@@ -93,8 +93,6 @@ namespace infrastructure {
 				if (!ifs.is_open()) { 
 					return;
 				}
-				auto size = std::filesystem::file_size(state_file_);
-
 				InputArchive input_archive(ifs);
 				std::vector<serialization::MapRepr> maps_repr;
 			

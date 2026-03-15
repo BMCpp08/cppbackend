@@ -1,6 +1,4 @@
-﻿#pragma once
-
-// boost.beast будет использовать std::string_view вместо boost::string_view
+﻿// boost.beast будет использовать std::string_view вместо boost::string_view
 #define BOOST_BEAST_USE_STD_STRING_VIEW
 #include "../app/app.h"
 #include <random>
@@ -128,9 +126,9 @@ namespace app {
 	}
 
 	std::shared_ptr<Player> PlayerTokens::FindPlayerByToken(Token token) {
-		if (token_to_player_.count(token)) {
-			return token_to_player_[token];
-		}
+		if (auto it = token_to_player_.find(token); it != token_to_player_.end()) {
+			return it->second;
+		}	
 		return nullptr;
 	}
 
@@ -258,7 +256,7 @@ namespace app {
 		try {
 			return join_game_use_case_.JoinGame(map_id, name);
 		}
-		catch (app::GameError<app::JoinGameErrorReason> err) {
+		catch (app::GameError<app::JoinGameErrorReason>& err) {
 
 			if (err.GetErrorReason() == app::INVALIDE_NAME) {//несуществующий id карты
 				throw GameError(JoinGameErrorReason::INVALIDE_NAME);
@@ -832,5 +830,6 @@ namespace app {
 		}
 		return res;
 	}
+
 }
 

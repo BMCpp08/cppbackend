@@ -441,9 +441,6 @@ namespace model {
 		double GetPlayTime() const noexcept {
 			return play_time_;
 		}
-		//TimePoint GetStartTime() const noexcept {
-		//	return start_time_;
-		//}
 	private:
 		geom::Point2D pos_;
 		std::string name_;
@@ -482,7 +479,11 @@ namespace model {
 					dogs_.emplace(index, std::make_shared<Dog>(std::move(point), name, static_cast<model::Dog::Id>( index ), road, capacity));
 					return dogs_[index];
 				}
-				catch (...) {
+				catch (const std::bad_alloc& exc) {
+					dogs_.erase(index);
+					throw;
+				}
+				catch (const std::exception& exc) {
 					dogs_.erase(index);
 					throw;
 				}
@@ -499,7 +500,11 @@ namespace model {
 					dogs_.emplace(idx, std::make_shared<Dog>(std::move(dog)));
 					return dogs_[idx];
 				}
-				catch (...) {
+				catch (const std::bad_alloc& exc) {
+					dogs_.erase(idx);
+					throw;
+				}
+				catch (const std::exception& exc) {
 					dogs_.erase(idx);
 					throw;
 				}
