@@ -100,7 +100,7 @@ int main(int argc, const char* argv[]) {
 	try {
 		auto db = std::make_shared<postgres::Database>(GetConfigFromEnv().db_url);
 		auto  connection_pool_ = std::make_shared <app::ConnectionPoolImpl>();
-		connection_pool_->PrepareAllConnections(GetConfigFromEnv().db_url, 10);
+		connection_pool_->PrepareAllConnections(GetConfigFromEnv().db_url, 5);
 		
 
 		if (auto args = ParseCommandLine(argc, argv)) {
