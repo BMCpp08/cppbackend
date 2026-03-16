@@ -1,5 +1,5 @@
-#pragma once
-// boost.beast будет использовать std::string_view вместо boost::string_view
+п»ї#pragma once
+// boost.beast Р±СѓРґРµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ std::string_view РІРјРµСЃС‚Рѕ boost::string_view
 #define BOOST_BEAST_USE_STD_STRING_VIEW
 
 #include <string>

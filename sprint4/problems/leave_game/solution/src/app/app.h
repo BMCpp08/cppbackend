@@ -260,7 +260,8 @@ namespace app {
 			: Authorization(player_tokens)
 			, game_(game)
 			, join_game_use_case_(join_game_use_case)
-			, connection_pool_{ connection_pool } {
+			, connection_pool_{ connection_pool } 
+			, gen(std::random_device{}()){
 
 			if (!game_) {
 				throw std::invalid_argument("Invalid ptr game_ = nullptr"s);
@@ -310,6 +311,7 @@ namespace app {
 		JoinGameUseCase& join_game_use_case_;
 		std::shared_ptr<ApplicationListener> listener_;
 		std::shared_ptr<ConnectionPoolImpl> connection_pool_;
+		std::mt19937 gen;
 	};
 
 	class GathererProvider : public collision_detector::ItemGathererProvider {

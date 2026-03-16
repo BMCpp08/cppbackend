@@ -1,6 +1,4 @@
 ﻿#include "http_server.h"
-
-
 #include <iostream>
 
 namespace http_server {

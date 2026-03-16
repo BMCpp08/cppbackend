@@ -3,7 +3,6 @@
 #include "../app/app.h"
 #include <random>
 
-
 namespace app {
 	using namespace std::literals;
 	using namespace boost_aliases;
@@ -18,7 +17,6 @@ namespace app {
 	static std::map<std::string, std::string> ParseQuery(std::string_view query) {
 		std::map<std::string, std::string> result;
 		size_t pos = 0;
-
 		while (pos < query.size()) {
 			size_t amp = query.find('&', pos);
 			std::string_view param = query.substr(pos, amp - pos);
@@ -35,7 +33,6 @@ namespace app {
 			if (amp == std::string_view::npos) {
 				break;
 			}
-
 			pos = amp + 1;
 		}
 		return result;
@@ -472,10 +469,7 @@ namespace app {
 					}
 
 					auto count = loot_generator->Generate(delta, map->GetLootCount(), dogs.size());
-
 					auto roads = session->GetMap()->GetRoads();
-					std::random_device rd;
-					std::mt19937 gen(rd());
 					auto loot_desc = map->GetDescription();
 
 					for (auto i = 0; i < count; ++i) {
@@ -484,7 +478,6 @@ namespace app {
 					}
 
 					auto loots = map->GetLoots();
-
 					std::vector<collision_detector::Item> items;
 					for (const auto& loot : loots) {
 						items.emplace_back(CreateItem(loot.position, item_width));
@@ -497,7 +490,7 @@ namespace app {
 
 					std::vector<collision_detector::Gatherer> gatherers;
 					std::vector<std::shared_ptr<model::Dog>> temp_list_dogs;
-					auto retirement_time = map->GetDogRetirementTime() * 1000.0;
+					auto retirement_time = map->GetDogRetirementTime() * ms_per_second;
 					std::vector<std::shared_ptr<model::Dog>> retirees;
 
 					for (const auto& dog : dogs) {
@@ -511,8 +504,7 @@ namespace app {
 						double w_road = road_width;
 						double distance = 0.;
 
-						auto start_pos = dog_->GetPosition();
-
+						auto& start_pos = dog_->GetPosition();
 						switch (cur_dir) {
 						case model::Direction::DIR_NORTH:
 							if (dog_->GetSpeed().y != 0) {
@@ -571,7 +563,7 @@ namespace app {
 
 					//Проверяем кого отправить на пенсию
 					for (const auto& dog : retirees) {
-						app::Retiree retiree{ app::RetireeId::New(), dog->GetName(), dog->GetScore(), dog->GetPlayTime()/1000. };
+						app::Retiree retiree{ app::RetireeId::New(), dog->GetName(), dog->GetScore(), dog->GetPlayTime()/ms_per_second };
 
 						if (connection_pool_) {
 							connection_pool_->SaveRetirees([&retiree](auto& repo) {
@@ -591,6 +583,10 @@ namespace app {
 				}
 			}
 		}
+		catch (std::logic_error& exc) {
+			BOOST_LOG_TRIVIAL(fatal) << logging::add_value(logger::data, logger::CreateJsonExc(EXIT_FAILURE, exc.what()))
+				<< logging::add_value(logger::message, logger::key_error);
+		}
 		catch (...) {
 			throw GameError(ErrorReason::FAILED_PARSE_JSON);
 		}
@@ -609,24 +605,14 @@ namespace app {
 			if (pos != std::string::npos) {
 				std::string_view query(target.data() + pos + 1, target.size() - pos - 1);
 				auto params = ParseQuery(query);
-				if (auto it = params.find("start"); it != params.end()) {
-					try {
-						start = std::stoi(it->second);
-						if (start < 0) { 
-							start = 0; 
-						}
-					}
-					catch (const std::logic_error& exc) {
-						throw exc;
+				if (auto it = params.find("start"s); it != params.end()) {
+					start = std::stoi(it->second);
+					if (start < 0) { 
+						start = 0; 
 					}
 				}
-				if (auto it = params.find("maxItems"); it != params.end()) {
-					try {
-						max_items = std::stoi(it->second);
-					}
-					catch (const std::logic_error& exc) {
-						throw exc;
-					}
+				if (auto it = params.find("maxItems"s); it != params.end()) {
+					max_items = std::stoi(it->second);
 				}
 			}
 
@@ -640,20 +626,19 @@ namespace app {
 
 			json::array result;
 			for (const auto& retiree : retirees) {
-
-				result.emplace_back(json::object({ {"name",retiree.GetName()},
-												{"score" , retiree.GetScore()},
-												{"playTime" , retiree.GetPlayTime()} }));
+				result.emplace_back(json::object({{"name"s,retiree.GetName()},
+												{"score"s, retiree.GetScore()},
+												{"playTime"s, retiree.GetPlayTime()} }));
 			}
 			return json::serialize(result);
 		}
-		catch (app::GameError<app::RecordsErrorReason> ecx) {
-			throw ecx;
+		catch (app::GameError<app::RecordsErrorReason>& ecx) {
+			throw;
 		}
-		catch (app::GameError<app::ErrorReason> ecx) {
-			throw ecx;
+		catch (app::GameError<app::ErrorReason>& ecx) {
+			throw;
 		}
-		catch (...) {
+		catch (const std::logic_error& exc) {
 			throw;
 		}
 	}

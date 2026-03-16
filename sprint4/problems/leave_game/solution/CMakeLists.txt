@@ -60,6 +60,7 @@ add_executable(game_server
     src/ticker.cpp
     src/model_serialization.h
     src/infrastructure.h
+    src/infrastructure.cpp
     src/postgres/postgres.cpp
     src/postgres/postgres.h
     src/app/app.h

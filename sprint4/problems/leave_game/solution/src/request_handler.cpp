@@ -358,6 +358,10 @@ namespace http_handler {
 						req.keep_alive(), ContentType::APP_JSON);
 				}
 			}
+			catch (std::logic_error& exc) {
+				BOOST_LOG_TRIVIAL(fatal) << logging::add_value(data, CreateJsonExc(EXIT_FAILURE, exc.what()))
+					<< logging::add_value(message, key_error);
+			}
 			catch (...) {
 				resp = MakeStringResponse(http::status::bad_request, "Invalid parameter: maxItems cannot be greater than 100", req.version(),
 					req.keep_alive(), ContentType::APP_JSON);

@@ -1,6 +1,4 @@
-﻿#pragma once
-
-#include "connection_pool_impl.h"
+﻿#include "connection_pool_impl.h"
 #include <pqxx/pqxx>
 
 namespace app {
